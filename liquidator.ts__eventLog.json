@@ -1,0 +1,720 @@
+[
+  {
+    "event": {
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "asset": "5CRTAHVoub9SZDQXvaaHH8xT1ScYyUvKGPoEo8vTnzv6KWAs",
+      "set": true
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "CollateralSet",
+      "timestamp": "1682423848000",
+      "blockNumber": 29337755,
+      "blockHash": "0x0579cde4863998964dc0cfab62a0afac36f3c20a1ff9889fbe557d14d4a4ad22"
+    }
+  },
+  {
+    "event": {
+      "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "3b9aca00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682423849001",
+      "blockNumber": 29337775,
+      "blockHash": "0x05e93282e53e0f3353ce7a351b40850e7cac97ec277f0e5e453faf411b9b866d"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CiAgrWH51LEUWELLhk5aLFRRTrafjJyRapBphK1iudqGLg8",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "038d7ea4c68000" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682423850000",
+      "blockNumber": 29337801,
+      "blockHash": "0xcc05c7f07c556be750d2931e350d8c33380b1311c24862a6f9489d540a208700"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CRTAHVoub9SZDQXvaaHH8xT1ScYyUvKGPoEo8vTnzv6KWAs",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "3b9aca00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682423856001",
+      "blockNumber": 29337901,
+      "blockHash": "0x2d5a57b7dd79d7824c10ad87055d68da57429bade98f82eed525c546a636a191"
+    }
+  },
+  {
+    "event": {
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW",
+      "set": true
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "CollateralSet",
+      "timestamp": "1682423858000",
+      "blockNumber": 29337941,
+      "blockHash": "0x81d2139364558b35c563c48637e5864213b74e68c975ac99ffee2f9fa72fa500"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CRTAHVoub9SZDQXvaaHH8xT1ScYyUvKGPoEo8vTnzv6KWAs",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "0218711a00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682423859001",
+      "blockNumber": 29337964,
+      "blockHash": "0x5e26f44791d01f9b3c3e6b716ed21866e2a32958bd94d79b88a9b68458cce7ae"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CRTAHVoub9SZDQXvaaHH8xT1ScYyUvKGPoEo8vTnzv6KWAs",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "0218711a00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "RepayVariable",
+      "timestamp": "1682423862000",
+      "blockNumber": 29338009,
+      "blockHash": "0x3cdb3c27031152586c46766ea06d7a1664cfb536c8fefd47eaf13b3f43cb90da"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CRTAHVoub9SZDQXvaaHH8xT1ScYyUvKGPoEo8vTnzv6KWAs",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "0218711a00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682423865000",
+      "blockNumber": 29338067,
+      "blockHash": "0x54416f50cd5b3ebd6c74b8f95141bef1f9aed536eb4955d521774153e784071b"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CRTAHVoub9SZDQXvaaHH8xT1ScYyUvKGPoEo8vTnzv6KWAs",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "0218711a00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "RepayVariable",
+      "timestamp": "1682423868000",
+      "blockNumber": 29338120,
+      "blockHash": "0xbb41223dede304f28c7c2662d7a7b36c56cf0e36a60d713a1f4ec0ffa04ebf46"
+    }
+  },
+  {
+    "event": {
+      "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "0218711a00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682424038000",
+      "blockNumber": 29340013,
+      "blockHash": "0x88909206bcd0d6a078e309df158ac56d480e9f9b3cb654f06309817168307347"
+    }
+  },
+  {
+    "event": {
+      "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "0f4240" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "RepayVariable",
+      "timestamp": "1682424233000",
+      "blockNumber": 29344913,
+      "blockHash": "0xdff840ff286e9d9e33ceba1aa43338176bfb35a76cfa77b428beff7660cb55eb"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CiAgrWH51LEUWELLhk5aLFRRTrafjJyRapBphK1iudqGLg8",
+      "caller": "5HNYtR7yb1Lpfe4b1bDmyCac6hMJLHWvBuNf5PJZRkRh89JZ",
+      "onBehalfOf": "5HNYtR7yb1Lpfe4b1bDmyCac6hMJLHWvBuNf5PJZRkRh89JZ",
+      "amount": { "rawNumber": "038d7ea4c68000" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "Deposit",
+      "timestamp": "1682424234000",
+      "blockNumber": 29344915,
+      "blockHash": "0x63350fdac57b16b45fa957752842136d18cccc3bc1c61c9774026f312cc17bad"
+    }
+  },
+  {
+    "event": {
+      "caller": "5HNYtR7yb1Lpfe4b1bDmyCac6hMJLHWvBuNf5PJZRkRh89JZ",
+      "asset": "5CiAgrWH51LEUWELLhk5aLFRRTrafjJyRapBphK1iudqGLg8",
+      "set": true
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "CollateralSet",
+      "timestamp": "1682424234000",
+      "blockNumber": 29344922,
+      "blockHash": "0x9e538f5a97e60b1521c7f89b156ede569c8da5a100e3a1157178ba320577b9da"
+    }
+  },
+  {
+    "event": {
+      "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW",
+      "caller": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "onBehalfOf": "5E7s4RLAjFwG5DHyS781JerAhH7CCxEjxEG2nvkskuj52mRZ",
+      "amount": { "rawNumber": "0254dd0798" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "RepayVariable",
+      "timestamp": "1682424234000",
+      "blockNumber": 29344930,
+      "blockHash": "0x5fef5a8c1f8418ab1d92a62bf2d0cdac07883f2dbb2ca2ff845fa9de371ba043"
+    }
+  },
+  {
+    "event": {
+      "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW",
+      "caller": "5HNYtR7yb1Lpfe4b1bDmyCac6hMJLHWvBuNf5PJZRkRh89JZ",
+      "onBehalfOf": "5HNYtR7yb1Lpfe4b1bDmyCac6hMJLHWvBuNf5PJZRkRh89JZ",
+      "amount": { "rawNumber": "3b9aca00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "Deposit",
+      "timestamp": "1682424234000",
+      "blockNumber": 29344936,
+      "blockHash": "0x232cc385361ee7298caf52f0c3803ef5e32c97157a0dc96cf5b043241605c294"
+    }
+  },
+  {
+    "event": {
+      "caller": "5HNYtR7yb1Lpfe4b1bDmyCac6hMJLHWvBuNf5PJZRkRh89JZ",
+      "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW",
+      "set": true
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "CollateralSet",
+      "timestamp": "1682424239000",
+      "blockNumber": 29345098,
+      "blockHash": "0x52e59f0fb60c7eaf271887c4540ca0b20768eee4d77d9f87afceef3cf73d3032"
+    }
+  },
+  {
+    "event": { "asset": "5CRTAHVoub9SZDQXvaaHH8xT1ScYyUvKGPoEo8vTnzv6KWAs", "active": false },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ReserveActivated",
+      "timestamp": "1682424244000",
+      "blockNumber": 29345275,
+      "blockHash": "0xea27a9ab6d791b77a5c7053075d7e6b1caa3003f0e5edd25cfe83a48b0140034"
+    }
+  },
+  {
+    "event": { "asset": "5FPNwLhzWhtvYas7gsrFpJmngUwJfFdLrsaMRVeRADkF4iGW", "active": false },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ReserveActivated",
+      "timestamp": "1682424245000",
+      "blockNumber": 29345276,
+      "blockHash": "0xca86097e0ddd68793e02431be1934f4e1a2a956d6d094b3b3a527e42f4b19074"
+    }
+  },
+  {
+    "event": { "asset": "5HTShVvCNNn3o5fiArPdkng9sjQRY7zb2JDaSU9Fq45GBQk5", "active": false },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ReserveActivated",
+      "timestamp": "1682424245000",
+      "blockNumber": 29345277,
+      "blockHash": "0x26b417ca09f807b409e133ba66e849be052c58669944035b63361f28f56b781a"
+    }
+  },
+  {
+    "event": { "asset": "5DjYsoPAXYG9mAa3qDT99NFgZYndVyHYukencgkwgspDDsvs", "active": false },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ReserveActivated",
+      "timestamp": "1682424245000",
+      "blockNumber": 29345278,
+      "blockHash": "0xb33d4771eb5e6ca514d64efb27fcc1ff22aebe773d016f6e69808145852d3626"
+    }
+  },
+  {
+    "event": { "asset": "5CiAgrWH51LEUWELLhk5aLFRRTrafjJyRapBphK1iudqGLg8", "active": false },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ReserveActivated",
+      "timestamp": "1682424245000",
+      "blockNumber": 29345279,
+      "blockHash": "0xfecb93a0f0dad7d4f2837495af303442c04044dd24bef21e8d70abf0ab8bfa13"
+    }
+  },
+  {
+    "event": { "asset": "5FjNGvc9kABveFNrXgG2mNYyZAmJxxDpMNt5x2mJim2RsL7v", "active": false },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ReserveActivated",
+      "timestamp": "1682424245000",
+      "blockNumber": 29345280,
+      "blockHash": "0x1dd2cc9820b289756b84314c89ef963b8eb0036f29fead78675f89a9067364fb"
+    }
+  },
+  {
+    "event": {
+      "asset": "5DDyvXWoxRKX1PpwHcFkUnZX9MwPmHbWU17SPZ2AKFgAVjya",
+      "decimals": { "rawNumber": "0f4240" },
+      "aTokenAddress": "5EcMCoBFciust4dPy5f1YWNeH9aTRTYcynKk1nQzDSbBnc5e",
+      "vTokenAddress": "5Etab9dUEaPzkzK6apa1DqWjFuaXHSJzxBZ6HahueqRpWqnu"
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRegistered",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345443,
+      "blockHash": "0x690e98b92cd25d81f3f99b54b4b8113aeb58f16a8e18e031723a804a456b4b4c"
+    }
+  },
+  {
+    "event": {
+      "asset": "5DDyvXWoxRKX1PpwHcFkUnZX9MwPmHbWU17SPZ2AKFgAVjya",
+      "interestRateModel": [
+        { "rawNumber": "45d964b800" },
+        { "rawNumber": "746a528800" },
+        { "rawNumber": "01d1a94a2000" },
+        { "rawNumber": "03a352944000" },
+        { "rawNumber": "09184e72a000" },
+        { "rawNumber": "5af3107a4000" },
+        { "rawNumber": "0110d9316ec000" }
+      ],
+      "maximalTotalSupply": null,
+      "maximalTotalDebt": null,
+      "minimalCollateral": { "rawNumber": "1e8480" },
+      "minimalDebt": { "rawNumber": "0f4240" },
+      "incomeForSuppliersPartE6": { "rawNumber": "0dbba0" },
+      "flashLoanFeeE6": { "rawNumber": "03e8" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ParametersChanged",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345443,
+      "blockHash": "0x690e98b92cd25d81f3f99b54b4b8113aeb58f16a8e18e031723a804a456b4b4c"
+    }
+  },
+  {
+    "event": {
+      "marketRuleId": 0,
+      "asset": "5DDyvXWoxRKX1PpwHcFkUnZX9MwPmHbWU17SPZ2AKFgAVjya",
+      "collateralCoefficientE6": 970000,
+      "borrowCoefficientE6": 1030000,
+      "penaltyE6": 15000
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRulesChanged",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345443,
+      "blockHash": "0x690e98b92cd25d81f3f99b54b4b8113aeb58f16a8e18e031723a804a456b4b4c"
+    }
+  },
+  {
+    "event": {
+      "asset": "5G8Jpgj7dZoP5wuMgTHdBPUWTmZaYaEyvaYurJpgVb1ki3ky",
+      "decimals": { "rawNumber": "0f4240" },
+      "aTokenAddress": "5HN8iMMKSGwWbYBsHE6Hf5DuPxVe8Le6xRED8NwAyv7Zxdof",
+      "vTokenAddress": "5EDRcHEoWukxGBvFeeYeW8CQ3RmnZuwkpkJwcgEj7MNGgXoH"
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRegistered",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345456,
+      "blockHash": "0x07606f23da9d64ef669719d9293e8b60ea0adca9b817cb6953ad16b9af2f55cc"
+    }
+  },
+  {
+    "event": {
+      "asset": "5G8Jpgj7dZoP5wuMgTHdBPUWTmZaYaEyvaYurJpgVb1ki3ky",
+      "interestRateModel": [
+        { "rawNumber": "45d964b800" },
+        { "rawNumber": "746a528800" },
+        { "rawNumber": "01d1a94a2000" },
+        { "rawNumber": "03a352944000" },
+        { "rawNumber": "09184e72a000" },
+        { "rawNumber": "5af3107a4000" },
+        { "rawNumber": "0110d9316ec000" }
+      ],
+      "maximalTotalSupply": null,
+      "maximalTotalDebt": null,
+      "minimalCollateral": { "rawNumber": "07d0" },
+      "minimalDebt": { "rawNumber": "03e8" },
+      "incomeForSuppliersPartE6": { "rawNumber": "0dbba0" },
+      "flashLoanFeeE6": { "rawNumber": "03e8" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ParametersChanged",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345456,
+      "blockHash": "0x07606f23da9d64ef669719d9293e8b60ea0adca9b817cb6953ad16b9af2f55cc"
+    }
+  },
+  {
+    "event": {
+      "marketRuleId": 0,
+      "asset": "5G8Jpgj7dZoP5wuMgTHdBPUWTmZaYaEyvaYurJpgVb1ki3ky",
+      "collateralCoefficientE6": 980000,
+      "borrowCoefficientE6": 1020000,
+      "penaltyE6": 10000
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRulesChanged",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345456,
+      "blockHash": "0x07606f23da9d64ef669719d9293e8b60ea0adca9b817cb6953ad16b9af2f55cc"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CVxZjK7WQCcjmgGZA35pTqyXr1cvvEe22nrz6wSTcsW1nTv",
+      "decimals": { "rawNumber": "0de0b6b3a7640000" },
+      "aTokenAddress": "5H14PSt5mPo9KPD6d2PqXVtcWcpgSm41hh6WjCHZf1uXxV9e",
+      "vTokenAddress": "5GodUbfNcWsRRGTfnp7BQ9JgnYMJsTiuH2Y7eNWegoxW9mWE"
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRegistered",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345469,
+      "blockHash": "0xd3fb5ae003e5182f5b7f41bb8a5a8685cad2dcb56faa306e41f32afebccd68d8"
+    }
+  },
+  {
+    "event": {
+      "asset": "5CVxZjK7WQCcjmgGZA35pTqyXr1cvvEe22nrz6wSTcsW1nTv",
+      "interestRateModel": [
+        { "rawNumber": "45d964b800" },
+        { "rawNumber": "746a528800" },
+        { "rawNumber": "01d1a94a2000" },
+        { "rawNumber": "03a352944000" },
+        { "rawNumber": "09184e72a000" },
+        { "rawNumber": "5af3107a4000" },
+        { "rawNumber": "0110d9316ec000" }
+      ],
+      "maximalTotalSupply": null,
+      "maximalTotalDebt": null,
+      "minimalCollateral": { "rawNumber": "07d0" },
+      "minimalDebt": { "rawNumber": "03e8" },
+      "incomeForSuppliersPartE6": { "rawNumber": "0dbba0" },
+      "flashLoanFeeE6": { "rawNumber": "03e8" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ParametersChanged",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345469,
+      "blockHash": "0xd3fb5ae003e5182f5b7f41bb8a5a8685cad2dcb56faa306e41f32afebccd68d8"
+    }
+  },
+  {
+    "event": {
+      "marketRuleId": 0,
+      "asset": "5CVxZjK7WQCcjmgGZA35pTqyXr1cvvEe22nrz6wSTcsW1nTv",
+      "collateralCoefficientE6": 800000,
+      "borrowCoefficientE6": 1200000,
+      "penaltyE6": 100000
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRulesChanged",
+      "timestamp": "1682424249000",
+      "blockNumber": 29345469,
+      "blockHash": "0xd3fb5ae003e5182f5b7f41bb8a5a8685cad2dcb56faa306e41f32afebccd68d8"
+    }
+  },
+  {
+    "event": {
+      "asset": "5GRu3YzEN9YBrcB9EaqiGpKpjwW9HmuwSAbDdeCw4v69sn6C",
+      "decimals": { "rawNumber": "05f5e100" },
+      "aTokenAddress": "5HYzrFhst8iXJU27nnGJkNRq8bGcY81JQuxXU52DRoxC77Br",
+      "vTokenAddress": "5H9Y8uZ64k7hQXCZxC9sMjfRNxe7jgxQECNqHHvKVnFVKQi2"
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRegistered",
+      "timestamp": "1682424250000",
+      "blockNumber": 29345482,
+      "blockHash": "0x5a4c1e3c09478ec3146b171cee57f532487d6a35a804cd1fce987c39dbd16520"
+    }
+  },
+  {
+    "event": {
+      "asset": "5GRu3YzEN9YBrcB9EaqiGpKpjwW9HmuwSAbDdeCw4v69sn6C",
+      "interestRateModel": [
+        { "rawNumber": "45d964b800" },
+        { "rawNumber": "746a528800" },
+        { "rawNumber": "01d1a94a2000" },
+        { "rawNumber": "03a352944000" },
+        { "rawNumber": "09184e72a000" },
+        { "rawNumber": "5af3107a4000" },
+        { "rawNumber": "0110d9316ec000" }
+      ],
+      "maximalTotalSupply": null,
+      "maximalTotalDebt": null,
+      "minimalCollateral": { "rawNumber": "07d0" },
+      "minimalDebt": { "rawNumber": "03e8" },
+      "incomeForSuppliersPartE6": { "rawNumber": "0dbba0" },
+      "flashLoanFeeE6": { "rawNumber": "03e8" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ParametersChanged",
+      "timestamp": "1682424250000",
+      "blockNumber": 29345482,
+      "blockHash": "0x5a4c1e3c09478ec3146b171cee57f532487d6a35a804cd1fce987c39dbd16520"
+    }
+  },
+  {
+    "event": {
+      "marketRuleId": 0,
+      "asset": "5GRu3YzEN9YBrcB9EaqiGpKpjwW9HmuwSAbDdeCw4v69sn6C",
+      "collateralCoefficientE6": 800000,
+      "borrowCoefficientE6": 1200000,
+      "penaltyE6": 100000
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRulesChanged",
+      "timestamp": "1682424250000",
+      "blockNumber": 29345482,
+      "blockHash": "0x5a4c1e3c09478ec3146b171cee57f532487d6a35a804cd1fce987c39dbd16520"
+    }
+  },
+  {
+    "event": {
+      "asset": "5DRWtNpAKukhyTHzEfkk7PjLQZq9E7CcArc8bGkLx9AE3Z5p",
+      "decimals": { "rawNumber": "e8d4a51000" },
+      "aTokenAddress": "5CfLUEeJscbdFu1VhrwuQjn5Cz9LJZVAVHCJwDgvqaQ6gvk7",
+      "vTokenAddress": "5F5V7EmSj3ptfkTgPG9mX4MSf19TqRwoSWx7YRMeGWgGBdKn"
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRegistered",
+      "timestamp": "1682424251000",
+      "blockNumber": 29345495,
+      "blockHash": "0x9594e7885da177ac92215de65ea7c764363607a8d0f0d298f31e2bc105c41747"
+    }
+  },
+  {
+    "event": {
+      "asset": "5DRWtNpAKukhyTHzEfkk7PjLQZq9E7CcArc8bGkLx9AE3Z5p",
+      "interestRateModel": [
+        { "rawNumber": "45d964b800" },
+        { "rawNumber": "746a528800" },
+        { "rawNumber": "01d1a94a2000" },
+        { "rawNumber": "03a352944000" },
+        { "rawNumber": "09184e72a000" },
+        { "rawNumber": "5af3107a4000" },
+        { "rawNumber": "0110d9316ec000" }
+      ],
+      "maximalTotalSupply": null,
+      "maximalTotalDebt": null,
+      "minimalCollateral": { "rawNumber": "07d0" },
+      "minimalDebt": { "rawNumber": "03e8" },
+      "incomeForSuppliersPartE6": { "rawNumber": "0dbba0" },
+      "flashLoanFeeE6": { "rawNumber": "03e8" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ParametersChanged",
+      "timestamp": "1682424251000",
+      "blockNumber": 29345495,
+      "blockHash": "0x9594e7885da177ac92215de65ea7c764363607a8d0f0d298f31e2bc105c41747"
+    }
+  },
+  {
+    "event": {
+      "marketRuleId": 0,
+      "asset": "5DRWtNpAKukhyTHzEfkk7PjLQZq9E7CcArc8bGkLx9AE3Z5p",
+      "collateralCoefficientE6": 800000,
+      "borrowCoefficientE6": 1200000,
+      "penaltyE6": 100000
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRulesChanged",
+      "timestamp": "1682424251000",
+      "blockNumber": 29345495,
+      "blockHash": "0x9594e7885da177ac92215de65ea7c764363607a8d0f0d298f31e2bc105c41747"
+    }
+  },
+  {
+    "event": {
+      "asset": "5ELWMYwQSgmKLYJhu5WigEZA5t6Y7QZ8w4dzeFkawU436LJ9",
+      "decimals": { "rawNumber": "e8d4a51000" },
+      "aTokenAddress": "5GHmBQ71YDqZZJ5EXzV2uH25prBXHVUTb871JMTkDNgDQZre",
+      "vTokenAddress": "5Gr5wfiJohjbjy4RngDt9vwS9TYr6us9S1qfywnxWC15CUaw"
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRegistered",
+      "timestamp": "1682424251000",
+      "blockNumber": 29345509,
+      "blockHash": "0xe849bc895f380278ba6d7f1eab63ff1e4d0fb672a67c942b9fe0b3d6a3496c61"
+    }
+  },
+  {
+    "event": {
+      "asset": "5ELWMYwQSgmKLYJhu5WigEZA5t6Y7QZ8w4dzeFkawU436LJ9",
+      "interestRateModel": [
+        { "rawNumber": "45d964b800" },
+        { "rawNumber": "746a528800" },
+        { "rawNumber": "01d1a94a2000" },
+        { "rawNumber": "03a352944000" },
+        { "rawNumber": "09184e72a000" },
+        { "rawNumber": "5af3107a4000" },
+        { "rawNumber": "0110d9316ec000" }
+      ],
+      "maximalTotalSupply": "0x00000000033b2e3c9fd0803ce8000000",
+      "maximalTotalDebt": "0x00000000033b2e3c9fd0803ce8000000",
+      "minimalCollateral": { "rawNumber": "07d0" },
+      "minimalDebt": { "rawNumber": "03e8" },
+      "incomeForSuppliersPartE6": { "rawNumber": "0dbba0" },
+      "flashLoanFeeE6": { "rawNumber": "03e8" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "ParametersChanged",
+      "timestamp": "1682424251000",
+      "blockNumber": 29345509,
+      "blockHash": "0xe849bc895f380278ba6d7f1eab63ff1e4d0fb672a67c942b9fe0b3d6a3496c61"
+    }
+  },
+  {
+    "event": {
+      "marketRuleId": 0,
+      "asset": "5ELWMYwQSgmKLYJhu5WigEZA5t6Y7QZ8w4dzeFkawU436LJ9",
+      "collateralCoefficientE6": 700000,
+      "borrowCoefficientE6": 1300000,
+      "penaltyE6": 150000
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "AssetRulesChanged",
+      "timestamp": "1682424251000",
+      "blockNumber": 29345509,
+      "blockHash": "0xe849bc895f380278ba6d7f1eab63ff1e4d0fb672a67c942b9fe0b3d6a3496c61"
+    }
+  },
+  {
+    "event": {
+      "asset": "5G8Jpgj7dZoP5wuMgTHdBPUWTmZaYaEyvaYurJpgVb1ki3ky",
+      "caller": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "onBehalfOf": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "amount": { "rawNumber": "02540be400" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "Deposit",
+      "timestamp": "1682425143000",
+      "blockNumber": 29377382,
+      "blockHash": "0x0795d319e850b213c0e0da6ac7fa98caca869df2bab03dcfdf6b7f3f1f04f1a5"
+    }
+  },
+  {
+    "event": {
+      "caller": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "asset": "5G8Jpgj7dZoP5wuMgTHdBPUWTmZaYaEyvaYurJpgVb1ki3ky",
+      "set": true
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "CollateralSet",
+      "timestamp": "1682425145000",
+      "blockNumber": 29377447,
+      "blockHash": "0x94b2bd238be5a9f634877bc260248abb70c3b43b5741808c067b3fa7e11da08b"
+    }
+  },
+  {
+    "event": {
+      "asset": "5GRu3YzEN9YBrcB9EaqiGpKpjwW9HmuwSAbDdeCw4v69sn6C",
+      "caller": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "onBehalfOf": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "amount": { "rawNumber": "05f5e100" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "Deposit",
+      "timestamp": "1682425146000",
+      "blockNumber": 29377499,
+      "blockHash": "0xb4486f6ace05102a8c3bc1541d0561729382957152bb3be6290c1e425c31ab37"
+    }
+  },
+  {
+    "event": {
+      "asset": "5GRu3YzEN9YBrcB9EaqiGpKpjwW9HmuwSAbDdeCw4v69sn6C",
+      "caller": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "onBehalfOf": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "amount": { "rawNumber": "989680" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682425151000",
+      "blockNumber": 29377668,
+      "blockHash": "0x8f8ef93ab74ad17a7de719459e6338584dd33b7a93495316e4104c7b26ac981a"
+    }
+  },
+  {
+    "event": {
+      "asset": "5G8Jpgj7dZoP5wuMgTHdBPUWTmZaYaEyvaYurJpgVb1ki3ky",
+      "caller": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "onBehalfOf": "5DfakUEMUqeD4xZhAUxNt2vJog9YpjSgA1rYrHwwpdVrcDEJ",
+      "amount": { "rawNumber": "0165a0bc00" }
+    },
+    "meta": {
+      "contractAddress": "5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx",
+      "eventName": "BorrowVariable",
+      "timestamp": "1682425155000",
+      "blockNumber": 29377752,
+      "blockHash": "0x2899cb2cacba030e05ff36309026decfd882fec58ace18076c062f9470a1e42f"
+    }
+  }
+]
