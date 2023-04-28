@@ -49,3 +49,5 @@ build.log.html
 
 jscpd
 clippy.log
+
+*log.*.json
