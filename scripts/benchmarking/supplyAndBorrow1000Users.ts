@@ -28,7 +28,12 @@ function parseAmountToBN(amount: number | string) {
   return { amountParsed, amountParsedDecimals };
 }
 
-const convertToCurrencyDecimalsStatic = (symbol: SUPPORTED_CURRENCIES_TYPE, amount: BN | number | string): BN => {
+export const convertFromCurrencyDecimalsStatic = (symbol: SUPPORTED_CURRENCIES_TYPE, amount: BN | number | string) => {
+  const decimals = SUPPORTED_CURRENCIES_DECIMALS[symbol];
+  return Number(convertNumberOrStringToBN(amount)) / 10 ** decimals;
+};
+
+export const convertToCurrencyDecimalsStatic = (symbol: SUPPORTED_CURRENCIES_TYPE, amount: BN | number | string): BN => {
   const decimals = SUPPORTED_CURRENCIES_DECIMALS[symbol];
   const { amountParsed, amountParsedDecimals } = BN.isBN(amount) ? { amountParsed: amount, amountParsedDecimals: 0 } : parseAmountToBN(amount);
   try {
@@ -56,8 +61,48 @@ type StoredUser = {
 };
 
 type NumericArg = number | string | BN;
+export const E6 = Math.pow(10, 6);
+export const E6bn = new BN(Math.pow(10, 6).toString());
+export const E8 = Math.pow(10, 8);
+export const E8bn = new BN(Math.pow(10, 8).toString());
 export const E12 = Math.pow(10, 12);
+export const E12bn = new BN(Math.pow(10, 12).toString());
+export const E18 = Math.pow(10, 18);
+export const E18bn = new BN(Math.pow(10, 18).toString());
 export const toE12 = (num: NumericArg) => (typeof num === 'number' ? num : BN.isBN(num) ? num.toNumber() : parseInt(num)) * E12;
+export const toE8 = (num: NumericArg) => (typeof num === 'number' ? num : BN.isBN(num) ? num.toNumber() : parseInt(num)) * E8;
+export const fromE6 = (num: BN | string): number => {
+  if (typeof num === 'string') return parseFloat(num) / E6;
+  try {
+    return num.toNumber() / E6;
+  } catch (e) {
+    return num.divn(E6).toNumber();
+  }
+};
+export const fromE8 = (num: BN | string): number => {
+  if (typeof num === 'string') return parseFloat(num) / E8;
+  try {
+    return num.toNumber() / E8;
+  } catch (e) {
+    return num.divn(E6).toNumber();
+  }
+};
+export const fromE12 = (num: BN | string): number => {
+  if (typeof num === 'string') return parseFloat(num) / E12;
+  try {
+    return num.toNumber() / E12;
+  } catch (e) {
+    return num.div(new BN(E12)).toNumber();
+  }
+};
+export const fromE18 = (num: BN | string): number => {
+  if (typeof num === 'string') return parseFloat(num) / E18;
+  try {
+    return num.toNumber() / E18;
+  } catch (e) {
+    return num.div(new BN(E18)).toNumber();
+  }
+};
 
 const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
 

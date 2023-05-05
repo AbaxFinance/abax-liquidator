@@ -1,7 +1,7 @@
 export const measureTime = async <T>(sampleSize: number, markId: string, benchmarkFunc: () => Promise<T>) => {
   console.log('Starting benchmarking func...');
   const start = Date.now();
-  for (let i = 0; i <= sampleSize; i++) {
+  for (let i = 0; i < sampleSize; i++) {
     await benchmarkFunc();
   }
   const end = Date.now();
