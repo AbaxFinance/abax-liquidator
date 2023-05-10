@@ -9,8 +9,10 @@ import path from 'path';
 import LendingPool from 'typechain/contracts/lending_pool';
 import EVENTS_TYPE_DESCRIPTIONS from 'typechain/event-data/lending_pool.json';
 import { getEventTypeDescription } from 'typechain/shared/utils';
-import { apiProviderWrapper, argvObj, getContractObject, sleep } from './common';
+import { apiProviderWrapper, sleep } from './common';
 import PriorityQueue from 'p-queue/dist/priority-queue';
+import { getArgvObj } from '@abaxfinance/utils';
+import { getContractObject } from '@abaxfinance/contract-helpers';
 type FetchResult = { startBlockNumber: number; endBlockNumber: number; success: boolean };
 type EventsFromBlockResult = { contractName: string; blockNumber: number; eventsToReturn: EventWithMeta[]; error?: Error };
 
@@ -217,8 +219,10 @@ const RUN_CONTINUOUSLY = (process.env.RUN_CONTINUOUSLY == 'true' || process.env.
   const api = await apiProviderWrapper.getAndWaitForReady();
   const { startBlockNumber, endBlockNumber } = await getStartEndBlockNumbers(api);
 
-  const queue = new PQueue({ concurrency: 40, autoStart: false });
-  const lendingPool = await getLendingPool(seed);
+  const queue = new PQueue({ concurrency: 20, autoStart: false });
+
+  const signer = keyring.createFromUri(seed, {}, 'sr25519');
+  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
   const errorLog: FetchEventError[] = getPreviousErrors(lendingPool.abi.info.contract.name.toString());
   const eventLog: EventWithMeta[] = getPreviousEvents(lendingPool.abi.info.contract.name.toString());
 
@@ -239,7 +243,7 @@ const RUN_CONTINUOUSLY = (process.env.RUN_CONTINUOUSLY == 'true' || process.env.
 
   console.log('Continuous mode on. Running continuous scan...');
   await runContinously(endBlockNumber, api, errorLog, queue, lendingPool, eventLog, blockToResumeWithOnSIGINTContainer);
-})(argvObj).catch((e) => {
+})(getArgvObj()).catch((e) => {
   console.log(e);
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);
@@ -270,12 +274,6 @@ async function getStartEndBlockNumbers(api: ApiPromise) {
   return { startBlockNumber, endBlockNumber: endBlockNumberFromApi };
 }
 
-async function getLendingPool(seed: string) {
-  const signer = keyring.createFromUri(seed, {}, 'sr25519');
-  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer);
-  return lendingPool;
-}
-
 function addBlocksToTheQueue(
   errorLog: FetchEventError[],
   queue: PQueue<PriorityQueue, DefaultAddOptions>,
@@ -295,6 +293,7 @@ function addBlocksToTheQueue(
         .add(() => getEventsByContract(blockNumber, api, lendingPool))
         .then(createStoreEventsAndErrors(eventLog, errorLog, blockToResumeWithOnSIGINTContainer));
     }
+    fs.writeFileSync(getEventErrorsPath(lendingPool.name), JSON.stringify([]), 'utf-8');
   }
 
   for (let blockNumber = startBlockNumber; blockNumber < endBlockNumber; blockNumber++) {

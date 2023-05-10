@@ -1,16 +1,16 @@
+import { getContractObject, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
+import { E18bn, E6bn, E8, ReturnPromiseType, convertFromCurrencyDecimalsStatic, fromE6, getArgvObj } from '@abaxfinance/utils';
 import Keyring from '@polkadot/keyring';
+import BN from 'bn.js';
 import ccxt from 'ccxt';
 import chalk from 'chalk';
 import LendingPool from 'typechain/contracts/lending_pool';
 import PSP22Ownable from 'typechain/contracts/psp22_ownable';
 import { BorrowVariable } from 'typechain/event-types/lending_pool';
-import { AccountId, UserReserveData, UserConfig, AssetRules, ReserveData } from 'typechain/types-returns/lending_pool';
+import { AccountId, AssetRules, ReserveData, UserConfig, UserReserveData } from 'typechain/types-returns/lending_pool';
 import { measureTime } from './benchmarking/utils';
-import { apiProviderWrapper, argvObj, getContractObject, replaceRNBNPropsWithStrings, sleep } from './common';
+import { apiProviderWrapper, sleep } from './common';
 import { EventWithMeta, getPreviousEvents } from './fetchEvents';
-import { ReturnPromiseType } from './tsUtils';
-import { E12, E12bn, E18, E18bn, E6, E6bn, E8, E8bn, convertFromCurrencyDecimalsStatic, fromE6, toE8 } from './benchmarking/supplyAndBorrow1000Users';
-import BN from 'bn.js';
 
 const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
 
@@ -47,7 +47,7 @@ const keyring = new Keyring();
   const api = await apiProviderWrapper.getAndWaitForReady();
 
   const liquidationSignerSpender = keyring.createFromUri(seed, {}, 'sr25519');
-  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, liquidationSignerSpender);
+  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, liquidationSignerSpender, api);
 
   const eventLog: EventWithMeta[] = getPreviousEvents(lendingPool.abi.info.contract.name.toString());
 
@@ -127,7 +127,12 @@ const keyring = new Keyring();
           userChosenMarketRule,
         );
 
-        const reserveTokenToRepay = await getContractObject(PSP22Ownable, biggestLoanData.underlyingAddress.toString(), liquidationSignerSpender);
+        const reserveTokenToRepay = await getContractObject(
+          PSP22Ownable,
+          biggestLoanData.underlyingAddress.toString(),
+          liquidationSignerSpender,
+          api,
+        );
         await reserveTokenToRepay.tx.approve(lendingPool.address, biggestLoanData.amountRaw.muln(2));
 
         const queryRes = await lendingPool
@@ -165,7 +170,7 @@ const keyring = new Keyring();
 
   await api.disconnect();
   process.exit(0);
-})(argvObj).catch((e) => {
+})(getArgvObj()).catch((e) => {
   console.log(e);
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);

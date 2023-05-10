@@ -1,51 +1,21 @@
-import path from 'path';
-import fs from 'fs-extra';
+import { getContractObject } from '@abaxfinance/contract-helpers';
+import { convertToCurrencyDecimalsStatic, getArgvObj } from '@abaxfinance/utils';
+import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import { KeyringPair } from '@polkadot/keyring/types';
-import { mnemonicGenerate } from '@polkadot/util-crypto';
 import BN from 'bn.js';
 import chalk from 'chalk';
-import { apiProviderWrapper, argvObj, getContractObject } from 'scripts/common';
-import { getPreviousEvents } from 'scripts/fetchEvents';
-import LendingPool from 'typechain/contracts/lending_pool';
-import TestReservesMinter from 'typechain/contracts/test_reserves_minter';
-import PSP22Ownable from 'typechain/contracts/psp22_ownable';
-import { TestReservesMinterErrorBuilder } from 'typechain/types-returns/test_reserves_minter';
-import { isEqual, isNil, noConflict } from 'lodash';
+import fs from 'fs-extra';
 import PQueue from 'p-queue';
-function parseAmountToBN(amount: number | string) {
-  const countDecimals = function (value: number | string) {
-    const MAX_AMOUNT_OF_DECIMALS_JS_HANDLES = 17;
-    if (!value.toString().includes('.')) return 0;
-    const decimals = value.toString().split('.')[1].length || 0;
-    if (decimals > MAX_AMOUNT_OF_DECIMALS_JS_HANDLES) throw 'number of decimals exceed the number that JS parseFloat can handle';
-    return decimals;
-  };
-  const amountParsedFloat = parseFloat(amount.toString());
-  if (isNaN(amountParsedFloat)) return { amountParsed: new BN(0), amountParsedDecimals: 0 };
-  const amountParsedDecimals = countDecimals(amountParsedFloat);
-  const amountParsed = convertNumberOrStringToBN(amountParsedFloat * Math.pow(10, amountParsedDecimals));
-  return { amountParsed, amountParsedDecimals };
-}
-
-export const convertToCurrencyDecimalsStatic = (symbol: SUPPORTED_CURRENCIES_TYPE, amount: BN | number | string): BN => {
-  const decimals = SUPPORTED_CURRENCIES_DECIMALS[symbol];
-  const { amountParsed, amountParsedDecimals } = BN.isBN(amount) ? { amountParsed: amount, amountParsedDecimals: 0 } : parseAmountToBN(amount);
-  try {
-    return amountParsed.mul(convertNumberOrStringToBN(Math.pow(10, decimals - amountParsedDecimals)));
-  } catch {
-    return amountParsed.mul(convertNumberOrStringToBN(Math.pow(10, decimals - amountParsedDecimals).toString()));
-  }
-};
+import path from 'path';
+import { apiProviderWrapper } from 'scripts/common';
+import LendingPool from 'typechain/contracts/lending_pool';
+import PSP22Ownable from 'typechain/contracts/psp22_ownable';
 
 type StoredUser = {
   pair: KeyringPair;
   mnemonic: string;
 };
-
-type NumericArg = number | string | BN;
-export const E6 = Math.pow(10, 6);
-export const fromE6 = (num: NumericArg) => (typeof num === 'number' ? num : BN.isBN(num) ? num.toNumber() : parseInt(num)) * E6;
 
 const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
 
@@ -97,7 +67,7 @@ const keyring = new Keyring();
   const api = await apiProviderWrapper.getAndWaitForReady();
 
   const signer = keyring.createFromUri(seed, {}, 'sr25519');
-  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer);
+  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
 
   const storedUsers = getStoredUsers();
   const usersToUse = storedUsers.map((su) => ({ mnemonic: su.mnemonic, pair: keyring.addFromUri(su.mnemonic, {}, 'sr25519') }));
@@ -108,7 +78,7 @@ const keyring = new Keyring();
   //   await borrowUntilUndercollateralized(usersToUse, i, lendingPool);
   // }
   for (let i = 0; i < 10; i++) {
-    queue.add(() => borrowUntilUndercollateralized(usersToUse, i, lendingPool));
+    queue.add(() => borrowUntilUndercollateralized(api, usersToUse, i, lendingPool));
   }
 
   queue.start();
@@ -117,13 +87,18 @@ const keyring = new Keyring();
   console.log('Finish');
   await api.disconnect();
   process.exit(0);
-})(argvObj).catch((e) => {
+})(getArgvObj()).catch((e) => {
   console.log(e);
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);
 });
 
-async function borrowUntilUndercollateralized(usersToUse: { pair: KeyringPair; mnemonic: string }[], i: number, lendingPool: LendingPool) {
+async function borrowUntilUndercollateralized(
+  api: ApiPromise,
+  usersToUse: { pair: KeyringPair; mnemonic: string }[],
+  i: number,
+  lendingPool: LendingPool,
+) {
   const user = usersToUse[i];
   if (i % 50 === 0) console.log(new Date(), 'Borrow until undercollateralized', `${i} users done`);
   const userSignedLendingPool = lendingPool.withSigner(user.pair);
@@ -146,10 +121,10 @@ async function borrowUntilUndercollateralized(usersToUse: { pair: KeyringPair; m
     if (collateralCoeffRes && collateralCoeffRes[1].rawNumber.gtn(0)) {
       collateralCoefficient = collateralCoeffRes[1].rawNumber;
       try {
-        const testUSDC = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair);
-        const testDOT = await getContractObject(PSP22Ownable, reserveDatas.BTC_TEST, user.pair);
-        const testEth = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair);
-        const testAzero = await getContractObject(PSP22Ownable, reserveDatas.BTC_TEST, user.pair);
+        const testUSDC = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+        const testDOT = await getContractObject(PSP22Ownable, reserveDatas.BTC_TEST, user.pair, api);
+        const testEth = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+        const testAzero = await getContractObject(PSP22Ownable, reserveDatas.BTC_TEST, user.pair, api);
         const usdcRes = await userSignedLendingPool.query.borrow(
           testUSDC.address,
           user.pair.address,

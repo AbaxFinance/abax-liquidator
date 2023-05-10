@@ -1,56 +1,26 @@
-import path from 'path';
-import fs from 'fs-extra';
+import { getContractObject } from '@abaxfinance/contract-helpers';
+import { U128_MAX_VALUE, convertToCurrencyDecimalsStatic, getArgvObj, toE12 } from '@abaxfinance/utils';
+import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import BN from 'bn.js';
 import chalk from 'chalk';
-import { apiProviderWrapper, argvObj, getContractObject } from 'scripts/common';
-import { getPreviousEvents } from 'scripts/fetchEvents';
-import LendingPool from 'typechain/contracts/lending_pool';
-import TestReservesMinter from 'typechain/contracts/test_reserves_minter';
-import PSP22Ownable from 'typechain/contracts/psp22_ownable';
-import { TestReservesMinterErrorBuilder } from 'typechain/types-returns/test_reserves_minter';
-import { isEqual, isNil, noConflict } from 'lodash';
+import fs from 'fs-extra';
+import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
-function parseAmountToBN(amount: number | string) {
-  const countDecimals = function (value: number | string) {
-    const MAX_AMOUNT_OF_DECIMALS_JS_HANDLES = 17;
-    if (!value.toString().includes('.')) return 0;
-    const decimals = value.toString().split('.')[1].length || 0;
-    if (decimals > MAX_AMOUNT_OF_DECIMALS_JS_HANDLES) throw 'number of decimals exceed the number that JS parseFloat can handle';
-    return decimals;
-  };
-  const amountParsedFloat = parseFloat(amount.toString());
-  if (isNaN(amountParsedFloat)) return { amountParsed: new BN(0), amountParsedDecimals: 0 };
-  const amountParsedDecimals = countDecimals(amountParsedFloat);
-  const amountParsed = convertNumberOrStringToBN(amountParsedFloat * Math.pow(10, amountParsedDecimals));
-  return { amountParsed, amountParsedDecimals };
-}
+import path from 'path';
+import { apiProviderWrapper } from 'scripts/common';
+import LendingPool from 'typechain/contracts/lending_pool';
+import PSP22Ownable from 'typechain/contracts/psp22_ownable';
+import TestReservesMinter from 'typechain/contracts/test_reserves_minter';
+import { TestReservesMinterErrorBuilder } from 'typechain/types-returns/test_reserves_minter';
 
-export const convertFromCurrencyDecimalsStatic = (symbol: SUPPORTED_CURRENCIES_TYPE, amount: BN | number | string) => {
-  const decimals = SUPPORTED_CURRENCIES_DECIMALS[symbol];
-  return Number(convertNumberOrStringToBN(amount)) / 10 ** decimals;
-};
-
-export const convertToCurrencyDecimalsStatic = (symbol: SUPPORTED_CURRENCIES_TYPE, amount: BN | number | string): BN => {
-  const decimals = SUPPORTED_CURRENCIES_DECIMALS[symbol];
-  const { amountParsed, amountParsedDecimals } = BN.isBN(amount) ? { amountParsed: amount, amountParsedDecimals: 0 } : parseAmountToBN(amount);
-  try {
-    return amountParsed.mul(convertNumberOrStringToBN(Math.pow(10, decimals - amountParsedDecimals)));
-  } catch {
-    return amountParsed.mul(convertNumberOrStringToBN(Math.pow(10, decimals - amountParsedDecimals).toString()));
-  }
-};
-export const U128_MAX_VALUE = new BN('340282366920938463463374607431768211455');
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);
 
 export function getRandomSigner(keyring: Keyring) {
   const mnemonic = mnemonicGenerate();
   const pair = keyring.addFromUri(mnemonic, {}, 'sr25519');
-
-  //   console.log(`Generate random signer: ${pair.address}`);
-  //   console.log(`Mnemonic: ${mnemonic}`);
 
   return { pair, mnemonic };
 }
@@ -58,50 +28,6 @@ export function getRandomSigner(keyring: Keyring) {
 type StoredUser = {
   pair: KeyringPair;
   mnemonic: string;
-};
-
-type NumericArg = number | string | BN;
-export const E6 = Math.pow(10, 6);
-export const E6bn = new BN(Math.pow(10, 6).toString());
-export const E8 = Math.pow(10, 8);
-export const E8bn = new BN(Math.pow(10, 8).toString());
-export const E12 = Math.pow(10, 12);
-export const E12bn = new BN(Math.pow(10, 12).toString());
-export const E18 = Math.pow(10, 18);
-export const E18bn = new BN(Math.pow(10, 18).toString());
-export const toE12 = (num: NumericArg) => (typeof num === 'number' ? num : BN.isBN(num) ? num.toNumber() : parseInt(num)) * E12;
-export const toE8 = (num: NumericArg) => (typeof num === 'number' ? num : BN.isBN(num) ? num.toNumber() : parseInt(num)) * E8;
-export const fromE6 = (num: BN | string): number => {
-  if (typeof num === 'string') return parseFloat(num) / E6;
-  try {
-    return num.toNumber() / E6;
-  } catch (e) {
-    return num.divn(E6).toNumber();
-  }
-};
-export const fromE8 = (num: BN | string): number => {
-  if (typeof num === 'string') return parseFloat(num) / E8;
-  try {
-    return num.toNumber() / E8;
-  } catch (e) {
-    return num.divn(E6).toNumber();
-  }
-};
-export const fromE12 = (num: BN | string): number => {
-  if (typeof num === 'string') return parseFloat(num) / E12;
-  try {
-    return num.toNumber() / E12;
-  } catch (e) {
-    return num.div(new BN(E12)).toNumber();
-  }
-};
-export const fromE18 = (num: BN | string): number => {
-  if (typeof num === 'string') return parseFloat(num) / E18;
-  try {
-    return num.toNumber() / E18;
-  } catch (e) {
-    return num.div(new BN(E18)).toNumber();
-  }
 };
 
 const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
@@ -167,7 +93,8 @@ const keyring = new Keyring();
   const api = await apiProviderWrapper.getAndWaitForReady();
 
   const signer = keyring.createFromUri(seed, {}, 'sr25519');
-  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer);
+
+  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
 
   const storedUsers = getStoredUsers();
   const shouldInitializeUsers = storedUsers.length === 0;
@@ -187,7 +114,7 @@ const keyring = new Keyring();
   queue.start();
   await queue.onIdle();
 
-  const testReservesMinter = await getContractObject(TestReservesMinter, TEST_RESERVES_MINTER, signer);
+  const testReservesMinter = await getContractObject(TestReservesMinter, TEST_RESERVES_MINTER, signer, api);
 
   for (let i = 0; i < usersToUse.length; i++) {
     queue.add(() => mintTestTokensForUser(usersToUse, i, testReservesMinter));
@@ -196,7 +123,7 @@ const keyring = new Keyring();
   await queue.onIdle();
 
   for (let i = 0; i < usersToUse.length; i++) {
-    queue.add(() => approveSupplyAndBorrow(usersToUse, i, lendingPool));
+    queue.add(() => approveSupplyAndBorrow(api, usersToUse, i, lendingPool));
   }
 
   queue.start();
@@ -205,7 +132,7 @@ const keyring = new Keyring();
   console.log('Finish');
   await api.disconnect();
   process.exit(0);
-})(argvObj).catch((e) => {
+})(getArgvObj()).catch((e) => {
   console.log(e);
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);
@@ -252,7 +179,7 @@ async function mintTestTokensForUser(usersToUse: { pair: KeyringPair; mnemonic: 
   }
 }
 
-async function approveSupplyAndBorrow(usersToUse: { pair: KeyringPair; mnemonic: string }[], i: number, lendingPool: LendingPool) {
+async function approveSupplyAndBorrow(api: ApiPromise, usersToUse: { pair: KeyringPair; mnemonic: string }[], i: number, lendingPool: LendingPool) {
   const user = usersToUse[i];
   if (i % 50 === 0) console.log(new Date(), 'Approve & Supply & Borrow', `${i} users done`);
   const userSignedLendingPool = lendingPool.withSigner(user.pair);
@@ -263,8 +190,8 @@ async function approveSupplyAndBorrow(usersToUse: { pair: KeyringPair; mnemonic:
 
   if (!collateralCoeffRes || collateralCoeffRes[1].rawNumber.eqn(0)) {
     try {
-      const testEth = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair);
-      const testAzero = await getContractObject(PSP22Ownable, reserveDatas.AZERO_TEST, user.pair);
+      const testEth = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+      const testAzero = await getContractObject(PSP22Ownable, reserveDatas.AZERO_TEST, user.pair, api);
       (await testEth.query.approve(lendingPool.address, SAFE_ONE_TIME_APPROVAL_AMOUNT)).value.unwrapRecursively();
       await testEth.tx.approve(lendingPool.address, SAFE_ONE_TIME_APPROVAL_AMOUNT);
       (await testAzero.query.approve(lendingPool.address, SAFE_ONE_TIME_APPROVAL_AMOUNT)).value.unwrapRecursively();
