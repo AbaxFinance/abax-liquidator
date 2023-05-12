@@ -6,13 +6,11 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import PQueue, { DefaultAddOptions } from 'p-queue';
 import path from 'path';
-import LendingPool from 'typechain/contracts/lending_pool';
-import EVENTS_TYPE_DESCRIPTIONS from 'typechain/event-data/lending_pool.json';
-import { getEventTypeDescription } from 'typechain/shared/utils';
+import { LendingPool, getEventTypeDescription } from '@abaxfinance/contract-helpers';
 import { apiProviderWrapper, sleep } from './common';
 import PriorityQueue from 'p-queue/dist/priority-queue';
 import { getArgvObj } from '@abaxfinance/utils';
-import { getContractObject } from '@abaxfinance/contract-helpers';
+import { getContractObject, EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL } from '@abaxfinance/contract-helpers';
 type FetchResult = { startBlockNumber: number; endBlockNumber: number; success: boolean };
 type EventsFromBlockResult = { contractName: string; blockNumber: number; eventsToReturn: EventWithMeta[]; error?: Error };
 
@@ -173,7 +171,7 @@ async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
             _event[ev.args[argI].name] = eventArgs[argI].toJSON();
           }
           const eventName = ev.identifier.toString();
-          const eventRet = handleEventReturn(_event, getEventTypeDescription(eventName, EVENTS_TYPE_DESCRIPTIONS));
+          const eventRet = handleEventReturn(_event, getEventTypeDescription(eventName, EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL));
 
           const eventRetWithMeta = {
             event: eventRet,

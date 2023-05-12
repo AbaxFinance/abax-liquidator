@@ -9,8 +9,8 @@ import fs from 'fs-extra';
 import PQueue from 'p-queue';
 import path from 'path';
 import { apiProviderWrapper } from 'scripts/common';
-import LendingPool from 'typechain/contracts/lending_pool';
-import PSP22Ownable from 'typechain/contracts/psp22_ownable';
+import { LendingPool } from '@abaxfinance/contract-helpers';
+import { Psp22Ownable } from '@abaxfinance/contract-helpers';
 
 type StoredUser = {
   pair: KeyringPair;
@@ -121,10 +121,10 @@ async function borrowUntilUndercollateralized(
     if (collateralCoeffRes && collateralCoeffRes[1].rawNumber.gtn(0)) {
       collateralCoefficient = collateralCoeffRes[1].rawNumber;
       try {
-        const testUSDC = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair, api);
-        const testDOT = await getContractObject(PSP22Ownable, reserveDatas.BTC_TEST, user.pair, api);
-        const testEth = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair, api);
-        const testAzero = await getContractObject(PSP22Ownable, reserveDatas.BTC_TEST, user.pair, api);
+        const testUSDC = await getContractObject(Psp22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+        const testDOT = await getContractObject(Psp22Ownable, reserveDatas.BTC_TEST, user.pair, api);
+        const testEth = await getContractObject(Psp22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+        const testAzero = await getContractObject(Psp22Ownable, reserveDatas.BTC_TEST, user.pair, api);
         const usdcRes = await userSignedLendingPool.query.borrow(
           testUSDC.address,
           user.pair.address,

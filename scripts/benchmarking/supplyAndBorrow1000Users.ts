@@ -11,10 +11,8 @@ import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
 import path from 'path';
 import { apiProviderWrapper } from 'scripts/common';
-import LendingPool from 'typechain/contracts/lending_pool';
-import PSP22Ownable from 'typechain/contracts/psp22_ownable';
-import TestReservesMinter from 'typechain/contracts/test_reserves_minter';
-import { TestReservesMinterErrorBuilder } from 'typechain/types-returns/test_reserves_minter';
+import { LendingPool } from '@abaxfinance/contract-helpers';
+import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder } from '@abaxfinance/contract-helpers';
 
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);
 
@@ -190,8 +188,8 @@ async function approveSupplyAndBorrow(api: ApiPromise, usersToUse: { pair: Keyri
 
   if (!collateralCoeffRes || collateralCoeffRes[1].rawNumber.eqn(0)) {
     try {
-      const testEth = await getContractObject(PSP22Ownable, reserveDatas.WETH_TEST, user.pair, api);
-      const testAzero = await getContractObject(PSP22Ownable, reserveDatas.AZERO_TEST, user.pair, api);
+      const testEth = await getContractObject(Psp22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+      const testAzero = await getContractObject(Psp22Ownable, reserveDatas.AZERO_TEST, user.pair, api);
       (await testEth.query.approve(lendingPool.address, SAFE_ONE_TIME_APPROVAL_AMOUNT)).value.unwrapRecursively();
       await testEth.tx.approve(lendingPool.address, SAFE_ONE_TIME_APPROVAL_AMOUNT);
       (await testAzero.query.approve(lendingPool.address, SAFE_ONE_TIME_APPROVAL_AMOUNT)).value.unwrapRecursively();

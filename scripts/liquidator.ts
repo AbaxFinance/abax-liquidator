@@ -1,13 +1,10 @@
-import { getContractObject, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
+import { MarketRule, getContractObject, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
 import { E18bn, E6bn, E8, ReturnPromiseType, convertFromCurrencyDecimalsStatic, fromE6, getArgvObj } from '@abaxfinance/utils';
 import Keyring from '@polkadot/keyring';
 import BN from 'bn.js';
 import ccxt from 'ccxt';
 import chalk from 'chalk';
-import LendingPool from 'typechain/contracts/lending_pool';
-import PSP22Ownable from 'typechain/contracts/psp22_ownable';
-import { BorrowVariable } from 'typechain/event-types/lending_pool';
-import { AccountId, AssetRules, ReserveData, UserConfig, UserReserveData } from 'typechain/types-returns/lending_pool';
+import { Psp22Ownable, LendingPool, BorrowVariable, AccountId, ReserveData, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
 import { measureTime } from './benchmarking/utils';
 import { apiProviderWrapper, sleep } from './common';
 import { EventWithMeta, getPreviousEvents } from './fetchEvents';
@@ -30,7 +27,6 @@ const MARKET_SYMBOLS_BY_RESERVE_NAME = {
   DOT_TEST: 'DOT/USDT',
 } as const;
 type RESERVE_NAMES_TYPE = keyof typeof MARKET_SYMBOLS_BY_RESERVE_NAME;
-type MarketRule = (AssetRules | null)[];
 const RESERVE_NAMES = Object.keys(RESERVE_ADDRESSES_BY_NAME) as (keyof typeof RESERVE_ADDRESSES_BY_NAME)[];
 
 const getReserveName = (addr: string) =>
@@ -128,7 +124,7 @@ const keyring = new Keyring();
         );
 
         const reserveTokenToRepay = await getContractObject(
-          PSP22Ownable,
+          Psp22Ownable,
           biggestLoanData.underlyingAddress.toString(),
           liquidationSignerSpender,
           api,

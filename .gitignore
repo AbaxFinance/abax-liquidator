@@ -40,14 +40,4 @@ yarn.lock
 .cargo/config.toml
 
 
-#typechain
-/typechain
-
-*deployedContracts.json
-build.log
-build.log.html
-
-jscpd
-clippy.log
-
 *log.*.json
