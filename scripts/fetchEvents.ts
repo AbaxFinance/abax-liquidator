@@ -39,11 +39,11 @@ interface IWithAbi {
   abi: Abi;
 }
 
-const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
+const LENDING_POOL_ADDRESS = '5CckcttmupmDiZxELpCgnMwWYBBjz8vV5wjhBaPEoG5fnubH';
+const START_BLOCK_NUMBER_EARLIEST = 36334999;
 
 const keyring = new Keyring();
 
-const START_BLOCK_NUMBER_EARLIEST = 29334999;
 const outputPathBase = path.join(path.parse(__filename).dir, 'scan_results');
 const lastResultsPath = path.join(outputPathBase, 'whole_run_results.json');
 
