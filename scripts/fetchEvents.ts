@@ -10,7 +10,12 @@ import { AToken, LendingPool, VToken, getEventTypeDescription, replaceRNBNPropsW
 import { apiProviderWrapper, sleep } from './common';
 import PriorityQueue from 'p-queue/dist/priority-queue';
 import { getArgvObj } from '@abaxfinance/utils';
-import { getContractObject, EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL } from '@abaxfinance/contract-helpers';
+import {
+  getContractObject,
+  EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL,
+  EVENT_DATA_TYPE_DESCRIPTIONS_A_TOKEN,
+  EVENT_DATA_TYPE_DESCRIPTIONS_V_TOKEN,
+} from '@abaxfinance/contract-helpers';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { TimeSpanFormatter } from 'scripts/benchmarking/utils';
 import LargeSet from 'large-set';
@@ -53,8 +58,6 @@ const ADOT_ADDRESS = '5HYAH78h6c7nzBraUAX2fyMLqk8EwVTohsj7xCzQUBqx7WQm';
 const VDOT_ADDRESS = '5EBdpgCVH34siyNv51hFfJSK3udow214W6JFScf4reLhqzqX';
 const START_BLOCK_NUMBER_EARLIEST = 36500600;
 
-const keyring = new Keyring();
-
 const outputPathBase = path.join(path.parse(__filename).dir, 'scan_results');
 const lastResultsPath = path.join(outputPathBase, 'whole_run_results.json');
 fs.ensureDir(outputPathBase);
@@ -69,13 +72,13 @@ const getLastFetchResult = async (): Promise<Partial<FetchResult>> => {
   }
 };
 
-export const getPreviousEvents = (contractName: string) => {
+export const getPreviousEvents = () => {
   try {
-    const eventsPath = getEventsLogPath(contractName);
+    const eventsPath = getEventsLogPath();
     if (!fs.existsSync(eventsPath)) return [];
     return JSON.parse(fs.readFileSync(eventsPath, 'utf8')) as EventWithMeta[];
   } catch (e) {
-    console.warn(`Unable to retrieve previous events for ${contractName}`);
+    console.warn(`Unable to retrieve eventLog`);
     return [];
   }
 };
@@ -128,7 +131,7 @@ async function createStoreEventsAndErrors(api: ApiPromise, eventLog: EventWithMe
       for (const [contractName, events] of Object.entries(result.eventsByContractAddress)) {
         eventLog.push(...events);
         console.log(new Date(), `pushed ${events.length} events for ${contractName}`);
-        fs.writeFileSync(getEventsLogPath(contractName), JSON.stringify(eventLog, null, 2), 'utf-8');
+        fs.writeFileSync(getEventsLogPath(), JSON.stringify(eventLog, null, 2), 'utf-8');
       }
     }
     if (blockToResumeWithOnSIGINTContainer.blockNumber) blockToResumeWithOnSIGINTContainer.blockNumber = result.blockNumber;
@@ -159,8 +162,8 @@ function getEventPendingBlocksPath() {
   return path.join(outputPathBase, `pendingBlocks.json`);
 }
 
-function getEventsLogPath(contractName: string) {
-  return path.join(outputPathBase, `${contractName}__events.json`);
+function getEventsLogPath() {
+  return path.join(outputPathBase, `eventLog.json`);
 }
 
 async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
@@ -190,12 +193,21 @@ async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
             _event[ev.args[argI].name] = eventArgs[argI].toJSON();
           }
           const eventName = ev.identifier.toString();
-          const eventRet = handleEventReturn(_event, getEventTypeDescription(eventName, EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL));
+          const contractName = contract.abi.info.contract.name.toString();
+
+          //TODO
+          const eventDataTypeDescriptionToUse =
+            contractName === 'a_token'
+              ? EVENT_DATA_TYPE_DESCRIPTIONS_A_TOKEN
+              : contractName === 'v_token'
+              ? EVENT_DATA_TYPE_DESCRIPTIONS_V_TOKEN
+              : EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL;
+          const eventRet = handleEventReturn(_event, getEventTypeDescription(eventName, eventDataTypeDescriptionToUse));
 
           const eventRetWithMeta = {
             event: eventRet,
             meta: {
-              contractName: contract.abi.info.contract.name.toString(),
+              contractName,
               contractAddress: address.toString() as string,
               eventName,
               timestamp: timestamp.toString(),
@@ -261,6 +273,7 @@ function addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(
       .add(() => getEventsByContract(blockNumber, api, contracts))
       .then((res) => createStoreEventsAndErrors(api, eventLog).then((handleFunc) => handleFunc(res)))
       .catch((e) => {
+        console.log(e);
         fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
         if (blockToResumeWithOnSIGINTContainer.blockNumber) storeLastSuccessfulBlock(blockToResumeWithOnSIGINTContainer.blockNumber);
         process.exit(1);
@@ -306,6 +319,7 @@ const CHUNK_SIZE = 10_000;
   if (!seed) throw 'could not determine seed';
   const api = await apiProviderWrapper.getAndWaitForReady();
 
+  const keyring = new Keyring();
   const signer = keyring.createFromUri(seed, {}, 'sr25519');
   const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
   const aTokens = await Promise.all(
@@ -320,7 +334,10 @@ const CHUNK_SIZE = 10_000;
   );
   const contracts = [lendingPool, ...aTokens, ...vTokens];
   //TODO DB
-  eventLog.push(...getPreviousEvents(lendingPool.abi.info.contract.name.toString()));
+  const prevLog = getPreviousEvents();
+  for (const e of prevLog) {
+    eventLog.push(e);
+  }
   ensureQueueItemsFinishOnProcessExitSignal(queue);
   const set = new LargeSet<number>();
   getPendingBlocks().forEach((b) => set.add(b));
@@ -331,6 +348,7 @@ const CHUNK_SIZE = 10_000;
 
   try {
     for (let i = 0; i < pendingBlocks.length; i += CHUNK_SIZE) {
+      fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
       const chunk = pendingBlocks.slice(i, i + CHUNK_SIZE);
       addBlockRangeToTheQueue(queue, api, contracts, eventLog, chunk);
 
@@ -341,16 +359,19 @@ const CHUNK_SIZE = 10_000;
       queue.pause();
     }
   } catch (e) {
+    fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
     console.log('error while analyzing past blocks...');
     console.log(e);
     process.exit(1);
   }
 
   const res = await getStartEndBlockNumbers(api);
+  fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
 
   blockToResumeWithOnSIGINTContainer.blockNumber = res.startBlockNumber;
   try {
     const blocksToAdd = arrayRange(res.startBlockNumber, res.endBlockNumber);
+    console.warn(`Amount of blocks to add to catch up to 'now': ${blocksToAdd.length}`);
     for (let i = 0; i < blocksToAdd.length; i += CHUNK_SIZE) {
       const chunk = blocksToAdd.slice(i, i + CHUNK_SIZE);
       for (const b of chunk) {
@@ -381,6 +402,7 @@ const CHUNK_SIZE = 10_000;
   await runContinously(res.endBlockNumber, api, queue, contracts, eventLog);
 })(getArgvObj()).catch((e) => {
   console.log('UNHANDLED', e);
+  fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);
 });

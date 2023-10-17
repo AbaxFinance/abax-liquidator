@@ -20,10 +20,16 @@ export class ApiProviderWrapper {
   };
 
   getAndWaitForReady = async (useCache: boolean = true) => {
-    if (!useCache || !this.wsProvider) this.wsProvider = new WsProvider(this.webSocketEndpoint);
+    if (!useCache || !this.wsProvider) {
+      await this.wsProvider?.disconnect();
+      this.wsProvider = null;
+      this.wsProvider = new WsProvider(this.webSocketEndpoint);
+    }
     if (!useCache || !this.api) {
       const newApi = await ApiPromise.create({ provider: this.wsProvider, noInitWarn: true, throwOnConnect: true });
       await newApi.isReady;
+      await this.api?.disconnect();
+      this.api = null;
       this.api = newApi;
     }
 
