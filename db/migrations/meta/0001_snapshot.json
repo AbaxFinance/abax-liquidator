@@ -1,0 +1,331 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "id": "fea556cd-1b47-45d7-89ec-f5bdfbec765b",
+  "prevId": "f7a800ed-6977-4e0e-a8f0-315a45cb6b87",
+  "tables": {
+    "events": {
+      "name": "events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "contractName": {
+          "name": "contractName",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contractAddress": {
+          "name": "contractAddress",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blockNumber": {
+          "name": "blockNumber",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blockHash": {
+          "name": "blockHash",
+          "type": "varchar(66)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data": {
+          "name": "data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "name_idx": {
+          "name": "name_idx",
+          "columns": ["name"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "lp_reserveDatas": {
+      "name": "lp_reserveDatas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "maximalTotalDeposit": {
+          "name": "maximalTotalDeposit",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "maximalTotalDebt": {
+          "name": "maximalTotalDebt",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "minimalCollateral": {
+          "name": "minimalCollateral",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "minimalDebt": {
+          "name": "minimalDebt",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cumulativeDepositIndexE18": {
+          "name": "cumulativeDepositIndexE18",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cumulativeDebtIndexE18": {
+          "name": "cumulativeDebtIndexE18",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decimals": {
+          "name": "decimals",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tokenPriceE8": {
+          "name": "tokenPriceE8",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activated": {
+          "name": "activated",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freezed": {
+          "name": "freezed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalDeposit": {
+          "name": "totalDeposit",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currentDepositRateE24": {
+          "name": "currentDepositRateE24",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalDebt": {
+          "name": "totalDebt",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currentDebtRateE24": {
+          "name": "currentDebtRateE24",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "indexesUpdateTimestamp": {
+          "name": "indexesUpdateTimestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interestRateModel": {
+          "name": "interestRateModel",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "incomeForSuppliersPartE6": {
+          "name": "incomeForSuppliersPartE6",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "address_idx": {
+          "name": "address_idx",
+          "columns": ["address"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "addr": {
+          "name": "addr",
+          "nullsNotDistinct": false,
+          "columns": ["address"]
+        }
+      }
+    },
+    "lp_userConfigs": {
+      "name": "lp_userConfigs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deposits": {
+          "name": "deposits",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "collaterals": {
+          "name": "collaterals",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "borrows": {
+          "name": "borrows",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marketRuleId": {
+          "name": "marketRuleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "address_idx": {
+          "name": "address_idx",
+          "columns": ["address"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "addr": {
+          "name": "addr",
+          "nullsNotDistinct": false,
+          "columns": ["address"]
+        }
+      }
+    },
+    "lp_userDatas": {
+      "name": "lp_userDatas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reserveAddress": {
+          "name": "reserveAddress",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deposit": {
+          "name": "deposit",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appliedCumulativeDepositIndexE18": {
+          "name": "appliedCumulativeDepositIndexE18",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appliedCumulativeDebtIndexE18": {
+          "name": "appliedCumulativeDebtIndexE18",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "address_idx": {
+          "name": "address_idx",
+          "columns": ["address"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "addr": {
+          "name": "addr",
+          "nullsNotDistinct": false,
+          "columns": ["address", "reserveAddress"]
+        }
+      }
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}
