@@ -15,9 +15,11 @@
     "allowJs": false,
     "checkJs": false,
     "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "find-process/*": ["find-process/*"]
+      "@polkadot/api/augment": ["./src/azero-testnet/interfaces/augment-api.ts"],
+      "@polkadot/types/augment": ["./src/azero-testnet/interfaces/augment-types.ts"]
     }
   },
   "include": ["**/*.ts"],
