@@ -22,9 +22,9 @@ import { getPreviousEvents } from 'scripts/fetchEvents';
         ['timestamp', 'lastEventTimestamp', 'totalLength', 'uniqueAddresses'],
         [new Date().toISOString(), lastEventTs.meta.timestampISO, events.length, [...new Set(addresses)].length],
       ];
+      console.clear();
       console.table(res);
       await sleep(15 * 1000);
-      console.clear();
     } catch (e) {
       console.log(new Date().toISOString(), 'error occured, retrying...');
     }
