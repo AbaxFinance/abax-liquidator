@@ -1,5 +1,5 @@
 //import { InferSelectModel } from 'drizzle-orm';
-import { integer, pgTable, serial, uniqueIndex, varchar, jsonb, unique, boolean } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, uniqueIndex, varchar, jsonb, boolean, doublePrecision, timestamp } from 'drizzle-orm/pg-core';
 
 export const events = pgTable(
   'events',
@@ -20,6 +20,52 @@ export const events = pgTable(
   },
 );
 
+export const actorsJobs = pgTable(
+  'actors_states',
+  {
+    id: serial('id').primaryKey(),
+    actor: varchar('actor', { length: 64 }).notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    jobType: varchar('jobType', { length: 128 }).notNull(),
+  },
+  (c) => {
+    return {
+      actorIndex: uniqueIndex('actor_idx').on(c.actor),
+    };
+  },
+);
+
+export const lpTrackingData = pgTable(
+  'lp_trackingData',
+  {
+    id: serial('id').primaryKey(),
+    address: varchar('address', { length: 48 }).notNull(),
+    updatePriority: integer('updatePriority').notNull(),
+    healthFactor: doublePrecision('helathFactor').notNull(),
+    updateAtLatest: integer('updateAtLatest').notNull(),
+  },
+  (c) => {
+    return {
+      addressIndex: uniqueIndex('address_idx').on(c.address),
+    };
+  },
+);
+
+export const lpUserMiscData = pgTable(
+  'lp_userMiscData',
+  {
+    id: serial('id').primaryKey(),
+    address: varchar('address', { length: 48 }).notNull(),
+    updatePriority: integer('updatePriority').notNull(),
+    healthFactor: doublePrecision('helathFactor').notNull(),
+  },
+  (c) => {
+    return {
+      addressIndex: uniqueIndex('address_idx').on(c.address),
+    };
+  },
+);
+
 export const lpUserDatas = pgTable(
   'lp_userDatas',
   {
@@ -27,13 +73,14 @@ export const lpUserDatas = pgTable(
     address: varchar('address', { length: 48 }).notNull(),
     reserveAddress: varchar('reserveAddress', { length: 48 }).notNull(),
     deposit: varchar('deposit', { length: 256 }).notNull(),
+    debt: varchar('debt', { length: 256 }).notNull(),
     appliedCumulativeDepositIndexE18: varchar('appliedCumulativeDepositIndexE18', { length: 256 }).notNull(),
     appliedCumulativeDebtIndexE18: varchar('appliedCumulativeDebtIndexE18', { length: 256 }).notNull(),
   },
   (c) => {
     return {
       addressIndex: uniqueIndex('address_idx').on(c.address),
-      unq: unique('addr').on(c.address, c.reserveAddress),
+      addressReserveIndex: uniqueIndex('address_reserve_idx').on(c.address, c.reserveAddress),
     };
   },
 );
