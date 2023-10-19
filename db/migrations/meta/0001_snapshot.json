@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "da26101f-9f4f-4dce-ab4c-7d845b6aad50",
-  "prevId": "3373939b-06d6-4297-a9b4-860e64761a4a",
+  "id": "2884cea4-f616-4726-92a2-cbfd7af4ff49",
+  "prevId": "167426ee-9fe3-4fcb-a16d-9300b14af652",
   "tables": {
     "actors_states": {
       "name": "actors_states",
@@ -48,6 +48,12 @@
       "name": "asset_prices",
       "schema": "",
       "columns": {
+        "name": {
+          "name": "name",
+          "type": "varchar(48)",
+          "primaryKey": true,
+          "notNull": true
+        },
         "address": {
           "name": "address",
           "type": "varchar(48)",
@@ -68,21 +74,28 @@
         },
         "updateTimestamp": {
           "name": "updateTimestamp",
-          "type": "integer",
+          "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
         "name_idx": {
           "name": "name_idx",
-          "columns": ["address"],
+          "columns": ["name"],
           "isUnique": true
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "asset_prices_address_unique": {
+          "name": "asset_prices_address_unique",
+          "nullsNotDistinct": false,
+          "columns": ["address"]
+        }
+      }
     },
     "events": {
       "name": "events",

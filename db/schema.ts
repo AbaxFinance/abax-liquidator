@@ -1,5 +1,5 @@
 import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { integer, pgTable, serial, uniqueIndex, varchar, jsonb, boolean, doublePrecision, timestamp } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, uniqueIndex, varchar, jsonb, boolean, doublePrecision, timestamp, unique } from 'drizzle-orm/pg-core';
 
 export const events = pgTable(
   'events',
@@ -142,11 +142,11 @@ export const lpReserveDatas = pgTable(
 export const assetPrices = pgTable(
   'asset_prices',
   {
-    name: varchar('address', { length: 48 }).primaryKey(),
-    address: varchar('address', { length: 48 }).notNull(),
+    name: varchar('name', { length: 48 }).primaryKey(),
+    address: varchar('address', { length: 48 }).unique().notNull(),
     currentPriceE8: varchar('currentPriceE8', { length: 128 }).notNull(),
     anchorPriceE8: varchar('anchorPriceE8', { length: 128 }).notNull(),
-    updateTimestamp: integer('updateTimestamp').notNull(),
+    updateTimestamp: timestamp('updateTimestamp').defaultNow().notNull(),
   },
   (c) => {
     return {

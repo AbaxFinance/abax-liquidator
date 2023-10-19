@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "3373939b-06d6-4297-a9b4-860e64761a4a",
+  "id": "167426ee-9fe3-4fcb-a16d-9300b14af652",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "actors_states": {
@@ -48,6 +48,12 @@
       "name": "asset_prices",
       "schema": "",
       "columns": {
+        "name": {
+          "name": "name",
+          "type": "varchar(48)",
+          "primaryKey": true,
+          "notNull": true
+        },
         "address": {
           "name": "address",
           "type": "varchar(48)",
@@ -68,27 +74,22 @@
         },
         "updateTimestamp": {
           "name": "updateTimestamp",
-          "type": "integer",
+          "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
         "name_idx": {
           "name": "name_idx",
-          "columns": ["address"],
+          "columns": ["name"],
           "isUnique": true
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "asset_prices_address_unique": {
-          "name": "asset_prices_address_unique",
-          "nullsNotDistinct": false,
-          "columns": ["address"]
-        }
-      }
+      "uniqueConstraints": {}
     },
     "events": {
       "name": "events",

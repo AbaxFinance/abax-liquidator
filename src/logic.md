@@ -79,3 +79,5 @@ rabbitmq
 https://www.reddit.com/r/node/comments/139w29v/how_do_you_handle_queues_in_nodejs_have_you_ever/
 https://github.com/timgit/pg-boss
 https://github.com/andywer/pg-listen
+
+Centralized logger??

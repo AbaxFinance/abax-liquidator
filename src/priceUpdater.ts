@@ -117,7 +117,7 @@ export class PriceUpdater {
       const assetPriceData = await db.select().from(assetPrices);
       console.log('Inserting data...');
 
-      const updateTs = new Date().getTime();
+      const updateTs = new Date();
       console.log('assetPriceData', assetPriceData);
       const valuesToInsert = (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA).map((apd) => {
         const currentPriceE8 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
@@ -139,11 +139,7 @@ export class PriceUpdater {
         .onConflictDoUpdate({
           target: assetPrices.address,
           set: {
-            address: sql`excluded.address`,
-            name: sql`excluded.name`,
-            updateTimestamp: sql`excluded.updateTimestamp`,
-            currentPriceE8: sql`excluded.currentPriceE8`,
-            anchorPriceE8: sql`excluded.anchorPriceE8`,
+            ...Object.fromEntries(Object.keys(assetPrices).map((x) => [x, sql.raw(`excluded."${x}"`)])),
           },
         });
 

@@ -19,8 +19,8 @@ import { getPreviousEvents } from 'scripts/fetchEvents';
       const lastEventTs = events[events.length - 1];
 
       const res = [
-        ['timestamp', 'lastEventTimestamp', 'totalLength', 'uniqueAddresses'],
-        [new Date().toISOString(), lastEventTs.meta.timestampISO, events.length, [...new Set(addresses)].length],
+        ['timestamp', 'lastEventTimestamp', 'lastBlockNumber', 'totalLength', 'uniqueAddresses'],
+        [new Date().toISOString(), lastEventTs.meta.timestampISO, lastEventTs.meta.blockNumber, events.length, [...new Set(addresses)].length],
       ];
       console.clear();
       console.table(res);
