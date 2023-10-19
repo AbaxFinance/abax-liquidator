@@ -1,9 +1,89 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "fea556cd-1b47-45d7-89ec-f5bdfbec765b",
-  "prevId": "f7a800ed-6977-4e0e-a8f0-315a45cb6b87",
+  "id": "da26101f-9f4f-4dce-ab4c-7d845b6aad50",
+  "prevId": "3373939b-06d6-4297-a9b4-860e64761a4a",
   "tables": {
+    "actors_states": {
+      "name": "actors_states",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jobType": {
+          "name": "jobType",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "actor_idx": {
+          "name": "actor_idx",
+          "columns": ["actor"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "asset_prices": {
+      "name": "asset_prices",
+      "schema": "",
+      "columns": {
+        "address": {
+          "name": "address",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currentPriceE8": {
+          "name": "currentPriceE8",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anchorPriceE8": {
+          "name": "anchorPriceE8",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updateTimestamp": {
+          "name": "updateTimestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "name_idx": {
+          "name": "name_idx",
+          "columns": ["address"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "events": {
       "name": "events",
       "schema": "",
@@ -18,43 +98,43 @@
           "name": "contractName",
           "type": "varchar(32)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contractAddress": {
           "name": "contractAddress",
           "type": "varchar(48)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "name": {
           "name": "name",
           "type": "varchar(48)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "timestamp": {
           "name": "timestamp",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "blockNumber": {
           "name": "blockNumber",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "blockHash": {
           "name": "blockHash",
           "type": "varchar(66)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "data": {
           "name": "data",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {
@@ -197,12 +277,58 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "addr": {
-          "name": "addr",
+        "lp_reserveDatas_address_unique": {
+          "name": "lp_reserveDatas_address_unique",
           "nullsNotDistinct": false,
           "columns": ["address"]
         }
       }
+    },
+    "lp_trackingData": {
+      "name": "lp_trackingData",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatePriority": {
+          "name": "updatePriority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "helathFactor": {
+          "name": "helathFactor",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updateAtLatest": {
+          "name": "updateAtLatest",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "address_idx": {
+          "name": "address_idx",
+          "columns": ["address"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
     },
     "lp_userConfigs": {
       "name": "lp_userConfigs",
@@ -255,8 +381,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "addr": {
-          "name": "addr",
+        "lp_userConfigs_address_unique": {
+          "name": "lp_userConfigs_address_unique",
           "nullsNotDistinct": false,
           "columns": ["address"]
         }
@@ -290,6 +416,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "debt": {
+          "name": "debt",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
         "appliedCumulativeDepositIndexE18": {
           "name": "appliedCumulativeDepositIndexE18",
           "type": "varchar(256)",
@@ -308,17 +440,56 @@
           "name": "address_idx",
           "columns": ["address"],
           "isUnique": true
+        },
+        "address_reserve_idx": {
+          "name": "address_reserve_idx",
+          "columns": ["address", "reserveAddress"],
+          "isUnique": true
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "addr": {
-          "name": "addr",
-          "nullsNotDistinct": false,
-          "columns": ["address", "reserveAddress"]
+      "uniqueConstraints": {}
+    },
+    "lp_userMiscData": {
+      "name": "lp_userMiscData",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatePriority": {
+          "name": "updatePriority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "helathFactor": {
+          "name": "helathFactor",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
         }
-      }
+      },
+      "indexes": {
+        "address_idx": {
+          "name": "address_idx",
+          "columns": ["address"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
     }
   },
   "enums": {},

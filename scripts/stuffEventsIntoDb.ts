@@ -1,21 +1,25 @@
-import { getArgvObj } from '@abaxfinance/utils';
 import chalk from 'chalk';
 import { db } from 'db';
-import { sleep } from 'scripts/common';
 import { getPreviousEvents } from 'scripts/fetchEvents';
 import { events } from '../db/schema';
 
-(async (args: Record<string, unknown>) => {
+(async () => {
   if (require.main !== module) return;
 
   // eslint-disable-next-line no-constant-condition
   const eventLog = getPreviousEvents();
   db.insert(events).values(
     eventLog.map((e) => ({
-      /*TODO */
+      blockHash: e.meta.blockHash,
+      contractAddress: e.meta.contractAddress,
+      contractName: e.meta.contractName,
+      blockNumber: e.meta.blockNumber,
+      data: e.event,
+      name: e.meta.eventName,
+      timestamp: parseInt(e.meta.timestamp),
     })),
   );
-})(getArgvObj()).catch((e) => {
+})().catch((e) => {
   console.log('UNHANDLED', e);
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);

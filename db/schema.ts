@@ -1,17 +1,17 @@
-//import { InferSelectModel } from 'drizzle-orm';
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { integer, pgTable, serial, uniqueIndex, varchar, jsonb, boolean, doublePrecision, timestamp } from 'drizzle-orm/pg-core';
 
 export const events = pgTable(
   'events',
   {
     id: serial('id').primaryKey(),
-    contractName: varchar('contractName', { length: 32 }),
-    contractAddress: varchar('contractAddress', { length: 48 }),
-    name: varchar('name', { length: 48 }),
-    timestamp: integer('timestamp'),
-    blockNumber: integer('blockNumber'),
-    blockHash: varchar('blockHash', { length: 66 }),
-    data: jsonb('data'),
+    contractName: varchar('contractName', { length: 32 }).notNull(),
+    contractAddress: varchar('contractAddress', { length: 48 }).notNull(),
+    name: varchar('name', { length: 48 }).notNull(),
+    timestamp: integer('timestamp').notNull(),
+    blockNumber: integer('blockNumber').notNull(),
+    blockHash: varchar('blockHash', { length: 66 }).notNull(),
+    data: jsonb('data').notNull(),
   },
   (c) => {
     return {
@@ -19,6 +19,8 @@ export const events = pgTable(
     };
   },
 );
+
+export type InsertEvent = InferInsertModel<typeof events>;
 
 export const actorsJobs = pgTable(
   'actors_states',
@@ -89,7 +91,7 @@ export const lpUserConfigs = pgTable(
   'lp_userConfigs',
   {
     id: serial('id').primaryKey(),
-    address: varchar('address', { length: 48 }).unique('addr').notNull(),
+    address: varchar('address', { length: 48 }).unique().notNull(),
     deposits: varchar('deposits', { length: 128 }).notNull(),
     collaterals: varchar('collaterals', { length: 128 }).notNull(),
     borrows: varchar('borrows', { length: 128 }).notNull(),
@@ -106,7 +108,7 @@ export const lpReserveDatas = pgTable(
   'lp_reserveDatas',
   {
     id: serial('id').primaryKey(),
-    address: varchar('address', { length: 48 }).unique('addr').notNull(),
+    address: varchar('address', { length: 48 }).unique().notNull(),
     //restrictions
     maximalTotalDeposit: varchar('maximalTotalDeposit', { length: 256 }),
     maximalTotalDebt: varchar('maximalTotalDebt', { length: 256 }),
@@ -133,6 +135,22 @@ export const lpReserveDatas = pgTable(
   (c) => {
     return {
       addressIndex: uniqueIndex('address_idx').on(c.address),
+    };
+  },
+);
+
+export const assetPrices = pgTable(
+  'asset_prices',
+  {
+    name: varchar('address', { length: 48 }).primaryKey(),
+    address: varchar('address', { length: 48 }).notNull(),
+    currentPriceE8: varchar('currentPriceE8', { length: 128 }).notNull(),
+    anchorPriceE8: varchar('anchorPriceE8', { length: 128 }).notNull(),
+    updateTimestamp: integer('updateTimestamp').notNull(),
+  },
+  (c) => {
+    return {
+      nameIndex: uniqueIndex('name_idx').on(c.name),
     };
   },
 );
