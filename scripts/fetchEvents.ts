@@ -107,6 +107,7 @@ function ensureQueueItemsFinishOnProcessExitSignal(queue: PQueue<PriorityQueue, 
         }
         if (process.env.DEBUG) console.log(new Date(), 'no more items pending in queue...');
         clearInterval(intervalID);
+        storeLastSuccessfulBlock(blockToResumeWithOnSIGINTContainer.blockNumber);
         process.exit(0);
       }, 500);
     }),
