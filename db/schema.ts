@@ -1,5 +1,5 @@
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { integer, pgTable, serial, uniqueIndex, varchar, jsonb, boolean, doublePrecision, timestamp, unique } from 'drizzle-orm/pg-core';
+import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
+import { boolean, doublePrecision, integer, jsonb, pgTable, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 
 export const events = pgTable(
   'events',
@@ -21,6 +21,7 @@ export const events = pgTable(
 );
 
 export type InsertEvent = InferInsertModel<typeof events>;
+export type SelectAssetPrice = InferSelectModel<typeof assetPrices>;
 
 export const actorsJobs = pgTable(
   'actors_states',

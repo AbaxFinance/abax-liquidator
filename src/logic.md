@@ -23,7 +23,7 @@ mark last successfull block as X+Y
 ### possibilities:
 
     - independent event tables
-        - workers that periodically insert new data into the tables
+        - insert event into appropriate table
     - denormalize events table
         - TODO performance?
     - secondary denormalized events table
@@ -39,26 +39,25 @@ Note: updateAtLatest <-- intervalByHFPriority(some_hf) + now()
 1. price changes
 
    1. pseudocode:
-      listen on anchorPrice change (polling)
-      get all user related datas
-      recalculate HF
       via rust worker(?)
-      update db (hf & updateAtLatest)
-   1. Q:
-
-   - threshold? - prices table? - every N seconds (5?):
-     fetch all prices
-     update prices table - insert currentPrice - if abs(currentPrice - anchorPrice) > getThreshold() - anchorPrice <-- currentPrice - insert updateTimestamp
+      listen on anchorPrice change (polling)
+      get all reserve datas
+      get all user related datas
+      for each address:
+      - recalculate HF
+      - update db (hf & updateAtLatest)
 
 (POTENTIAL_ACTOR)
 
 1. periodic
    1. pseudocode:
       every N seconds (5?):
+      get all reserve datas
       get all user datas required for updating (select from tracking table where updateAtLatest <= now() )
-      recalculate HF
-      via rust worker(?)
-      update db (hf & updateAtLatest)
+      for each address:
+      - recalculate HF
+      - via rust worker(?)
+      - update db (hf & updateAtLatest)
 
 ## Liquidation
 
@@ -66,10 +65,9 @@ Note: updateAtLatest <-- intervalByHFPriority(some_hf) + now()
 
 1. periodic
    1. pseudocode:
-      every N seconds(5?):
-      get all user datas below HF threshold (select from tracking table where HF <= hf_threshold )
       get market rules
-      get current tokens prices
+      listen on (event)address_to_liquidate
+      get user data && current tokens prices from db
       calculateMinimumTokenReceivedE18 (weak point?)
       liquidate if profitable
 

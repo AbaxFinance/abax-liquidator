@@ -2,6 +2,7 @@ import { getArgvObj } from '@abaxfinance/utils';
 import chalk from 'chalk';
 import { sleep } from 'scripts/common';
 import { getPreviousEvents } from 'scripts/fetchEvents';
+import fs from 'fs-extra';
 
 (async (args: Record<string, unknown>) => {
   if (require.main !== module) return;
@@ -12,17 +13,23 @@ import { getPreviousEvents } from 'scripts/fetchEvents';
       const events = getPreviousEvents();
       // const startTs = new Date('2023-08-31T00:00:17.000Z').getTime();
       // const endTs = new Date('2023-09-05T00:00:17.000Z').getTime();
+      const lpEvents = events
+        // .filter((e) => startTs <= parseInt(e.meta.timestamp) && parseInt(e.meta.timestamp) <= endTs)
+        .filter((e) => e.meta.contractName === 'lending_pool');
       const addresses = events
         // .filter((e) => startTs <= parseInt(e.meta.timestamp) && parseInt(e.meta.timestamp) <= endTs)
         .flatMap((e) => [e.event.caller, e.event.from, e.event.to])
         .filter((e) => !!e);
       const lastEventTs = events[events.length - 1];
+      const uniqueAddresses = [...new Set(addresses)];
+      // fs.writeFileSync('uniq_addresses.json', JSON.stringify(uniqueAddresses, null, 2));
 
       const res = [
-        ['timestamp', 'lastEventTimestamp', 'lastBlockNumber', 'totalLength', 'uniqueAddresses'],
-        [new Date().toISOString(), lastEventTs.meta.timestampISO, lastEventTs.meta.blockNumber, events.length, [...new Set(addresses)].length],
+        ['lastEventTimestamp', 'lastBlockNumber', 'totalLength', 'uniqueAddresses', 'allTimeLPEventsCount'],
+        [lastEventTs.meta.timestampISO, lastEventTs.meta.blockNumber, events.length, uniqueAddresses.length, lpEvents.length],
       ];
-      console.clear();
+
+      // console.clear();
       console.table(res);
       await sleep(15 * 1000);
     } catch (e) {

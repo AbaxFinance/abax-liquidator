@@ -25,12 +25,12 @@ import { PriceUpdater } from 'src/priceUpdater';
 
   const res = await Promise.all([
     priceUpdater.runLoop(),
-    // userDataChainUpdater.runLoop(),
-    // reserveDataChainUpdater.runLoop(),
-    // priceChangeHFUpdater.runLoop(),
-    // periodicHFUpdater.runLoop(),
-    // liquidator.runLoop(),
-    // eventListenerFeeder.runLoop(),
+    userDataChainUpdater.runLoop(),
+    reserveDataChainUpdater.runLoop(),
+    priceChangeHFUpdater.runLoop(),
+    periodicHFUpdater.runLoop(),
+    liquidator.runLoop(),
+    eventListenerFeeder.runLoop(),
   ]);
   console.error(JSON.stringify(res, null, 2));
 })().catch((e) => {
