@@ -178,6 +178,23 @@ async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
   const events: any = await apiAt.query.system.events();
   const timestamp = await apiAt.query.timestamp.now();
 
+  return parseBlockEvents<TContract>(events, contracts, timestamp, blockNumber, blockHash, eventsToReturnByContractAddress);
+}
+
+// eslint-disable-next-line eqeqeq
+const RUN_CONTINUOUSLY = (process.env.RUN_CONTINUOUSLY == 'true' || process.env.RUN_CONTINUOUSLY == '1') ?? false;
+
+let benchTimeIntermediateStart: number | null = null;
+const arrayRange = (start: number, stop: number, step = 1) =>
+  Array.from({ length: (stop - start) / step + 1 }, (value, index) => start + index * step);
+function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
+  events: any,
+  contracts: TContract[],
+  timestamp,
+  blockNumber: number,
+  blockHash: BlockHash,
+  eventsToReturnByContractAddress: Record<string, EventWithMeta[]>,
+) {
   for (const record of events) {
     const { event } = record;
 
@@ -228,12 +245,6 @@ async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
   return { blockNumber, blockHash, eventsByContractAddress: eventsToReturnByContractAddress };
 }
 
-// eslint-disable-next-line eqeqeq
-const RUN_CONTINUOUSLY = (process.env.RUN_CONTINUOUSLY == 'true' || process.env.RUN_CONTINUOUSLY == '1') ?? false;
-
-let benchTimeIntermediateStart: number | null = null;
-const arrayRange = (start: number, stop: number, step = 1) =>
-  Array.from({ length: (stop - start) / step + 1 }, (value, index) => start + index * step);
 async function runContinously<TContract extends IWithAbi & IWithAddress>(
   initStartBlockNumber: number,
   api: ApiPromise,
@@ -241,17 +252,9 @@ async function runContinously<TContract extends IWithAbi & IWithAddress>(
   contracts: TContract[],
   eventLog: EventWithMeta[],
 ) {
-  let startBlockNumber = initStartBlockNumber + 1;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const endBlockNumberFromApi = await getLatestBlockNumber(api);
-    const blocksToAdd = arrayRange(startBlockNumber, endBlockNumberFromApi);
-    console.warn(`Adding blocks to the queue...`);
-    pendingBlocks.push(...blocksToAdd);
-    addBlockRangeToTheQueue(queue, api, contracts, eventLog, blocksToAdd);
-    startBlockNumber = endBlockNumberFromApi + 1;
-    await sleep(1000);
-  }
+  api.query.system.events((events) => {
+    console.log(events);
+  });
 }
 
 async function getStartEndBlockNumbers(api: ApiPromise) {
@@ -268,7 +271,10 @@ function addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(
   eventLog: EventWithMeta[],
   blockNumbers: number[],
 ) {
-  console.log(new Date(), `adding ${blockNumbers.length} blocks to the queue from range...`);
+  console.log(
+    new Date(),
+    `adding ${blockNumbers.length} blocks to the queue from range...[${blockNumbers[0]}...${blockNumbers[blockNumbers.length - 1]}]`,
+  );
   for (const blockNumber of blockNumbers) {
     queue
       .add(() => getEventsByContract(blockNumber, api, contracts))

@@ -4,7 +4,7 @@ rm -f "$SCRIPT_DIR/fetcher.log"
 while :
 do
     script -aefq "$SCRIPT_DIR/fetcher.log" -c \
-    "env DEBUG=1 env NODE_OPTIONS=\"$NODE_OPTIONS --max-old-space-size=16384\" npx ts-node scripts/fetchEvents.ts"
+    "env DEBUG=1 env NODE_OPTIONS=\"$NODE_OPTIONS --max-old-space-size=16384\" RUN_CONTINUOUSLY=1 npx ts-node scripts/fetchEvents.ts"
     exit_code=$?
     
     # Check if the exit code is 130 (SIGINT)
