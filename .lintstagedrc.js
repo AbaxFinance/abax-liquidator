@@ -1,3 +1,3 @@
 module.exports = {
-  './**/*.{js,ts}': ['eslint --fix', 'pretty-quick  --loglevel warn --staged'],
+  './**/*.{js,ts}': ['eslint --fix', 'prettier --loglevel warn --write'],
 };
