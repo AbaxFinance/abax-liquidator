@@ -11,6 +11,7 @@ import fs from 'fs-extra';
   while (true) {
     try {
       const events = getPreviousEvents();
+      // const events = getPreviousEvents('scan_results_old');
       // const startTs = new Date('2023-08-31T00:00:17.000Z').getTime();
       // const endTs = new Date('2023-09-05T00:00:17.000Z').getTime();
       const lpEvents = events

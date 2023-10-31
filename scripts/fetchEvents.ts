@@ -58,9 +58,9 @@ const ADOT_ADDRESS = '5D1dwQEhyXzVDuB8RX85xm9iNa4pTtUr2jVpYHNFte7FxRTw';
 const VDOT_ADDRESS = '5HDidr2RT4VGkxyGuJieGAfqYpqphwviB4WULaNp6VNsf2B2';
 const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 44700600;
 
-const outputPathBase = path.join(path.parse(__filename).dir, 'scan_results');
-const lastResultsPath = path.join(outputPathBase, 'whole_run_results.json');
-fs.ensureDir(outputPathBase);
+const getOutputPathBase = (dirname = 'scan_results') => path.join(path.parse(__filename).dir, dirname);
+const lastResultsPath = path.join(getOutputPathBase(), 'whole_run_results.json');
+fs.ensureDir(getOutputPathBase());
 
 const getLastFetchResult = async (): Promise<Partial<FetchResult>> => {
   try {
@@ -72,9 +72,9 @@ const getLastFetchResult = async (): Promise<Partial<FetchResult>> => {
   }
 };
 
-export const getPreviousEvents = () => {
+export const getPreviousEvents = (dirname?: string) => {
   try {
-    const eventsPath = getEventsLogPath();
+    const eventsPath = getEventsLogPath(dirname);
     if (!fs.existsSync(eventsPath)) return [];
     return JSON.parse(fs.readFileSync(eventsPath, 'utf8')) as EventWithMeta[];
   } catch (e) {
@@ -160,11 +160,11 @@ async function createStoreEventsAndErrors(api: ApiPromise, eventLog: EventWithMe
 }
 
 function getEventPendingBlocksPath() {
-  return path.join(outputPathBase, `pendingBlocks.json`);
+  return path.join(getOutputPathBase(), `pendingBlocks.json`);
 }
 
-function getEventsLogPath() {
-  return path.join(outputPathBase, `eventLog.json`);
+function getEventsLogPath(dirname?: string) {
+  return path.join(getOutputPathBase(dirname), `eventLog.json`);
 }
 
 async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
