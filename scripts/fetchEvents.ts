@@ -172,13 +172,12 @@ async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
   api: ApiPromise,
   contracts: TContract[],
 ): Promise<EventsFromBlockResult> {
-  const eventsToReturnByContractAddress: Record<string, EventWithMeta[]> = {};
   const blockHash: BlockHash = (await api.rpc.chain.getBlockHash(blockNumber)) as any;
   const apiAt = await api.at(blockHash);
   const events: any = await apiAt.query.system.events();
   const timestamp = await apiAt.query.timestamp.now();
 
-  return parseBlockEvents<TContract>(events, contracts, timestamp, blockNumber, blockHash, eventsToReturnByContractAddress);
+  return parseBlockEvents<TContract>(events, contracts, timestamp, blockNumber, blockHash);
 }
 
 // eslint-disable-next-line eqeqeq
@@ -193,8 +192,8 @@ function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
   timestamp,
   blockNumber: number,
   blockHash: BlockHash,
-  eventsToReturnByContractAddress: Record<string, EventWithMeta[]>,
 ) {
+  const eventsToReturnByContractAddress: Record<string, EventWithMeta[]> = {};
   for (const record of events) {
     const { event } = record;
 
@@ -252,8 +251,23 @@ async function runContinously<TContract extends IWithAbi & IWithAddress>(
   contracts: TContract[],
   eventLog: EventWithMeta[],
 ) {
-  api.query.system.events((events) => {
-    console.log(events);
+  api.query.system.events(function (events) {
+    const blockHash = events.createdAtHash.toHuman();
+    api.derive.chain.getBlock(blockHash).then((block) => {
+      const blockNumber = block.block.header.number;
+      const timestampExtrinistic = block.extrinsics.find(
+        (ex) => ex.extrinsic.method.method.toString() === 'set' && ex.extrinsic.method.section.toString() === 'timestamp',
+      );
+      // console.log({ block: JSON.stringify(block.toHuman(), null, 2) });
+      if (!timestampExtrinistic) throw new Error('WTF there is no timestamp extrinistic in block :C');
+      console.log(
+        JSON.stringify(
+          parseBlockEvents(events, contracts, (timestampExtrinistic.extrinsic.method.args[0] as any).toNumber(), blockNumber.toNumber(), blockHash),
+          null,
+          2,
+        ),
+      );
+    });
   });
 }
 
