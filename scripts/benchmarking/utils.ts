@@ -115,7 +115,8 @@ export class TimeSpanFormatter {
       milisPerTimeUnit: 1,
     },
   ];
-  constructor() {
+  constructor(overrideMsFormattingIfHasDecimals?: boolean) {
+    this.overrideMsFormattingIfHasDecimals = overrideMsFormattingIfHasDecimals ?? true;
     this.setLocale('en');
   }
   setLocale = (value: string | string[] | undefined, style: Intl.RelativeTimeFormatStyle = 'long') => {

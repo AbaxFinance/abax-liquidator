@@ -131,10 +131,10 @@ function printStats(result: EventsFromBlockResult) {
   } else {
     console.log(
       new Date(),
-      `Last analyzed block: ${result.blockNumber} (${timestampISO}) Speed: ${new TimeSpanFormatter().format(
+      `Last analyzed block: ${result.blockNumber} (${timestampISO}) Speed: ${new TimeSpanFormatter(false).format(
         's.f',
         (now - benchTimeIntermediateStart) / BENCH_STATS_DIVIDER,
-      )}[seconds.fraction] per ${SAVE_INTERVAL / BENCH_STATS_DIVIDER} blocks`,
+      )}seconds per ${SAVE_INTERVAL / BENCH_STATS_DIVIDER} blocks`,
     );
   }
   benchTimeIntermediateStart = now;
@@ -316,6 +316,7 @@ async function processPastBlocks(api: ApiPromise, contracts: (LendingPool | ATok
 
       queue.pause();
     }
+    console.log(`#### analyzed past/missing/pending blocks ####`);
   } catch (e) {
     console.log('error while analyzing blocks...');
     console.log(e);
