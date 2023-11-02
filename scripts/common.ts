@@ -37,6 +37,13 @@ export class ApiProviderWrapper {
     return this.api;
   };
 
+  getAndWaitForReadyNoCache = async () => {
+    const wsProvider = new WsProvider(this.webSocketEndpoint);
+    const newApi = await ApiPromise.create({ provider: wsProvider, noInitWarn: true, throwOnConnect: true });
+    await newApi.isReady;
+    return newApi;
+  };
+
   closeApi = async () => {
     await this.api?.disconnect();
     await this.wsProvider?.disconnect();

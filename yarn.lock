@@ -27,11 +27,11 @@ __metadata:
 
 "@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers::locator=abax-liquidator%40workspace%3A.":
   version: 0.1.0-alpha.0
-  resolution: "@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=4df061&locator=abax-liquidator%40workspace%3A."
+  resolution: "@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=e290ca&locator=abax-liquidator%40workspace%3A."
   peerDependencies:
     "@727-ventures/typechain-types": ^1.1.2
     bn.js: ^5.2.1
-  checksum: f9441d9e4e8aa54b2718013b2cdab522898bede1bf021eedd79e8d94444b1473ab8f01e35400e568900d2090204007a77840f12c82ae2b7a70d6472acbb1c9c9
+  checksum: 3527e8e0806bbc78b802de382329ca30d86ac653adac7b0879d2b48c33df5db3860bcd592e7e95bf8f5ef332a976e3dcffa03ad3a447ab0ecc2c706179c46789
   languageName: node
   linkType: hard
 

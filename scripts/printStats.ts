@@ -1,7 +1,7 @@
 import { getArgvObj } from '@abaxfinance/utils';
 import chalk from 'chalk';
 import { sleep } from 'scripts/common';
-import { getPreviousEvents } from 'scripts/fetchEvents';
+import { getPreviousEventsFromFile } from 'scripts/fetchEvents';
 import fs from 'fs-extra';
 
 (async (args: Record<string, unknown>) => {
@@ -10,7 +10,7 @@ import fs from 'fs-extra';
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      const events = getPreviousEvents();
+      const events = getPreviousEventsFromFile();
       // const events = getPreviousEvents('scan_results_old');
       // const startTs = new Date('2023-08-31T00:00:17.000Z').getTime();
       // const endTs = new Date('2023-09-05T00:00:17.000Z').getTime();

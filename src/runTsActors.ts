@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { db } from 'db';
-import { getPreviousEvents } from 'scripts/fetchEvents';
+import { getPreviousEventsFromFile } from 'scripts/fetchEvents';
 import { events } from '../db/schema';
 import { UserDataChainUpdater } from './userDataChainUpdater';
 import { ReserveDataChainUpdater } from './reserveDataChainUpdater';

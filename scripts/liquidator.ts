@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import { Psp22Ownable, LendingPool, BorrowVariable, AccountId, ReserveData, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
 import { measureTime } from './benchmarking/utils';
 import { apiProviderWrapper, sleep } from './common';
-import { EventWithMeta, getPreviousEvents } from './fetchEvents';
+import { EventWithMeta, getPreviousEventsFromFile } from './fetchEvents';
 
 const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
 
@@ -45,7 +45,7 @@ const keyring = new Keyring();
   const liquidationSignerSpender = keyring.createFromUri(seed, {}, 'sr25519');
   const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, liquidationSignerSpender, api);
 
-  const eventLog: EventWithMeta[] = getPreviousEvents(lendingPool.abi.info.contract.name.toString());
+  const eventLog: EventWithMeta[] = getPreviousEventsFromFile(lendingPool.abi.info.contract.name.toString());
 
   console.log(new Date(), 'event count', eventLog.length);
   const borrowEvents = eventLog.filter((e) => e.meta.eventName === 'BorrowVariable');

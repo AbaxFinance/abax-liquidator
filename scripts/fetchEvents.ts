@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import PQueue, { DefaultAddOptions } from 'p-queue';
 import path from 'path';
 import { AToken, LendingPool, VToken, getEventTypeDescription, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
-import { apiProviderWrapper, sleep } from './common';
+import { apiProviderWrapper } from './common';
 import PriorityQueue from 'p-queue/dist/priority-queue';
 import { getArgvObj } from '@abaxfinance/utils';
 import {
@@ -19,8 +19,15 @@ import {
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { TimeSpanFormatter } from 'scripts/benchmarking/utils';
 import LargeSet from 'large-set';
-type FetchResult = { endBlockNumber: number };
-type EventsFromBlockResult = { blockNumber: number; eventsByContractAddress: Record<string, EventWithMeta[]>; error?: Error; blockHash: BlockHash };
+
+const getOutputPathBase = (dirname = 'scan_results') => path.join(path.parse(__filename).dir, dirname);
+type EventsFromBlockResult = {
+  blockTimestamp: string;
+  blockNumber: number;
+  eventsByContractAddress: Record<string, EventWithMeta[]>;
+  error?: Error;
+  blockHash: BlockHash;
+};
 
 export type EventWithMeta = {
   event: any;
@@ -43,36 +50,7 @@ interface IWithAbi {
   abi: Abi;
 }
 
-const LENDING_POOL_ADDRESS = '5GBai32Vbzizw3xidVUwkjzFydaas7s2B8uudgtiguzmW8yn';
-const ADAI_ADDRESS = '5GusvrnNEfYThkDxdSUZRca9ScTiVyrF3S76UJEQTUXBDdmT';
-const VDAI_ADDRESS = '5EkScoCUiXCraQw5kSbknbugVEhWod9xMv4PRkyo9MHTREXw';
-const AUSDC_ADDRESS = '5EVfH2BRm2ggimfRcuEH8zRYkviyEN69et4fDjHWHzWjirBK';
-const VUSDC_ADDRESS = '5CdF6Vdf9mAG5fjhFuNaLfFLj9i31SjxBsVj5JHBARmL5Xmd';
-const AWETH_ADDRESS = '5DvMrRU79zS29FSSP5k8CyuCK2de59Xvvqwzbm1UzqNWwxFY';
-const VWETH_ADDRESS = '5HY4mmPQuMDakTDeaf6Cj5TJaSbmb7G3fHczcyuyhmU6UeVR';
-const ABTC_ADDRESS = '5GZm7bsGE53Gyf9Cg2GwsTjDrP9skY6A6uSZiCFWDoEZyMtj';
-const VBTC_ADDRESS = '5EEurzNsm5SMDSJBHbtu4GHbkdSsHdjPbWNb28vxpEWkZJWX';
-const AAZERO_ADDRESS = '5Da8px1HEoAvs3m9i55ftfSswDbskqCY4rHr1KAFsTqfiTia';
-const VAZERO_ADDRESS = '5ChJnTSpsQ26zJGyGt7uHHLRjbquAy1JSmaijMujUi9VKfJL';
-const ADOT_ADDRESS = '5D1dwQEhyXzVDuB8RX85xm9iNa4pTtUr2jVpYHNFte7FxRTw';
-const VDOT_ADDRESS = '5HDidr2RT4VGkxyGuJieGAfqYpqphwviB4WULaNp6VNsf2B2';
-const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 44700600;
-
-const getOutputPathBase = (dirname = 'scan_results') => path.join(path.parse(__filename).dir, dirname);
-const lastResultsPath = path.join(getOutputPathBase(), 'whole_run_results.json');
-fs.ensureDir(getOutputPathBase());
-
-const getLastFetchResult = async (): Promise<Partial<FetchResult>> => {
-  try {
-    const lastResult = JSON.parse(await fs.readFile(lastResultsPath, 'utf8')) as FetchResult;
-    return lastResult;
-  } catch (e) {
-    console.warn('Failed to retrieve last fetch result');
-    return { endBlockNumber: undefined };
-  }
-};
-
-export const getPreviousEvents = (dirname?: string) => {
+export const getPreviousEventsFromFile = (dirname?: string) => {
   try {
     const eventsPath = getEventsLogPath(dirname);
     if (!fs.existsSync(eventsPath)) return [];
@@ -83,9 +61,9 @@ export const getPreviousEvents = (dirname?: string) => {
   }
 };
 
-const getPendingBlocks = () => {
+const getAnalyzedBlocksFromFile = () => {
   try {
-    const prevErrPath = getEventPendingBlocksPath();
+    const prevErrPath = getAnalyzedBlocksPath();
     if (!fs.existsSync(prevErrPath)) return [];
     return JSON.parse(fs.readFileSync(prevErrPath, 'utf-8')) as number[];
   } catch (e) {
@@ -107,16 +85,10 @@ function ensureQueueItemsFinishOnProcessExitSignal(queue: PQueue<PriorityQueue, 
         }
         if (process.env.DEBUG) console.log(new Date(), 'no more items pending in queue...');
         clearInterval(intervalID);
-        storeLastSuccessfulBlock(blockToResumeWithOnSIGINTContainer.blockNumber);
         process.exit(0);
       }, 500);
     }),
   );
-}
-
-function storeLastSuccessfulBlock(endBlockNumber: number) {
-  const fetchResult = { endBlockNumber } satisfies FetchResult;
-  fs.writeFileSync(lastResultsPath, JSON.stringify(fetchResult), 'utf-8');
 }
 
 async function getLatestBlockNumber(api: ApiPromise) {
@@ -125,42 +97,59 @@ async function getLatestBlockNumber(api: ApiPromise) {
   return endBlockNumber;
 }
 
-const benchInterval = 500;
-async function createStoreEventsAndErrors(api: ApiPromise, eventLog: EventWithMeta[]): Promise<(result: EventsFromBlockResult) => void> {
-  return async (result) => {
-    if (Object.keys(result.eventsByContractAddress).length > 0) {
-      for (const [contractName, events] of Object.entries(result.eventsByContractAddress)) {
-        eventLog.push(...events);
-        console.log(new Date(), `pushed ${events.length} events for ${contractName}`);
-        fs.writeFileSync(getEventsLogPath(), JSON.stringify(eventLog, null, 2), 'utf-8');
-      }
+const SAVE_INTERVAL = 500;
+const BENCH_STATS_DIVIDER = SAVE_INTERVAL / 100;
+let blockBenchCounter = 0;
+let benchTimeIntermediateStart: number | null = null;
+function storeEventsAndErrors(result: EventsFromBlockResult) {
+  if (analyzedBlocksSet.has(result.blockNumber)) {
+    console.warn(`duplicate analysis of block ${result.blockNumber}`);
+    return;
+  } else {
+    analyzedBlocksSet.add(result.blockNumber);
+    blockBenchCounter++;
+  }
+  if (Object.keys(result.eventsByContractAddress).length > 0) {
+    for (const [contractName, events] of Object.entries(result.eventsByContractAddress)) {
+      eventLog.push(...events);
+      console.log(new Date(), `pushed ${events.length} events for ${contractName} | block: ${result.blockNumber}`);
     }
-    if (blockToResumeWithOnSIGINTContainer.blockNumber) blockToResumeWithOnSIGINTContainer.blockNumber = result.blockNumber;
-    if (result.blockNumber % benchInterval === 0) {
-      const now = Date.now();
-      const apiAt = await api.at(result.blockHash);
-      const timestamp = await apiAt.query.timestamp.now();
-      const timestampISO = new Date(parseInt(timestamp.toString())).toISOString();
-      if (!benchTimeIntermediateStart) {
-        console.log(new Date(), `Last analyzed block: ${result.blockNumber} (${timestampISO})`);
-      } else {
-        console.log(
-          new Date(),
-          `Last analyzed block: ${result.blockNumber} (${timestampISO}) Speed: ${new TimeSpanFormatter().format(
-            's.f',
-            (now - benchTimeIntermediateStart) / 5,
-          )}[seconds.fraction] per ${benchInterval / 5} blocks`,
-        );
-      }
-      benchTimeIntermediateStart = now;
-    }
-    const idx = pendingBlocks.indexOf(result.blockNumber);
-    if (idx !== -1) pendingBlocks.splice(idx, 1);
-  };
+  }
+  if (blockBenchCounter >= SAVE_INTERVAL) {
+    blockBenchCounter = 0;
+    fs.writeFileSync(getEventsLogPath(), JSON.stringify(eventLog, null, 2), 'utf-8');
+    storeAnalyzedBlocks();
+    printStats(result);
+  }
 }
 
-function getEventPendingBlocksPath() {
-  return path.join(getOutputPathBase(), `pendingBlocks.json`);
+function printStats(result: EventsFromBlockResult) {
+  const now = Date.now();
+  const timestampISO = new Date(parseInt(result.blockTimestamp.toString())).toISOString();
+  if (!benchTimeIntermediateStart) {
+    console.log(new Date(), `Last analyzed block: ${result.blockNumber} (${timestampISO})`);
+  } else {
+    console.log(
+      new Date(),
+      `Last analyzed block: ${result.blockNumber} (${timestampISO}) Speed: ${new TimeSpanFormatter().format(
+        's.f',
+        (now - benchTimeIntermediateStart) / BENCH_STATS_DIVIDER,
+      )}[seconds.fraction] per ${SAVE_INTERVAL / BENCH_STATS_DIVIDER} blocks`,
+    );
+  }
+  benchTimeIntermediateStart = now;
+}
+
+function storeAnalyzedBlocks() {
+  const blocksToStore: number[] = [];
+  for (const val of analyzedBlocksSet.values()) {
+    blocksToStore.push(val);
+  }
+  fs.writeFileSync(getAnalyzedBlocksPath(), JSON.stringify(blocksToStore, null, 2), 'utf-8');
+}
+
+function getAnalyzedBlocksPath() {
+  return path.join(getOutputPathBase(), `analyzedBlocks.json`);
 }
 
 function getEventsLogPath(dirname?: string) {
@@ -177,19 +166,14 @@ async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
   const events: any = await apiAt.query.system.events();
   const timestamp = await apiAt.query.timestamp.now();
 
-  return parseBlockEvents<TContract>(events, contracts, timestamp, blockNumber, blockHash);
+  return parseBlockEvents<TContract>(events, contracts, timestamp.toString(), blockNumber, blockHash);
 }
 
-// eslint-disable-next-line eqeqeq
-const RUN_CONTINUOUSLY = (process.env.RUN_CONTINUOUSLY == 'true' || process.env.RUN_CONTINUOUSLY == '1') ?? false;
-
-let benchTimeIntermediateStart: number | null = null;
-const arrayRange = (start: number, stop: number, step = 1) =>
-  Array.from({ length: (stop - start) / step + 1 }, (value, index) => start + index * step);
+const arrayRange = (start: number, stop: number, step = 1) => Array.from({ length: (stop - start) / step + 1 }, (_, index) => start + index * step);
 function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
   events: any,
   contracts: TContract[],
-  timestamp,
+  timestamp: string,
   blockNumber: number,
   blockHash: BlockHash,
 ) {
@@ -241,48 +225,37 @@ function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
       }
     }
   }
-  return { blockNumber, blockHash, eventsByContractAddress: eventsToReturnByContractAddress };
+  return { blockTimestamp: timestamp, blockNumber, blockHash, eventsByContractAddress: eventsToReturnByContractAddress };
 }
 
-async function runContinously<TContract extends IWithAbi & IWithAddress>(
-  initStartBlockNumber: number,
-  api: ApiPromise,
-  queue: PQueue<PriorityQueue, DefaultAddOptions>,
-  contracts: TContract[],
-  eventLog: EventWithMeta[],
-) {
-  api.query.system.events(function (events) {
-    const blockHash = events.createdAtHash.toHuman();
-    api.derive.chain.getBlock(blockHash).then((block) => {
-      const blockNumber = block.block.header.number;
-      const timestampExtrinistic = block.extrinsics.find(
-        (ex) => ex.extrinsic.method.method.toString() === 'set' && ex.extrinsic.method.section.toString() === 'timestamp',
-      );
-      // console.log({ block: JSON.stringify(block.toHuman(), null, 2) });
-      if (!timestampExtrinistic) throw new Error('WTF there is no timestamp extrinistic in block :C');
-      console.log(
-        JSON.stringify(
-          parseBlockEvents(events, contracts, (timestampExtrinistic.extrinsic.method.args[0] as any).toNumber(), blockNumber.toNumber(), blockHash),
-          null,
-          2,
-        ),
-      );
+async function listenToNewEvents<TContract extends IWithAbi & IWithAddress>(contracts: TContract[]) {
+  const freshApi = await apiProviderWrapper.getAndWaitForReadyNoCache();
+  try {
+    console.log('#### attaching listener to api.query.system.events ####');
+    freshApi.query.system.events(function (events: { createdAtHash: { toHuman: () => BlockHash } }) {
+      const blockHash = events.createdAtHash.toHuman();
+      freshApi.derive.chain.getBlock(blockHash).then((block) => {
+        const blockNumber = block.block.header.number;
+        const timestampExtrinistic = block.extrinsics.find(
+          (ex) => ex.extrinsic.method.method.toString() === 'set' && ex.extrinsic.method.section.toString() === 'timestamp',
+        );
+        if (!timestampExtrinistic) throw new Error('There is no timestamp extrinistic in block :C');
+        const res = parseBlockEvents(events, contracts, timestampExtrinistic.extrinsic.method.args[0].toString(), blockNumber.toNumber(), blockHash);
+        storeEventsAndErrors(res);
+      });
     });
-  });
-}
-
-async function getStartEndBlockNumbers(api: ApiPromise) {
-  const { endBlockNumber: prevRunEndBlockNumber } = await getLastFetchResult();
-  const startBlockNumber = (prevRunEndBlockNumber ?? START_BLOCK_NUMBER_PRE_DEPLOYMENT) + 1;
-  const endBlockNumberFromApi = await getLatestBlockNumber(api);
-  return { startBlockNumber, endBlockNumber: endBlockNumberFromApi };
+  } catch (e) {
+    console.error(e);
+    console.error('ERROR WHILE ANALYZING BLOCK || RETRYING');
+    await freshApi.disconnect();
+    listenToNewEvents(contracts);
+  }
 }
 
 function addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(
   queue: PQueue<PriorityQueue, DefaultAddOptions>,
   api: ApiPromise,
   contracts: TContract[],
-  eventLog: EventWithMeta[],
   blockNumbers: number[],
 ) {
   console.log(
@@ -292,44 +265,18 @@ function addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(
   for (const blockNumber of blockNumbers) {
     queue
       .add(() => getEventsByContract(blockNumber, api, contracts))
-      .then((res) => createStoreEventsAndErrors(api, eventLog).then((handleFunc) => handleFunc(res)))
+      .then((res) => storeEventsAndErrors(res))
       .catch((e) => {
         console.log(e);
-        fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
-        if (blockToResumeWithOnSIGINTContainer.blockNumber) storeLastSuccessfulBlock(blockToResumeWithOnSIGINTContainer.blockNumber);
         process.exit(1);
       });
   }
 }
-
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-// #############################################################################################
-
-const pendingBlocks: number[] = [];
 const eventLog: EventWithMeta[] = [];
-
-const blockToResumeWithOnSIGINTContainer: { blockNumber: number } = { blockNumber: 0 };
-
+const analyzedBlocksSet = new LargeSet<number>();
 const queue = new PQueue({ concurrency: 30, autoStart: false });
-const CHUNK_SIZE = 10_000;
+const QUEUE_CHUNK_SIZE = 10_000;
+const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 44719900;
 (async (args: Record<string, unknown>) => {
   if (require.main !== module) return;
   const outputJsonFolder = (args['path'] as string) ?? process.argv[2] ?? process.env.PWD;
@@ -338,92 +285,98 @@ const CHUNK_SIZE = 10_000;
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
   const seed = process.env.SEED;
   if (!seed) throw 'could not determine seed';
+  fs.ensureDir(getOutputPathBase());
   const api = await apiProviderWrapper.getAndWaitForReady();
 
-  const keyring = new Keyring();
-  const signer = keyring.createFromUri(seed, {}, 'sr25519');
-  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
-  const aTokens = await Promise.all(
-    [ADAI_ADDRESS, AAZERO_ADDRESS, ABTC_ADDRESS, ADOT_ADDRESS, AUSDC_ADDRESS, AWETH_ADDRESS].map((addr) =>
-      getContractObject(AToken, addr, signer, api),
-    ),
-  );
-  const vTokens = await Promise.all(
-    [VDAI_ADDRESS, VAZERO_ADDRESS, VBTC_ADDRESS, VDOT_ADDRESS, VUSDC_ADDRESS, VWETH_ADDRESS].map((addr) =>
-      getContractObject(VToken, addr, signer, api),
-    ),
-  );
-  const contracts = [lendingPool, ...aTokens, ...vTokens];
   //TODO DB
-  const prevLog = getPreviousEvents();
-  for (const e of prevLog) {
-    eventLog.push(e);
-  }
-  ensureQueueItemsFinishOnProcessExitSignal(queue);
-  const set = new LargeSet<number>();
-  getPendingBlocks().forEach((b) => set.add(b));
-  for (const val of set.values()) {
-    pendingBlocks.push(val);
-  }
-  console.log('total number of pending blocks to process : ', pendingBlocks.length);
+  populateInMemoryEventLog();
+  populateAlreadyAnalyzedBlockNumbers();
+  ///
+  const contracts = getContractsToFetchEventsFor(seed, api);
+  listenToNewEvents(contracts);
 
-  try {
-    for (let i = 0; i < pendingBlocks.length; i += CHUNK_SIZE) {
-      fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
-      const chunk = pendingBlocks.slice(i, i + CHUNK_SIZE);
-      addBlockRangeToTheQueue(queue, api, contracts, eventLog, chunk);
-
-      console.log(`amount of pending blocks to process:`, queue.size);
-      queue.start();
-      await queue.onIdle();
-
-      queue.pause();
-    }
-  } catch (e) {
-    fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
-    console.log('error while analyzing past blocks...');
-    console.log(e);
-    process.exit(1);
-  }
-
-  const res = await getStartEndBlockNumbers(api);
-  fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
-
-  blockToResumeWithOnSIGINTContainer.blockNumber = res.startBlockNumber;
-  try {
-    const blocksToAdd = arrayRange(res.startBlockNumber, res.endBlockNumber);
-    console.warn(`Amount of blocks to add to catch up to 'now': ${blocksToAdd.length}`);
-    for (let i = 0; i < blocksToAdd.length; i += CHUNK_SIZE) {
-      const chunk = blocksToAdd.slice(i, i + CHUNK_SIZE);
-      for (const b of chunk) {
-        pendingBlocks.push(b);
-      }
-
-      addBlockRangeToTheQueue(queue, api, contracts, eventLog, chunk);
-
-      console.log(`amount of blocks to process:`, queue.size);
-      queue.start();
-      await queue.onIdle();
-
-      queue.pause();
-    }
-  } catch (e) {
-    console.log('error while analyzing past blocks...');
-    console.log(e);
-    process.exit(1);
-  }
-
-  if (!RUN_CONTINUOUSLY) {
-    console.log(`Continuous mode off. Exiting...`);
-    await api.disconnect();
-    process.exit(0);
-  }
-
-  console.log('Continuous mode on. Running continuous scan...');
-  await runContinously(res.endBlockNumber, api, queue, contracts, eventLog);
+  await processPastBlocks(api, contracts);
 })(getArgvObj()).catch((e) => {
-  console.log('UNHANDLED', e);
-  fs.writeFileSync(getEventPendingBlocksPath(), JSON.stringify(pendingBlocks), 'utf-8');
+  console.log('UNHANDLED ERROR\n', e);
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);
 });
+
+async function processPastBlocks(api: ApiPromise, contracts: (LendingPool | AToken | VToken)[]) {
+  const blocksToCatchUpToNow = await getBlocksToCatchUpToNow(api);
+  console.log('total number of blocks to process to catch up to now: ', blocksToCatchUpToNow.length);
+
+  ensureQueueItemsFinishOnProcessExitSignal(queue);
+  try {
+    for (let i = 0; i < blocksToCatchUpToNow.length; i += QUEUE_CHUNK_SIZE) {
+      const currentChunk = blocksToCatchUpToNow.slice(i, i + QUEUE_CHUNK_SIZE);
+      addBlockRangeToTheQueue(queue, api, contracts, currentChunk);
+      queue.start();
+      await queue.onIdle();
+
+      queue.pause();
+    }
+  } catch (e) {
+    console.log('error while analyzing blocks...');
+    console.log(e);
+    process.exit(1);
+  }
+}
+
+async function getBlocksToCatchUpToNow(api: ApiPromise) {
+  const blocksToCatchUpSet = new LargeSet<number>();
+  const latestBlockNumber = await getLatestBlockNumber(api);
+  for (let currentBlockNumber = START_BLOCK_NUMBER_PRE_DEPLOYMENT; currentBlockNumber <= latestBlockNumber; currentBlockNumber++) {
+    if (!analyzedBlocksSet.has(currentBlockNumber)) blocksToCatchUpSet.add(currentBlockNumber);
+  }
+
+  const blocksToAnalyze: number[] = [];
+  for (const val of blocksToCatchUpSet.values()) {
+    blocksToAnalyze.push(val);
+  }
+  return blocksToAnalyze;
+}
+
+function getContractsToFetchEventsFor(seed: string, api: ApiPromise) {
+  const LENDING_POOL_ADDRESS = '5GBai32Vbzizw3xidVUwkjzFydaas7s2B8uudgtiguzmW8yn';
+  const ADAI_ADDRESS = '5GusvrnNEfYThkDxdSUZRca9ScTiVyrF3S76UJEQTUXBDdmT';
+  const VDAI_ADDRESS = '5EkScoCUiXCraQw5kSbknbugVEhWod9xMv4PRkyo9MHTREXw';
+  const AUSDC_ADDRESS = '5EVfH2BRm2ggimfRcuEH8zRYkviyEN69et4fDjHWHzWjirBK';
+  const VUSDC_ADDRESS = '5CdF6Vdf9mAG5fjhFuNaLfFLj9i31SjxBsVj5JHBARmL5Xmd';
+  const AWETH_ADDRESS = '5DvMrRU79zS29FSSP5k8CyuCK2de59Xvvqwzbm1UzqNWwxFY';
+  const VWETH_ADDRESS = '5HY4mmPQuMDakTDeaf6Cj5TJaSbmb7G3fHczcyuyhmU6UeVR';
+  const ABTC_ADDRESS = '5GZm7bsGE53Gyf9Cg2GwsTjDrP9skY6A6uSZiCFWDoEZyMtj';
+  const VBTC_ADDRESS = '5EEurzNsm5SMDSJBHbtu4GHbkdSsHdjPbWNb28vxpEWkZJWX';
+  const AAZERO_ADDRESS = '5Da8px1HEoAvs3m9i55ftfSswDbskqCY4rHr1KAFsTqfiTia';
+  const VAZERO_ADDRESS = '5ChJnTSpsQ26zJGyGt7uHHLRjbquAy1JSmaijMujUi9VKfJL';
+  const ADOT_ADDRESS = '5D1dwQEhyXzVDuB8RX85xm9iNa4pTtUr2jVpYHNFte7FxRTw';
+  const VDOT_ADDRESS = '5HDidr2RT4VGkxyGuJieGAfqYpqphwviB4WULaNp6VNsf2B2';
+
+  const keyring = new Keyring();
+  const signer = keyring.createFromUri(seed, {}, 'sr25519');
+
+  const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
+  const aTokens = [ADAI_ADDRESS, AAZERO_ADDRESS, ABTC_ADDRESS, ADOT_ADDRESS, AUSDC_ADDRESS, AWETH_ADDRESS].map((addr) =>
+    getContractObject(AToken, addr, signer, api),
+  );
+  const vTokens = [VDAI_ADDRESS, VAZERO_ADDRESS, VBTC_ADDRESS, VDOT_ADDRESS, VUSDC_ADDRESS, VWETH_ADDRESS].map((addr) =>
+    getContractObject(VToken, addr, signer, api),
+  );
+
+  const contracts = [lendingPool, ...aTokens, ...vTokens];
+  return contracts;
+}
+
+function populateAlreadyAnalyzedBlockNumbers() {
+  const analyzedBlocksFromStorage = getAnalyzedBlocksFromFile();
+  analyzedBlocksFromStorage.forEach((b) => {
+    analyzedBlocksSet.add(b);
+  });
+}
+
+function populateInMemoryEventLog() {
+  const prevLog = getPreviousEventsFromFile();
+  for (const e of prevLog) {
+    eventLog.push(e);
+  }
+}
