@@ -101,7 +101,7 @@ const SAVE_INTERVAL = 500;
 const BENCH_STATS_DIVIDER = SAVE_INTERVAL / 100;
 let blockBenchCounter = 0;
 let benchTimeIntermediateStart: number | null = null;
-function storeEventsAndErrors(result: EventsFromBlockResult) {
+function storeEventsAndErrors(result: EventsFromBlockResult, listenMode = false) {
   if (analyzedBlocksSet.has(result.blockNumber)) {
     console.warn(`duplicate analysis of block ${result.blockNumber}`);
     return;
@@ -115,11 +115,11 @@ function storeEventsAndErrors(result: EventsFromBlockResult) {
       console.log(new Date(), `pushed ${events.length} events for ${contractName} | block: ${result.blockNumber}`);
     }
   }
-  if (blockBenchCounter >= SAVE_INTERVAL) {
+  if (blockBenchCounter >= SAVE_INTERVAL || listenMode) {
     blockBenchCounter = 0;
     fs.writeFileSync(getEventsLogPath(), JSON.stringify(eventLog, null, 2), 'utf-8');
     storeAnalyzedBlocks();
-    printStats(result);
+    if (!listenMode) printStats(result);
   }
 }
 
@@ -241,7 +241,7 @@ async function listenToNewEvents<TContract extends IWithAbi & IWithAddress>(cont
         );
         if (!timestampExtrinistic) throw new Error('There is no timestamp extrinistic in block :C');
         const res = parseBlockEvents(events, contracts, timestampExtrinistic.extrinsic.method.args[0].toString(), blockNumber.toNumber(), blockHash);
-        storeEventsAndErrors(res);
+        storeEventsAndErrors(res, true);
       });
     });
   } catch (e) {
