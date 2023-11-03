@@ -46,22 +46,7 @@ export const lpTrackingData = pgTable(
     address: varchar('address', { length: 48 }).notNull(),
     updatePriority: integer('updatePriority').notNull(),
     healthFactor: doublePrecision('helathFactor').notNull(),
-    updateAtLatest: integer('updateAtLatest').notNull(),
-  },
-  (c) => {
-    return {
-      addressIndex: uniqueIndex('address_idx').on(c.address),
-    };
-  },
-);
-
-export const lpUserMiscData = pgTable(
-  'lp_userMiscData',
-  {
-    id: serial('id').primaryKey(),
-    address: varchar('address', { length: 48 }).notNull(),
-    updatePriority: integer('updatePriority').notNull(),
-    healthFactor: doublePrecision('helathFactor').notNull(),
+    updateAtLatest: timestamp('updateAtLatest', { withTimezone: true }).notNull(),
   },
   (c) => {
     return {

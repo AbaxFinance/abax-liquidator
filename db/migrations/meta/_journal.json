@@ -15,6 +15,13 @@
       "when": 1698975546534,
       "tag": "0001_whole_catseye",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1698976708902,
+      "tag": "0002_wet_nomad",
+      "breakpoints": true
     }
   ]
 }
