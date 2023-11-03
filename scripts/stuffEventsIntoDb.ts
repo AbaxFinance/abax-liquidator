@@ -5,10 +5,13 @@ import { events } from '../db/schema';
 
 (async () => {
   if (require.main !== module) return;
+  console.log(`Deleting rows...`);
+  await db.delete(events);
 
   // eslint-disable-next-line no-constant-condition
   const eventLog = getPreviousEventsFromFile();
-  db.insert(events).values(
+  console.log(`${eventLog.length} event to load....`);
+  await db.insert(events).values(
     eventLog.map((e) => ({
       blockHash: e.meta.blockHash,
       contractAddress: e.meta.contractAddress,
@@ -16,9 +19,11 @@ import { events } from '../db/schema';
       blockNumber: e.meta.blockNumber,
       data: e.event,
       name: e.meta.eventName,
-      timestamp: parseInt(e.meta.timestamp),
+      blockTimestamp: new Date(e.meta.timestampISO),
     })),
   );
+  console.log(`Loaded`);
+  process.exit(0);
 })().catch((e) => {
   console.log('UNHANDLED', e);
   console.error(chalk.red(JSON.stringify(e, null, 2)));

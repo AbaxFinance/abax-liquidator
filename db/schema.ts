@@ -8,10 +8,11 @@ export const events = pgTable(
     contractName: varchar('contractName', { length: 32 }).notNull(),
     contractAddress: varchar('contractAddress', { length: 48 }).notNull(),
     name: varchar('name', { length: 48 }).notNull(),
-    timestamp: integer('timestamp').notNull(),
+    blockTimestamp: timestamp('blockTimestamp', { withTimezone: true }).notNull(),
     blockNumber: integer('blockNumber').notNull(),
     blockHash: varchar('blockHash', { length: 66 }).notNull(),
     data: jsonb('data').notNull(),
+    verifiedUniqueness: boolean('verifiedUniqueness').notNull().default(false),
   },
   (c) => {
     return {
@@ -28,7 +29,7 @@ export const actorsJobs = pgTable(
   {
     id: serial('id').primaryKey(),
     actor: varchar('actor', { length: 64 }).notNull(),
-    timestamp: timestamp('timestamp').notNull(),
+    updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).notNull(),
     jobType: varchar('jobType', { length: 128 }).notNull(),
   },
   (c) => {
@@ -128,7 +129,7 @@ export const lpReserveDatas = pgTable(
     currentDepositRateE24: varchar('currentDepositRateE24', { length: 128 }).notNull(),
     totalDebt: varchar('totalDebt', { length: 128 }).notNull(),
     currentDebtRateE24: varchar('currentDebtRateE24', { length: 128 }).notNull(),
-    indexesUpdateTimestamp: integer('indexesUpdateTimestamp'),
+    indexesUpdateTimestamp: timestamp('indexesUpdateTimestamp', { withTimezone: true }).notNull(),
     //parameters
     interestRateModel: jsonb('interestRateModel').notNull(),
     incomeForSuppliersPartE6: varchar('incomeForSuppliersPartE6', { length: 128 }).notNull(),

@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "167426ee-9fe3-4fcb-a16d-9300b14af652",
+  "id": "999a046e-94eb-4750-8671-7573fec3ccae",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "actors_states": {
@@ -20,9 +20,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
+        "updateTimestamp": {
+          "name": "updateTimestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
@@ -36,7 +36,9 @@
       "indexes": {
         "actor_idx": {
           "name": "actor_idx",
-          "columns": ["actor"],
+          "columns": [
+            "actor"
+          ],
           "isUnique": true
         }
       },
@@ -83,13 +85,23 @@
       "indexes": {
         "name_idx": {
           "name": "name_idx",
-          "columns": ["name"],
+          "columns": [
+            "name"
+          ],
           "isUnique": true
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "asset_prices_address_unique": {
+          "name": "asset_prices_address_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "address"
+          ]
+        }
+      }
     },
     "events": {
       "name": "events",
@@ -119,9 +131,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "integer",
+        "blockTimestamp": {
+          "name": "blockTimestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
@@ -147,7 +159,9 @@
       "indexes": {
         "name_idx": {
           "name": "name_idx",
-          "columns": ["name"],
+          "columns": [
+            "name"
+          ],
           "isUnique": true
         }
       },
@@ -257,9 +271,9 @@
         },
         "indexesUpdateTimestamp": {
           "name": "indexesUpdateTimestamp",
-          "type": "integer",
+          "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "interestRateModel": {
           "name": "interestRateModel",
@@ -277,7 +291,9 @@
       "indexes": {
         "address_idx": {
           "name": "address_idx",
-          "columns": ["address"],
+          "columns": [
+            "address"
+          ],
           "isUnique": true
         }
       },
@@ -287,7 +303,9 @@
         "lp_reserveDatas_address_unique": {
           "name": "lp_reserveDatas_address_unique",
           "nullsNotDistinct": false,
-          "columns": ["address"]
+          "columns": [
+            "address"
+          ]
         }
       }
     },
@@ -329,7 +347,9 @@
       "indexes": {
         "address_idx": {
           "name": "address_idx",
-          "columns": ["address"],
+          "columns": [
+            "address"
+          ],
           "isUnique": true
         }
       },
@@ -381,7 +401,9 @@
       "indexes": {
         "address_idx": {
           "name": "address_idx",
-          "columns": ["address"],
+          "columns": [
+            "address"
+          ],
           "isUnique": true
         }
       },
@@ -391,7 +413,9 @@
         "lp_userConfigs_address_unique": {
           "name": "lp_userConfigs_address_unique",
           "nullsNotDistinct": false,
-          "columns": ["address"]
+          "columns": [
+            "address"
+          ]
         }
       }
     },
@@ -445,12 +469,17 @@
       "indexes": {
         "address_idx": {
           "name": "address_idx",
-          "columns": ["address"],
+          "columns": [
+            "address"
+          ],
           "isUnique": true
         },
         "address_reserve_idx": {
           "name": "address_reserve_idx",
-          "columns": ["address", "reserveAddress"],
+          "columns": [
+            "address",
+            "reserveAddress"
+          ],
           "isUnique": true
         }
       },
@@ -490,7 +519,9 @@
       "indexes": {
         "address_idx": {
           "name": "address_idx",
-          "columns": ["address"],
+          "columns": [
+            "address"
+          ],
           "isUnique": true
         }
       },
