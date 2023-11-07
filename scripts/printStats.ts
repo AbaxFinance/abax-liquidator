@@ -20,14 +20,13 @@ const PRE_RERELEASE = new Date('2023-10-30T00:00:17.000Z');
       const events = getPreviousEventsFromFile().filter((e) => startTs <= parseInt(e.meta.timestamp) && parseInt(e.meta.timestamp) <= endTs);
       const lpEvents = events.filter((e) => e.meta.contractName === 'lending_pool');
       const addresses = events.flatMap((e) => [e.event.caller, e.event.from, e.event.to]).filter((e) => !!e);
-      const lastEventTs = events[events.length - 1];
       const uniqueAddresses = [...new Set(addresses)];
       // fs.writeFileSync('uniq_addresses.json', JSON.stringify(uniqueAddresses, null, 2));
 
       const res = [
         ['lastEventTimestamp', 'start', 'end', 'eventCount', 'uniqueAddresses', 'lPEventsCount'],
         [
-          lastEventTs.meta.timestampISO,
+          events[events.length - 1].meta.timestampISO,
           new Date(startTs).toISOString(),
           new Date(endTs).toISOString(),
           events.length,
@@ -36,7 +35,7 @@ const PRE_RERELEASE = new Date('2023-10-30T00:00:17.000Z');
         ],
       ];
 
-      // console.clear();
+      console.clear();
       console.log(new Date());
       console.table(res);
       await sleep(10 * 1000);

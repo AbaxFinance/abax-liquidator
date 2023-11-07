@@ -7,7 +7,8 @@ import { ReserveDataChainUpdater } from './reserveDataChainUpdater';
 import { PriceChangeHFUpdater } from 'src/priceChangeHFUpdater';
 import { PeriodicHFUpdater } from 'src/periodicHFUpdater';
 import { Liquidator } from './liquidator';
-import { EventFeeder } from 'src/eventFeeder';
+import { EventListener } from 'src/event-feeder/EventListener';
+import { EventAnalyzeEnsurer } from 'src/event-feeder/EventAnalyzeEnsurer';
 import { PriceUpdater } from 'src/priceUpdater';
 
 (async () => {
@@ -21,7 +22,8 @@ import { PriceUpdater } from 'src/priceUpdater';
   const periodicHFUpdater = new PeriodicHFUpdater();
   const priceUpdater = new PriceUpdater();
   const liquidator = new Liquidator();
-  const eventListenerFeeder = new EventFeeder();
+  const eventListenerFeeder = new EventListener();
+  const eventAnalyzeEnsurer = new EventAnalyzeEnsurer();
 
   const res = await Promise.all([
     priceUpdater.runLoop(),
@@ -31,6 +33,7 @@ import { PriceUpdater } from 'src/priceUpdater';
     periodicHFUpdater.runLoop(),
     liquidator.runLoop(),
     eventListenerFeeder.runLoop(),
+    eventAnalyzeEnsurer.runLoop(),
   ]);
   console.error(JSON.stringify(res, null, 2));
 })().catch((e) => {
