@@ -1,6 +1,13 @@
 version: '3.5'
 
 services:
+  rabbitmq:
+    image: 'rabbitmq:3.11.9-management-alpine'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    networks:
+      - postgres
   postgres:
     container_name: postgres_container
     image: postgres
@@ -15,7 +22,6 @@ services:
     networks:
       - postgres
     restart: unless-stopped
-
   pgadmin:
     container_name: pgadmin_container
     image: dpage/pgadmin4

@@ -11,9 +11,10 @@ import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
 import { db } from 'db';
-import { analyzedBlocks, events } from 'db/schema';
+import { analyzedBlocks, events, lpTrackingData } from 'db/schema';
 import { PostgresError } from 'postgres';
 import { ApiProviderWrapper } from 'scripts/common';
+import { HF_PRIORITY, UPDATE_INTERVAL_BY_HF_PRIORITY } from 'src/constants';
 import { EventWithMeta, EventsFromBlockResult, IWithAbi, IWithAddress } from 'src/types';
 import { getLendingPoolContractAddresses } from 'src/utils';
 
@@ -51,25 +52,56 @@ export async function storeEventsAndErrors(result: EventsFromBlockResult) {
   }
   if (Object.keys(result.eventsByContractAddress).length > 0) {
     for (const [contractName, eventsToInsert] of Object.entries(result.eventsByContractAddress)) {
-      await db
-        .insert(events)
-        .values(
-          eventsToInsert.map((e) => ({
-            blockHash: e.meta.blockHash,
-            contractAddress: e.meta.contractAddress,
-            contractName: e.meta.contractName,
-            blockNumber: e.meta.blockNumber,
-            data: e.event,
-            name: e.meta.eventName,
-            blockTimestamp: new Date(e.meta.timestampISO),
-            hash: u8aToHex(blake2AsU8a(JSON.stringify(e), 256), undefined, false),
-          })),
-        )
-        .onConflictDoNothing();
-      console.log(new Date(), `pushed ${eventsToInsert.length} events for ${contractName} | block: ${result.blockNumber}`);
+      await saveToEventsTable(eventsToInsert, contractName, result);
+      await saveToLpTrackingTable(eventsToInsert, result);
     }
   }
   return result;
+}
+
+async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: EventsFromBlockResult) {
+  const allAddresses: string[] = eventsToInsert
+    .flatMap((e) => [e.event.caller, e.event.from, e.event.to, e.event.user, e.event.onBehalfOf])
+    .filter((e) => !!e);
+  const uniqueAddresses = [...new Set(allAddresses)];
+  console.log(`${uniqueAddresses.length} user addresses to load....`);
+  const insertedIds = await db
+    .insert(lpTrackingData)
+    .values(
+      uniqueAddresses.map((addr) => ({
+        address: addr,
+        healthFactor: 0,
+        updatePriority: 0,
+        updateAtLatest: new Date(Date.now() + UPDATE_INTERVAL_BY_HF_PRIORITY[HF_PRIORITY.CRITICAL]),
+      })),
+    )
+    .returning({ insertedId: lpTrackingData.id })
+    .onConflictDoNothing();
+  if (insertedIds.length > 0) {
+    console.log(new Date(), `pushed ${insertedIds.length} addresses for | block: ${result.blockNumber}`);
+  }
+}
+
+async function saveToEventsTable(eventsToInsert: EventWithMeta[], contractName: string, result: EventsFromBlockResult) {
+  const insertedIds = await db
+    .insert(events)
+    .values(
+      eventsToInsert.map((e) => ({
+        blockHash: e.meta.blockHash,
+        contractAddress: e.meta.contractAddress,
+        contractName: e.meta.contractName,
+        blockNumber: e.meta.blockNumber,
+        data: e.event,
+        name: e.meta.eventName,
+        blockTimestamp: new Date(e.meta.timestampISO),
+        hash: u8aToHex(blake2AsU8a(JSON.stringify(e), 256), undefined, false),
+      })),
+    )
+    .onConflictDoNothing();
+  if (insertedIds.length > 0) {
+    console.log(new Date(), `pushed ${insertedIds.length} events for ${contractName} | block: ${result.blockNumber}`);
+  }
+  return insertedIds;
 }
 
 export function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(

@@ -4,8 +4,8 @@ import { getPreviousEventsFromFile } from 'scripts/fetchEvents';
 import { events } from '../db/schema';
 import { UserDataChainUpdater } from './userDataChainUpdater';
 import { ReserveDataChainUpdater } from './reserveDataChainUpdater';
-import { PriceChangeHFUpdater } from 'src/priceChangeHFUpdater';
-import { PeriodicHFUpdater } from 'src/periodicHFUpdater';
+import { PriceChangeHFUpdater } from 'src/hf-recalculation/PriceChangeHFUpdater';
+import { PeriodicHFUpdater } from 'src/hf-recalculation/PeriodicHFUpdater';
 import { Liquidator } from './liquidator';
 import { EventListener } from 'src/event-feeder/EventListener';
 import { EventAnalyzeEnsurer } from 'src/event-feeder/EventAnalyzeEnsurer';
@@ -20,6 +20,7 @@ import { PriceUpdater } from 'src/priceUpdater';
   const reserveDataChainUpdater = new ReserveDataChainUpdater();
   const priceChangeHFUpdater = new PriceChangeHFUpdater();
   const periodicHFUpdater = new PeriodicHFUpdater();
+  const periodicHFUpdater2 = new PeriodicHFUpdater();
   const priceUpdater = new PriceUpdater();
   const liquidator = new Liquidator();
   const eventListenerFeeder = new EventListener();
@@ -27,13 +28,14 @@ import { PriceUpdater } from 'src/priceUpdater';
 
   const res = await Promise.all([
     priceUpdater.runLoop(),
-    userDataChainUpdater.runLoop(),
-    reserveDataChainUpdater.runLoop(),
-    priceChangeHFUpdater.runLoop(),
+    // eventListenerFeeder.runLoop(),
+    // eventAnalyzeEnsurer.runLoop(),
+    // userDataChainUpdater.runLoop(),
+    // reserveDataChainUpdater.runLoop(),
+    // priceChangeHFUpdater.runLoop(),
     periodicHFUpdater.runLoop(),
-    liquidator.runLoop(),
-    eventListenerFeeder.runLoop(),
-    eventAnalyzeEnsurer.runLoop(),
+    periodicHFUpdater2.runLoop(),
+    // liquidator.runLoop(),
   ]);
   console.error(JSON.stringify(res, null, 2));
 })().catch((e) => {

@@ -1,0 +1,1 @@
+ALTER TABLE "events" ALTER COLUMN "blockHash" SET DATA TYPE char(66);

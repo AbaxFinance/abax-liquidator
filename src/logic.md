@@ -10,15 +10,8 @@ HF priorities:
 
 ## Event fetcher/listener
 
-(POTENTIAL_ACTOR)
-
-basically fetchEvents(?)
-
-while true:
-//assuming last successful block analyzed X
-read Y blocks
-push events into the db
-mark last successfull block as X+Y
+- actor-listener
+- actor for catchup/analysis ensurer purposes
 
 ### possibilities:
 
@@ -79,3 +72,4 @@ https://github.com/timgit/pg-boss
 https://github.com/andywer/pg-listen
 
 Centralized logger??
+winston+kibana

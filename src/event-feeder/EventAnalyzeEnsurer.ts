@@ -41,7 +41,7 @@ export class EventAnalyzeEnsurer {
       const contracts = getLendingPoolContractAddresses(seed, api);
       await this.ensureBlockAnalysis(this.queue, api, contracts);
       console.log('EventAnalyzeEnsurer', 'sleeping for 1 min...');
-      sleep(1 * 60 * 1000);
+      await sleep(1 * 60 * 1000);
     }
   }
   addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(
@@ -59,6 +59,7 @@ export class EventAnalyzeEnsurer {
         .add(() => getEventsByContract(blockNumber, api, contracts))
         .then((res) => storeEventsAndErrors(res))
         .then((resOrFailed) => {
+          this.blockBenchCounter++;
           if (resOrFailed && this.blockBenchCounter >= BENCH_BLOCKS_INTERVAL) {
             this.blockBenchCounter = 0;
             this.printStats(resOrFailed);
@@ -70,6 +71,7 @@ export class EventAnalyzeEnsurer {
         });
     }
   }
+
   async ensureBlockAnalysis(queue: PQueue, api: ApiPromise, contracts: (LendingPool | AToken | VToken)[]) {
     const blocksToCatchUpToNow = await getBlocksToCatchUpToNow(api);
     console.log('total number of blocks to process to catch up to now: ', blocksToCatchUpToNow.length);
@@ -162,10 +164,10 @@ async function getMissingOrFailedToAnalyzeBlocks() {
 }
 
 async function getLastBlockNumberInDb() {
-  const lastBlockNumberRes = await db.execute<{ maxBlockNumber: number }>(
-    sql`SELECT max(${analyzedBlocks.blockNumber.name}) as maxBlockNumber FROM ${analyzedBlocks}`,
+  const lastBlockNumberRes = await db.execute<{ maxblocknumber: number }>(
+    sql.raw(`SELECT max("${analyzedBlocks.blockNumber.name}") as maxblocknumber FROM "${getTableName(analyzedBlocks)}"`),
   );
-  const lastBlockNumberInDb = lastBlockNumberRes[0]?.maxBlockNumber ?? START_BLOCK_NUMBER_PRE_DEPLOYMENT;
+  const lastBlockNumberInDb = lastBlockNumberRes[0]?.maxblocknumber ?? START_BLOCK_NUMBER_PRE_DEPLOYMENT;
   return lastBlockNumberInDb;
 }
 

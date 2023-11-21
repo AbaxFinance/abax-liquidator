@@ -1,5 +1,5 @@
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import { boolean, char, doublePrecision, integer, jsonb, pgTable, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
+import { boolean, char, doublePrecision, integer, json, jsonb, pgTable, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 
 export const analyzedBlocks = pgTable('analyzedBlocks', {
   blockNumber: integer('blockNumber').primaryKey(),
@@ -14,7 +14,7 @@ export const events = pgTable(
     name: varchar('name', { length: 48 }).notNull(),
     blockTimestamp: timestamp('blockTimestamp', { withTimezone: true }).notNull(),
     blockNumber: integer('blockNumber').notNull(),
-    blockHash: char('blockHash', { length: 64 }).notNull(),
+    blockHash: char('blockHash', { length: 66 }).notNull(),
     data: jsonb('data').notNull(),
     hash: char('hash', { length: 66 }).notNull().unique(),
   },
@@ -86,6 +86,10 @@ export const lpUserConfigs = pgTable(
     };
   },
 );
+export const lpMarketRules = pgTable('lp_marketRules', {
+  id: integer('id').primaryKey(),
+  assetRules: json('assetRules'),
+});
 
 export const lpReserveDatas = pgTable(
   'lp_reserveDatas',

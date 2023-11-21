@@ -10,8 +10,8 @@ import { sql } from 'drizzle-orm';
 
 const LOOP_INTERVAL = process.env.LOOP_INTERVAL ?? 5 * ONE_SECOND;
 
-type AnyMarket = 'AZERO/USDT' | 'BTC/USDT' | 'USDC/USDT' | 'ETH/USDT' | 'DOT/USDT';
-type AnyRegisteredAsset = 'AZERO' | 'BTC' | 'USDC' | 'ETH' | 'DOT';
+type AnyMarket = 'AZERO/USDT' | 'BTC/USDT' | 'USDC/USDT' | 'ETH/USDT' | 'DOT/USDT' | 'USDT/DAI';
+type AnyRegisteredAsset = 'AZERO' | 'BTC' | 'USDC' | 'ETH' | 'DOT' | 'DAI';
 
 const MARKET_SYMBOLS_BY_RESERVE_NAME = {
   AZERO: 'AZERO/USDT',
@@ -19,6 +19,7 @@ const MARKET_SYMBOLS_BY_RESERVE_NAME = {
   USDC: 'USDC/USDT',
   ETH: 'ETH/USDT',
   DOT: 'DOT/USDT',
+  DAI: 'USDT/DAI', //TODO
 } satisfies Record<AnyRegisteredAsset, AnyMarket>;
 
 const PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME = {
@@ -27,6 +28,7 @@ const PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME = {
   USDC: 0.02,
   ETH: 0.02,
   DOT: 0.02,
+  DAI: 0.02, //TODO
 } satisfies Record<AnyRegisteredAsset, number>;
 export function recordEntries<K extends PropertyKey, T>(object: Record<K, T>) {
   return Object.entries(object) as [K, T][];
@@ -40,35 +42,42 @@ function getKeyByValue<K extends PropertyKey, T>(obj: Record<K, T>, value: T) {
 const INIT_ASSET_PRICE_DATA = [
   {
     name: 'AZERO',
-    address: 'AZERO_addr',
+    address: '5CLLmNswXre58cuz6hBnyscpieFYUyqq5vwvopiW3q41SSYF',
     currentPriceE8: 0,
     anchorPriceE8: 0,
     updateTimestamp: 0,
   },
   {
     name: 'BTC',
-    address: 'BTC_addr',
+    address: '5CJCSzTY2wZQaDp9PrzC1LsVfTEp9sGBHcAY3vjv9JLakfX9',
     currentPriceE8: 0,
     anchorPriceE8: 0,
     updateTimestamp: 0,
   },
   {
     name: 'USDC',
-    address: 'USDC_addr',
+    address: '5GXDPgrjJC7cyr9B1jCm5UqLGuephaEKGoAeHKfodB3TVghP',
     currentPriceE8: 0,
     anchorPriceE8: 0,
     updateTimestamp: 0,
   },
   {
     name: 'ETH',
-    address: 'ETH_addr',
+    address: '5DgMoQHDKSJryNGR4DXo5H267Hmnf9ph5ZMLPXBtPxcZfN3P',
     currentPriceE8: 0,
     anchorPriceE8: 0,
     updateTimestamp: 0,
   },
   {
     name: 'DOT',
-    address: 'DOT_addr',
+    address: '5EwcHvcGBC9jnVzmPJUzwgZJLxUkrWCzzZfoqpjZ45o9C9Gh',
+    currentPriceE8: 0,
+    anchorPriceE8: 0,
+    updateTimestamp: 0,
+  },
+  {
+    name: 'DAI',
+    address: '5ELYqHS8YZ2hAEnCiqGJg8Ztc6JoFFKHpvgUbuz9oW9vc5at',
     currentPriceE8: 0,
     anchorPriceE8: 0,
     updateTimestamp: 0,
@@ -98,6 +107,11 @@ export class PriceUpdater {
       //      update prices table - insert currentPrice - if abs(currentPrice - anchorPrice) > getThreshold() - anchorPrice <-- currentPrice - insert updateTimestamp
 
       const pricePromises: Promise<{ marketPair: AnyMarket; ob: OrderBook }>[] = [];
+      // console.log(
+      //   'symbols',
+      //   kucoinExchange.symbols.filter((s) => s.includes('DAI')),
+      // );
+      // process.exit(1);
       try {
         for (const marketPair of Object.values(MARKET_SYMBOLS_BY_RESERVE_NAME)) {
           pricePromises.push(kucoinExchange.fetchOrderBook(marketPair).then((ob) => ({ marketPair, ob })));
@@ -118,7 +132,7 @@ export class PriceUpdater {
       console.log('Inserting data...');
 
       const updateTs = new Date();
-      console.log('assetPriceData', assetPriceData);
+      // console.log('assetPriceData', assetPriceData);
       const valuesToInsert = (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA).map((apd) => {
         const currentPriceE8 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
         return {
@@ -132,7 +146,7 @@ export class PriceUpdater {
               : apd.anchorPriceE8,
         };
       });
-      console.log('valuesToInsert', valuesToInsert);
+      // console.log('valuesToInsert', valuesToInsert);
       await db
         .insert(assetPrices)
         .values(valuesToInsert)
