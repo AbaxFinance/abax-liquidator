@@ -9,6 +9,7 @@ import PriorityQueue from 'p-queue/dist/priority-queue';
 import { TimeSpanFormatter } from 'scripts/benchmarking/utils';
 import { ApiProviderWrapper, sleep } from 'scripts/common';
 import { parseBlockEvents, storeEventsAndErrors } from 'src/event-feeder/EventListener';
+import { logger } from 'src/logger';
 import { EventsFromBlockResult, IWithAbi, IWithAddress } from 'src/types';
 import { getLatestBlockNumber, getLendingPoolContractAddresses } from 'src/utils';
 
@@ -33,14 +34,14 @@ export class EventAnalyzeEnsurer {
   async runLoop() {
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      console.log('EventAnalyzeEnsurer', 'running...');
+      logger.info('EventAnalyzeEnsurer', 'running...');
       const seed = process.env.SEED;
       if (!seed) throw 'could not determine seed';
 
       const api = await this.apiProviderWrapper.getAndWaitForReady();
       const contracts = getLendingPoolContractAddresses(seed, api);
       await this.ensureBlockAnalysis(this.queue, api, contracts);
-      console.log('EventAnalyzeEnsurer', 'sleeping for 1 min...');
+      logger.info('EventAnalyzeEnsurer', 'sleeping for 1 min...');
       await sleep(1 * 60 * 1000);
     }
   }
@@ -50,10 +51,7 @@ export class EventAnalyzeEnsurer {
     contracts: TContract[],
     blockNumbers: number[],
   ) {
-    console.log(
-      new Date(),
-      `adding ${blockNumbers.length} blocks to the queue from range...[${blockNumbers[0]}...${blockNumbers[blockNumbers.length - 1]}]`,
-    );
+    logger.info(`adding ${blockNumbers.length} blocks to the queue from range...[${blockNumbers[0]}...${blockNumbers[blockNumbers.length - 1]}]`);
     for (const blockNumber of blockNumbers) {
       queue
         .add(() => getEventsByContract(blockNumber, api, contracts))
@@ -66,7 +64,7 @@ export class EventAnalyzeEnsurer {
           }
         })
         .catch((e) => {
-          console.log(e);
+          logger.info(e);
           process.exit(1);
         });
     }
@@ -74,7 +72,7 @@ export class EventAnalyzeEnsurer {
 
   async ensureBlockAnalysis(queue: PQueue, api: ApiPromise, contracts: (LendingPool | AToken | VToken)[]) {
     const blocksToCatchUpToNow = await getBlocksToCatchUpToNow(api);
-    console.log('total number of blocks to process to catch up to now: ', blocksToCatchUpToNow.length);
+    logger.info('total number of blocks to process to catch up to now: ', blocksToCatchUpToNow.length);
 
     ensureQueueItemsFinishOnProcessExitSignal(queue);
     try {
@@ -86,10 +84,10 @@ export class EventAnalyzeEnsurer {
 
         queue.pause();
       }
-      console.log(`#### analyzed past/missing/pending blocks ####`);
+      logger.info(`#### analyzed past/missing/pending blocks ####`);
     } catch (e) {
-      console.log('error while analyzing blocks...');
-      console.log(e);
+      logger.info('error while analyzing blocks...');
+      logger.info(e);
       process.exit(1);
     }
   }
@@ -97,10 +95,9 @@ export class EventAnalyzeEnsurer {
     const now = Date.now();
     const timestampISO = new Date(parseInt(result.blockTimestamp.toString())).toISOString();
     if (!this.benchTimeIntermediateStart) {
-      console.log(new Date(), `Last analyzed block: ${result.blockNumber} (${timestampISO})`);
+      logger.info(`Last analyzed block: ${result.blockNumber} (${timestampISO})`);
     } else {
-      console.log(
-        new Date(),
+      logger.info(
         `Last analyzed block: ${result.blockNumber} (${timestampISO}) Speed: ${new TimeSpanFormatter(false).format(
           's.f',
           (now - this.benchTimeIntermediateStart) / BENCH_STATS_DIVIDER,
@@ -174,15 +171,15 @@ async function getLastBlockNumberInDb() {
 export function ensureQueueItemsFinishOnProcessExitSignal(queue: PQueue<PriorityQueue, DefaultAddOptions>) {
   ['SIGINT', 'SIGQUIT', 'SIGTERM'].map((signal) =>
     process.on(signal, () => {
-      if (process.env.DEBUG) console.log(signal);
-      if (process.env.DEBUG) console.log('Pausing queue...');
+      if (process.env.DEBUG) logger.info(signal);
+      if (process.env.DEBUG) logger.info('Pausing queue...');
       queue.pause();
       const intervalID = setInterval(() => {
         if (queue.pending > 0) {
-          if (process.env.DEBUG) console.log(new Date(), `pending: ${queue.pending} items`);
+          if (process.env.DEBUG) logger.info(`pending: ${queue.pending} items`);
           return;
         }
-        if (process.env.DEBUG) console.log(new Date(), 'no more items pending in queue...');
+        if (process.env.DEBUG) logger.info('no more items pending in queue...');
         clearInterval(intervalID);
         process.exit(0);
       }, 500);

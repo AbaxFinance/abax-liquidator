@@ -9,6 +9,7 @@ import {
   UserConfig,
   UserReserveData,
   getContractObject,
+  replaceRNBNPropsWithStrings,
 } from '@abaxfinance/contract-helpers';
 import { db } from 'db';
 import { assetPrices, lpTrackingData, lpUserConfigs, lpUserDatas } from 'db/schema';
@@ -22,6 +23,7 @@ import BN from 'bn.js';
 import { ReserveDataWithMetadata } from 'src/types';
 import amqplib from 'amqplib';
 import { AMQP_URL, LIQUIDATION_EXCHANGE, LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '../messageQueueConsts';
+import { logger } from 'src/logger';
 const MARKET_RULE_IDS = [0, 1, 2] as const;
 
 export class PeriodicHFUpdater {
@@ -43,13 +45,13 @@ export class PeriodicHFUpdater {
     await channel.bindQueue(LIQUIDATION_QUEUE_NAME, LIQUIDATION_EXCHANGE, LIQUIDATION_ROUTING_KEY);
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      console.log('PeriodicHFUpdater', 'running...');
+      logger.info('PeriodicHFUpdater', 'running...');
 
       //TODO chunks
       const addressesToUpdate = (
         await db.select({ address: lpTrackingData.address }).from(lpTrackingData).where(lt(lpTrackingData.updateAtLatest, new Date()))
       ).map((a) => a.address);
-      console.log(`Updating HF for ${addressesToUpdate.length} addresses...`);
+      logger.info(`Updating HF for ${addressesToUpdate.length} addresses...`);
       const reserveAddresses = deployedContracts['alephzero-testnet'].filter((c) => c.name.startsWith('psp22')).map((c) => c.address);
 
       //TODO move to strategy START
@@ -77,24 +79,26 @@ export class PeriodicHFUpdater {
         const healthFactor = parseFloat(collateralPower.mul(E6bn).div(debtPower).toString()) / E6;
         //send message to liquidator if necesary
         if (collateralPower.lte(debtPower)) {
-          console.log(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
+          logger.info(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
 
           channel.publish(
             LIQUIDATION_EXCHANGE,
             LIQUIDATION_ROUTING_KEY,
-            Buffer.from(JSON.stringify({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
+            Buffer.from(
+              JSON.stringify(replaceRNBNPropsWithStrings({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
+            ),
             {
               contentType: 'application/json',
               persistent: true,
             },
           );
-          console.log(`${userAddress} should be liquidated | HF: ${healthFactor}`);
+          logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
         }
-        // console.log(`${userAddress} is safe | HF: ${healthFactor}`);
+        // logger.info(`${userAddress} is safe | HF: ${healthFactor}`);
 
         //update db
       }
-      console.log('PeriodicHFUpdater', 'sleeping for 5 seconds...');
+      logger.info('PeriodicHFUpdater', 'sleeping for 5 seconds...');
       await sleep(5 * 1000);
     }
   }
@@ -111,7 +115,7 @@ export class PeriodicHFUpdater {
     try {
       for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
         const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
-        console.log(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
+        logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
         const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
         const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
         const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);
@@ -121,8 +125,8 @@ export class PeriodicHFUpdater {
         await apiProviderWrapperForUserDataFetch.closeApi();
       }
     } catch (e) {
-      console.log('error while fetching user data...');
-      console.log(e);
+      logger.info('error while fetching user data...');
+      logger.info(e);
       process.exit(1);
     }
 
@@ -131,7 +135,7 @@ export class PeriodicHFUpdater {
     for (const id of MARKET_RULE_IDS) {
       //TODO strategy
       // if (!marketRules.has(userConfig.marketRuleId.toString())) {
-      console.log(`fetching market rule.... ${id}`);
+      logger.info(`fetching market rule.... ${id}`);
       const {
         value: { ok: marketRule },
       } = await lendingPool.query.viewMarketRule(id);
@@ -262,8 +266,8 @@ async function getProtocolUserDataFromChain(
 
 async function getProtocolUserDataFromDB(userAddress: AccountId): Promise<ProtocolUserDataReturnType> {
   const userConfigRows = await db.select().from(lpUserConfigs).where(eq(lpUserConfigs.address, userAddress.toString()));
-  if (userConfigRows.length > 1) console.warn(`more than 1 user config in the database for address: ${userAddress.toString()}`);
-  if (userConfigRows.length === 0) console.warn(`no user config in the database for address: ${userAddress.toString()}`);
+  if (userConfigRows.length > 1) logger.warning(`more than 1 user config in the database for address: ${userAddress.toString()}`);
+  if (userConfigRows.length === 0) logger.warning(`no user config in the database for address: ${userAddress.toString()}`);
   const userConfig: UserConfig = {
     deposits: new ReturnNumber(userConfigRows[0].deposits),
     collaterals: new ReturnNumber(userConfigRows[0].collaterals),
@@ -294,7 +298,7 @@ async function getPricesE18ByReserveAddressFromDb(reserveAddresses: string[]) {
     try {
       acc[address] = new BN((parseFloat(currentPrice) * E8).toString()).mul(E12bn).divn(10 ** 2);
     } catch (e) {
-      console.log(e, currentPrice, address);
+      logger.info(currentPrice, address, e);
       throw e;
     }
     return acc;

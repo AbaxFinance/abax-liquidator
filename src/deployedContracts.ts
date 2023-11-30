@@ -33,3 +33,16 @@ export const deployedContracts: Record<'local' | 'alephzero-testnet' | 'alephzer
   alephzero: [],
   custom: [],
 };
+
+function createGetters(deployedContractsToUse: ChainContractInfo[]) {
+  return {
+    contractInfoRaw: deployedContractsToUse,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+    getAddress: (contractName: string) => deployedContractsToUse.find((c) => c.name === contractName)?.address!,
+    getReserveName: (address: string) => deployedContractsToUse.find((c) => c.address === address)?.reserveName as string,
+    getReserveUnderlyingAddress: (reserveName: string) =>
+      deployedContractsToUse.find((c) => c.name.startsWith('psp22') && c.reserveName === reserveName)!.address,
+  };
+}
+
+export const deployedContractsGetters = createGetters(deployedContracts['alephzero-testnet']);

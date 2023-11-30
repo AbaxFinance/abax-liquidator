@@ -1,15 +1,13 @@
 import chalk from 'chalk';
-import { db } from 'db';
-import { getPreviousEventsFromFile } from 'scripts/fetchEvents';
-import { events } from '../db/schema';
-import { UserDataChainUpdater } from './userDataChainUpdater';
-import { ReserveDataChainUpdater } from './reserveDataChainUpdater';
-import { PriceChangeHFUpdater } from 'src/hf-recalculation/PriceChangeHFUpdater';
-import { PeriodicHFUpdater } from 'src/hf-recalculation/PeriodicHFUpdater';
-import { Liquidator } from './liquidator/liquidator';
-import { EventListener } from 'src/event-feeder/EventListener';
+import { ReserveDataChainUpdater } from 'src/chain-data-updater/reserveDataChainUpdater';
+import { UserDataChainUpdater } from 'src/chain-data-updater/userDataChainUpdater';
 import { EventAnalyzeEnsurer } from 'src/event-feeder/EventAnalyzeEnsurer';
-import { PriceUpdater } from 'src/priceUpdater';
+import { EventListener } from 'src/event-feeder/EventListener';
+import { PeriodicHFUpdater } from 'src/hf-recalculation/PeriodicHFUpdater';
+import { PriceChangeHFUpdater } from 'src/hf-recalculation/PriceChangeHFUpdater';
+import { Liquidator } from 'src/liquidator/liquidator';
+import { logger } from 'src/logger';
+import { PriceUpdater } from 'src/price-updater/priceUpdater';
 
 (async () => {
   if (require.main !== module) return;
@@ -37,9 +35,9 @@ import { PriceUpdater } from 'src/priceUpdater';
     // periodicHFUpdater2.runLoop(),
     liquidator.runLoop(),
   ]);
-  console.error(JSON.stringify(res, null, 2));
+  logger.error(JSON.stringify(res, null, 2));
 })().catch((e) => {
-  console.log('UNHANDLED', e);
-  console.error(chalk.red(JSON.stringify(e, null, 2)));
+  logger.info('UNHANDLED', e);
+  logger.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);
 });

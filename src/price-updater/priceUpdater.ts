@@ -5,6 +5,7 @@ import { ONE_SECOND } from 'src/constants';
 import { E8 } from '@abaxfinance/utils';
 import ccxt, { OrderBook } from 'ccxt';
 import { sql } from 'drizzle-orm';
+import { logger } from 'src/logger';
 
 //TOOD better logging
 
@@ -87,12 +88,12 @@ const INIT_ASSET_PRICE_DATA = [
 export class PriceUpdater {
   async runLoop() {
     const kucoinExchange = new ccxt.kucoin();
-    console.log('Loading kucoin markets....');
+    logger.info('Loading kucoin markets....');
     await kucoinExchange.loadMarkets();
-    console.log('Kucoin markets loaded...');
+    logger.info('Kucoin markets loaded...');
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      console.log('PriceChangeHFUpdater', 'running...');
+      logger.info('PriceChangeHFUpdater', 'running...');
 
       //       1. pseudocode:
       //       listen on anchorPrice change (polling)
@@ -107,7 +108,7 @@ export class PriceUpdater {
       //      update prices table - insert currentPrice - if abs(currentPrice - anchorPrice) > getThreshold() - anchorPrice <-- currentPrice - insert updateTimestamp
 
       const pricePromises: Promise<{ marketPair: AnyMarket; ob: OrderBook }>[] = [];
-      // console.log(
+      // logger.info(
       //   'symbols',
       //   kucoinExchange.symbols.filter((s) => s.includes('DAI')),
       // );
@@ -117,22 +118,22 @@ export class PriceUpdater {
           pricePromises.push(kucoinExchange.fetchOrderBook(marketPair).then((ob) => ({ marketPair, ob })));
         }
       } catch (e) {
-        console.error('Error during fetchOrderBook', e);
+        logger.error('Error during fetchOrderBook', e);
         await sleep(LOOP_INTERVAL);
         continue;
       }
-      console.log('fetching order book...');
+      logger.info('fetching order book...');
       const orderbooks = await Promise.all(pricePromises);
-      console.log('Fetched order book...');
+      logger.info('Fetched order book...');
       const currentPricesE8 = orderbooks.map(
         (curr) => [getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair), curr.ob.bids[0][0] * E8] as [AnyRegisteredAsset, number],
       );
 
       const assetPriceData = await db.select().from(assetPrices);
-      console.log('Inserting data...');
+      logger.info('Inserting data...');
 
       const updateTs = new Date();
-      // console.log('assetPriceData', assetPriceData);
+      // logger.info('assetPriceData', assetPriceData);
       const valuesToInsert = (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA).map((apd) => {
         const currentPriceE8 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
         return {
@@ -146,7 +147,7 @@ export class PriceUpdater {
               : apd.anchorPriceE8,
         };
       });
-      // console.log('valuesToInsert', valuesToInsert);
+      // logger.info('valuesToInsert', valuesToInsert);
       await db
         .insert(assetPrices)
         .values(valuesToInsert)

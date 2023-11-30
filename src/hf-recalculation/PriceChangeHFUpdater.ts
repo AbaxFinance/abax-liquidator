@@ -9,7 +9,7 @@ export class PriceChangeHFUpdater {
     let cachedAssetPriceData: SelectAssetPrice[] = [];
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      console.log('PriceChangeHFUpdater', 'running...');
+      logger.info('PriceChangeHFUpdater', 'running...');
       const currentAssetPriceData = await db.select().from(assetPrices);
       for (const currentPriceData of currentAssetPriceData) {
         const cachedPriceData = cachedAssetPriceData.find((pd) => pd.address === currentPriceData.address);

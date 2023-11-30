@@ -29,7 +29,7 @@ export class EventListener {
 
   async runLoop() {
     // eslint-disable-next-line no-constant-condition
-    console.log('EventFeeder', 'running...');
+    logger.info('EventFeeder', 'running...');
     const seed = process.env.SEED;
     if (!seed) throw 'could not determine seed';
 
@@ -44,7 +44,7 @@ export async function storeEventsAndErrors(result: EventsFromBlockResult) {
     await db.insert(analyzedBlocks).values({ blockNumber: result.blockNumber });
   } catch (e) {
     if (e instanceof PostgresError && e.message.includes('duplicate key value violates unique constraint')) {
-      console.warn(`duplicate analysis of block ${result.blockNumber}`);
+      logger.warning(`duplicate analysis of block ${result.blockNumber}`);
       return false;
     } else {
       throw e;
@@ -64,7 +64,7 @@ async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: Ev
     .flatMap((e) => [e.event.caller, e.event.from, e.event.to, e.event.user, e.event.onBehalfOf])
     .filter((e) => !!e);
   const uniqueAddresses = [...new Set(allAddresses)];
-  console.log(`${uniqueAddresses.length} user addresses to load....`);
+  logger.info(`${uniqueAddresses.length} user addresses to load....`);
   const insertedIds = await db
     .insert(lpTrackingData)
     .values(
@@ -78,7 +78,7 @@ async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: Ev
     .returning({ insertedId: lpTrackingData.id })
     .onConflictDoNothing();
   if (insertedIds.length > 0) {
-    console.log(new Date(), `pushed ${insertedIds.length} addresses for | block: ${result.blockNumber}`);
+    logger.info(new Date(), `pushed ${insertedIds.length} addresses for | block: ${result.blockNumber}`);
   }
 }
 
@@ -99,7 +99,7 @@ async function saveToEventsTable(eventsToInsert: EventWithMeta[], contractName: 
     )
     .onConflictDoNothing();
   if (insertedIds.length > 0) {
-    console.log(new Date(), `pushed ${insertedIds.length} events for ${contractName} | block: ${result.blockNumber}`);
+    logger.info(new Date(), `pushed ${insertedIds.length} events for ${contractName} | block: ${result.blockNumber}`);
   }
   return insertedIds;
 }
@@ -168,7 +168,7 @@ function getEventDataTypeDescriptionToUse(contractName: string) {
 }
 export async function listenToNewEvents<TContract extends IWithAbi & IWithAddress>(api: ApiPromise, contracts: TContract[]) {
   try {
-    console.log('#### attaching listener to api.query.system.events ####');
+    logger.info('#### attaching listener to api.query.system.events ####');
     api.query.system.events(function (eventsRet: { createdAtHash: { toHuman: () => BlockHash } }) {
       const blockHash = eventsRet.createdAtHash.toHuman();
       api.derive.chain.getBlock(blockHash).then((block) => {
@@ -188,8 +188,8 @@ export async function listenToNewEvents<TContract extends IWithAbi & IWithAddres
       });
     });
   } catch (e) {
-    console.error(e);
-    console.error('ERROR WHILE ANALYZING BLOCK || RETRYING');
+    logger.error(e);
+    logger.error('ERROR WHILE ANALYZING BLOCK || RETRYING');
     listenToNewEvents(api, contracts);
   }
 }
