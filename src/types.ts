@@ -33,3 +33,17 @@ export interface IWithAbi {
 export type ReserveDataWithMetadata = CompleteReserveData & {
   id: number;
 };
+
+export type LiquidationData = {
+  userAddress: string;
+  debtPower: string;
+  biggestDebtData: {
+    amountRawE6: string;
+    underlyingAddress: string;
+  };
+  collateralPower: string;
+  biggestCollateralData: {
+    amountRawE6: string;
+    underlyingAddress: string;
+  };
+};

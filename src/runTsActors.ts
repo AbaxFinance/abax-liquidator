@@ -6,7 +6,7 @@ import { UserDataChainUpdater } from './userDataChainUpdater';
 import { ReserveDataChainUpdater } from './reserveDataChainUpdater';
 import { PriceChangeHFUpdater } from 'src/hf-recalculation/PriceChangeHFUpdater';
 import { PeriodicHFUpdater } from 'src/hf-recalculation/PeriodicHFUpdater';
-import { Liquidator } from './liquidator';
+import { Liquidator } from './liquidator/liquidator';
 import { EventListener } from 'src/event-feeder/EventListener';
 import { EventAnalyzeEnsurer } from 'src/event-feeder/EventAnalyzeEnsurer';
 import { PriceUpdater } from 'src/priceUpdater';
@@ -34,8 +34,8 @@ import { PriceUpdater } from 'src/priceUpdater';
     // reserveDataChainUpdater.runLoop(),
     // priceChangeHFUpdater.runLoop(),
     periodicHFUpdater.runLoop(),
-    periodicHFUpdater2.runLoop(),
-    // liquidator.runLoop(),
+    // periodicHFUpdater2.runLoop(),
+    liquidator.runLoop(),
   ]);
   console.error(JSON.stringify(res, null, 2));
 })().catch((e) => {

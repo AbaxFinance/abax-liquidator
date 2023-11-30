@@ -20,7 +20,8 @@ import { E12bn, E18bn, E6, E6bn, E8 } from '@abaxfinance/utils';
 import { deployedContracts } from 'src/deployedContracts';
 import BN from 'bn.js';
 import { ReserveDataWithMetadata } from 'src/types';
-
+import amqplib from 'amqplib';
+import { AMQP_URL, LIQUIDATION_EXCHANGE, LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '../messageQueueConsts';
 const MARKET_RULE_IDS = [0, 1, 2] as const;
 
 export class PeriodicHFUpdater {
@@ -34,6 +35,12 @@ export class PeriodicHFUpdater {
   }
 
   async runLoop() {
+    const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
+    const channel = await connection.createChannel();
+    await channel.assertExchange(LIQUIDATION_EXCHANGE, 'direct', { durable: true });
+    await channel.assertQueue(LIQUIDATION_QUEUE_NAME, { durable: true });
+
+    await channel.bindQueue(LIQUIDATION_QUEUE_NAME, LIQUIDATION_EXCHANGE, LIQUIDATION_ROUTING_KEY);
     // eslint-disable-next-line no-constant-condition
     while (true) {
       console.log('PeriodicHFUpdater', 'running...');
@@ -71,8 +78,16 @@ export class PeriodicHFUpdater {
         //send message to liquidator if necesary
         if (collateralPower.lte(debtPower)) {
           console.log(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
-          //
-          //rabbitMQChannel.sendToQueue(liquidationQueue, Buffer.from(JSON.stringify({userAddress, })));
+
+          channel.publish(
+            LIQUIDATION_EXCHANGE,
+            LIQUIDATION_ROUTING_KEY,
+            Buffer.from(JSON.stringify({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
+            {
+              contentType: 'application/json',
+              persistent: true,
+            },
+          );
           console.log(`${userAddress} should be liquidated | HF: ${healthFactor}`);
         }
         // console.log(`${userAddress} is safe | HF: ${healthFactor}`);
@@ -91,12 +106,12 @@ export class PeriodicHFUpdater {
     const reserveDatas = await fetchProtocolReserveDatas(balanceViewerL, reserveAddresses);
 
     const usersWithReserveDatas: ProtocolUserDataReturnType[] = [];
-    const CHUNK_SIZE = 15;
+    const CHUNK_SIZE = 10;
     const apiProviderWrapperForUserDataFetch = new ApiProviderWrapper(this.wsEndpoint);
     try {
       for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
         const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
-        console.log(`fetching user data chunk (${i - CHUNK_SIZE}-${i})...`);
+        console.log(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
         const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
         const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
         const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);
