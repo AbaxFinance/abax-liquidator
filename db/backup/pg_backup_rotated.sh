@@ -223,5 +223,5 @@ until false; do
     fi;
     
     echo "sleeping for 5 min..."
-    sleep 15
+    sleep 5m
 done

@@ -1,9 +1,9 @@
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { getConnectionString } from '@db/connection';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import path from 'path';
 import postgres from 'postgres';
 import * as schema from './schema';
-import path from 'path';
-import { getConnectionString } from '@db/connection';
 
 const migrationClient = postgres(getConnectionString(), {
   max: 1,

@@ -90,7 +90,7 @@ export class PeriodicHFUpdater extends BaseActor {
 
         //update db
       }
-      logger.info('PeriodicHFUpdater', 'sleeping for 5 seconds...');
+      logger.info('sleeping for 5 seconds...');
       await sleep(5 * 1000);
     }
   }
@@ -300,7 +300,7 @@ async function getPricesE18ByReserveAddressFromDb(reserveAddresses: string[]) {
       try {
         acc[address] = new BN((parseFloat(currentPrice) * E8).toString()).mul(E12bn).divn(10 ** 2);
       } catch (e) {
-        logger.info(currentPrice, address, e);
+        logger.info({ currentPrice, address, e });
         throw e;
       }
       return acc;

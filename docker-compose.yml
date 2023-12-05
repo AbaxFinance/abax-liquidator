@@ -3,6 +3,7 @@ version: '3.9'
 services:
   rabbitmq:
     container_name: rabbitmq
+    hostname: rabbitmq
     image: 'rabbitmq:3.11.9-management-alpine'
     ports:
       - '5672:5672'
@@ -14,6 +15,7 @@ services:
       - local_bridge
   postgres:
     container_name: postgres_container
+    hostname: postgres_container
     image: postgres:16.1
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -21,6 +23,8 @@ services:
       PGDATA: /data/postgres
     volumes:
       - ./local_postgres_data:/data/postgres
+      - ./db/pg_hba.conf:/var/lib/postgresql/pg_hba.conf
+    command: postgres -c 'hba_file=/var/lib/postgresql/pg_hba.conf'
     ports:
       - '5432:5432'
     networks:
@@ -28,6 +32,7 @@ services:
     restart: unless-stopped
   postgres-bp:
     container_name: postgres-bp_container
+    hostname: postgres-bp_container
     build:
       context: './db/backup'
       dockerfile: Dockerfile
@@ -41,6 +46,7 @@ services:
     restart: unless-stopped
   pgadmin:
     container_name: pgadmin_container
+    hostname: pgadmin_container
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
@@ -57,8 +63,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'price-updater'
+    image: 'liquidator-node-actor'
     container_name: 'price-updater'
+    hostname: 'price-updater'
     restart: always
     environment:
       ACTOR_TO_RUN: PRICE_UPDATER
@@ -73,8 +80,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'reservedata-chain-updater'
+    image: 'liquidator-node-actor'
     container_name: 'reservedata-chain-updater'
+    hostname: 'reservedata-chain-updater'
     restart: always
     environment:
       ACTOR_TO_RUN: RESERVE_DATA_CHAIN_UPDATER
@@ -89,8 +97,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'userdata-chain-updater'
+    image: 'liquidator-node-actor'
     container_name: 'userdata-chain-updater'
+    hostname: 'userdata-chain-updater'
     restart: always
     environment:
       ACTOR_TO_RUN: USER_DATA_CHAIN_UPDATER
@@ -105,8 +114,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'eventanalysis-ensurer'
+    image: 'liquidator-node-actor'
     container_name: 'eventanalysis-ensurer'
+    hostname: 'eventanalysis-ensurer'
     restart: always
     environment:
       ACTOR_TO_RUN: EVENT_ANALYZE_ENSURER
@@ -121,8 +131,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'event-listener'
+    image: 'liquidator-node-actor'
     container_name: 'event-listener'
+    hostname: 'event-listener'
     restart: always
     environment:
       ACTOR_TO_RUN: EVENT_LISTENER
@@ -137,8 +148,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'periodic-hf-updater'
+    image: 'liquidator-node-actor'
     container_name: 'periodic-hf-updater'
+    hostname: 'periodic-hf-updater'
     restart: always
     environment:
       ACTOR_TO_RUN: PERIODIC_HFUPDATER
@@ -154,8 +166,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'price-change-updater'
+    image: 'liquidator-node-actor'
     container_name: 'price-change-updater'
+    hostname: 'price-change-updater'
     restart: always
     environment:
       ACTOR_TO_RUN: PRICE_CHANGE_HFUPDATER
@@ -170,8 +183,9 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator'
+    image: 'liquidator-node-actor'
     container_name: 'liquidator'
+    hostname: 'liquidator'
     restart: always
     environment:
       ACTOR_TO_RUN: LIQUIDATOR

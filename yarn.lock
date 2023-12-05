@@ -2333,7 +2333,7 @@ __metadata:
     amqplib: ^0.10.3
     ansi-to-html: ^0.7.2
     bn.js: ^5.2.1
-    ccxt: ^4.1.75
+    ccxt: ^4.1.77
     chalk: ^5.3.0
     dotenv: ^16.3.1
     drizzle-kit: ^0.20.6
@@ -2865,12 +2865,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ccxt@npm:^4.1.75":
-  version: 4.1.75
-  resolution: "ccxt@npm:4.1.75"
+"ccxt@npm:^4.1.77":
+  version: 4.1.77
+  resolution: "ccxt@npm:4.1.77"
   dependencies:
     ws: ^8.8.1
-  checksum: 6f95a73e86400ab3940a3f1f60070bb59ae17757559f84594f1ce26ca15675e50721a7d1eda94b3c2be80544fe48c05bf18e5fc989b39732f8941b00a2dbe64b
+  checksum: 5a62e92391b42d10661fa5f2d6efc0625c7f22b189ae8f556dfd619f5dca4700ad63d0589c6c1f695eeaba8ecb362d7b71621163f3831aabf1e3263b273214ed
   languageName: node
   linkType: hard
 
