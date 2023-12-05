@@ -63,7 +63,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'price-updater'
     hostname: 'price-updater'
     restart: always
@@ -80,7 +80,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'reservedata-chain-updater'
     hostname: 'reservedata-chain-updater'
     restart: always
@@ -97,7 +97,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'userdata-chain-updater'
     hostname: 'userdata-chain-updater'
     restart: always
@@ -114,7 +114,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'eventanalysis-ensurer'
     hostname: 'eventanalysis-ensurer'
     restart: always
@@ -131,7 +131,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'event-listener'
     hostname: 'event-listener'
     restart: always
@@ -148,7 +148,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'periodic-hf-updater'
     hostname: 'periodic-hf-updater'
     restart: always
@@ -166,7 +166,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'price-change-updater'
     hostname: 'price-change-updater'
     restart: always
@@ -183,7 +183,7 @@ services:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
-    image: 'liquidator-node-actor'
+    image: 'liquidation-node-actor'
     container_name: 'liquidator'
     hostname: 'liquidator'
     restart: always

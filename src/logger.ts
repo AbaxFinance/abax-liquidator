@@ -1,5 +1,6 @@
 import winston from 'winston';
 import path from 'path';
+import 'winston-daily-rotate-file';
 export const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
@@ -8,9 +9,25 @@ export const logger = winston.createLogger({
       format: 'YYYY-MM-DD hh:mm:ss.SSS A',
     }),
     winston.format.align(),
-    winston.format.printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`),
+    winston.format.printf((info) => `[${process.env.ACTOR_TO_RUN?.toLocaleLowerCase()}] [${info.timestamp}] ${info.level}: ${info.message}`),
   ),
-  transports: [new winston.transports.Console(), new winston.transports.File({ dirname: path.join(__dirname, 'logs'), filename: 'fulllog.log' })],
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.DailyRotateFile({
+      dirname: path.join('/app', 'logs'),
+      maxSize: '12m',
+      maxFiles: 10,
+      zippedArchive: true,
+      filename: `${process.env.ACTOR_TO_RUN?.toLocaleLowerCase()}.log`,
+    }),
+    new winston.transports.DailyRotateFile({
+      dirname: path.join('/app', 'logs'),
+      maxSize: '12m',
+      maxFiles: 50,
+      zippedArchive: true,
+      filename: `combined.log`,
+    }),
+  ],
 });
 
 //

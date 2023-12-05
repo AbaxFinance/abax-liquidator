@@ -1,3 +1,3 @@
-1. db backup
-2. split actors to different containers
-3. logging
+1. DB auth
+1. subsquid
+1. dockerignore
