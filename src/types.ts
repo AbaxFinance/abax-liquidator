@@ -1,6 +1,6 @@
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { Abi } from '@polkadot/api-contract';
-import { CompleteReserveData } from '@abaxfinance/contract-helpers';
+import type { CompleteReserveData } from '@abaxfinance/contract-helpers';
 export type EventsFromBlockResult = {
   blockTimestamp: string;
   blockNumber: number;

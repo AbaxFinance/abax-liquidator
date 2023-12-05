@@ -1,30 +1,32 @@
 import { AToken, LendingPool, VToken } from '@abaxfinance/contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
-import { db } from 'db';
-import { analyzedBlocks } from 'db/schema';
+import { db } from '@db/index';
+import { analyzedBlocks } from '@db/schema';
 import { getTableName, sql } from 'drizzle-orm';
-import PQueue, { DefaultAddOptions } from 'p-queue';
-import PriorityQueue from 'p-queue/dist/priority-queue';
+import PQueue from 'p-queue';
+import type { DefaultAddOptions } from 'p-queue';
 import { TimeSpanFormatter } from 'scripts/benchmarking/utils';
 import { ApiProviderWrapper, sleep } from 'scripts/common';
-import { parseBlockEvents, storeEventsAndErrors } from 'src/event-feeder/EventListener';
-import { logger } from 'src/logger';
-import { EventsFromBlockResult, IWithAbi, IWithAddress } from 'src/types';
-import { getLatestBlockNumber, getLendingPoolContractAddresses } from 'src/utils';
+import { BaseActor } from '@src/base-actor/BaseActor';
+import { parseBlockEvents, storeEventsAndErrors } from '@src/event-feeder/EventListener';
+import { logger } from '@src/logger';
+import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
+import { getLatestBlockNumber, getLendingPoolContractAddresses } from '@src/utils';
 
 const QUEUE_CHUNK_SIZE = 10_000;
 const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 44719900;
 const BENCH_BLOCKS_INTERVAL = 500;
 const BENCH_STATS_DIVIDER = BENCH_BLOCKS_INTERVAL / 100;
 
-export class EventAnalyzeEnsurer {
+export class EventAnalyzeEnsurer extends BaseActor {
   apiProviderWrapper: ApiProviderWrapper;
   queue: any;
   blockBenchCounter = 0;
   benchTimeIntermediateStart: number | null = null;
 
   constructor() {
+    super();
     const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
@@ -45,17 +47,12 @@ export class EventAnalyzeEnsurer {
       await sleep(1 * 60 * 1000);
     }
   }
-  addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(
-    queue: PQueue<PriorityQueue, DefaultAddOptions>,
-    api: ApiPromise,
-    contracts: TContract[],
-    blockNumbers: number[],
-  ) {
+  addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(queue: PQueue, api: ApiPromise, contracts: TContract[], blockNumbers: number[]) {
     logger.info(`adding ${blockNumbers.length} blocks to the queue from range...[${blockNumbers[0]}...${blockNumbers[blockNumbers.length - 1]}]`);
     for (const blockNumber of blockNumbers) {
       queue
         .add(() => getEventsByContract(blockNumber, api, contracts))
-        .then((res) => storeEventsAndErrors(res))
+        .then((res) => storeEventsAndErrors(res!))
         .then((resOrFailed) => {
           this.blockBenchCounter++;
           if (resOrFailed && this.blockBenchCounter >= BENCH_BLOCKS_INTERVAL) {
@@ -168,7 +165,7 @@ async function getLastBlockNumberInDb() {
   return lastBlockNumberInDb;
 }
 
-export function ensureQueueItemsFinishOnProcessExitSignal(queue: PQueue<PriorityQueue, DefaultAddOptions>) {
+export function ensureQueueItemsFinishOnProcessExitSignal(queue: PQueue) {
   ['SIGINT', 'SIGQUIT', 'SIGTERM'].map((signal) =>
     process.on(signal, () => {
       if (process.env.DEBUG) logger.info(signal);

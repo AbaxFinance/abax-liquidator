@@ -1,10 +1,11 @@
 // HF priorities:
 
-import { AToken, LendingPool, UserConfig, VToken, getContractObject } from '@abaxfinance/contract-helpers';
+import { AToken, LendingPool, VToken, getContractObject } from '@abaxfinance/contract-helpers';
+import type { UserConfig } from '@abaxfinance/contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
-import { ONE_MINUTE } from 'src/constants';
-import { ReserveDataWithMetadata } from 'src/types';
+import type { ReserveDataWithMetadata } from '@src/types';
+import { ONE_MINUTE } from '@src/constants';
 export const arrayRange = (start: number, stop: number, step = 1) =>
   Array.from({ length: (stop - start) / step + 1 }, (_, index) => start + index * step);
 

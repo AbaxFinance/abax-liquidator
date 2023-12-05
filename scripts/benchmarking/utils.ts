@@ -1,4 +1,5 @@
-import { ReturnPromiseType, countDecimals } from '@abaxfinance/utils';
+import { countDecimals } from '@abaxfinance/utils';
+import type { ReturnPromiseType } from '@abaxfinance/utils';
 
 export const measureTime = async <T>(sampleSize: number, markId: string, benchmarkFunc: () => Promise<T>) => {
   const start = Date.now();

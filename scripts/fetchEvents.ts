@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { EventWithMeta } from 'src/types';
+import type { EventWithMeta } from '@src/types';
 
 const getOutputPathBase = (dirname = 'scan_results') => path.join(path.parse(__filename).dir, dirname);
 

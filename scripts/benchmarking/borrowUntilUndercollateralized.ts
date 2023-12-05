@@ -2,7 +2,7 @@ import { getContractObject } from '@abaxfinance/contract-helpers';
 import { convertToCurrencyDecimalsStatic, getArgvObj } from '@abaxfinance/utils';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
-import { KeyringPair } from '@polkadot/keyring/types';
+import type { KeyringPair } from '@polkadot/keyring/types';
 import BN from 'bn.js';
 import chalk from 'chalk';
 import fs from 'fs-extra';

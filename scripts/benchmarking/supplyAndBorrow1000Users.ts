@@ -2,17 +2,17 @@ import { getContractObject } from '@abaxfinance/contract-helpers';
 import { U128_MAX_VALUE, convertToCurrencyDecimalsStatic, getArgvObj, toE12 } from '@abaxfinance/utils';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
-import { KeyringPair } from '@polkadot/keyring/types';
-import { mnemonicGenerate } from '@polkadot/util-crypto';
+import type { KeyringPair } from '@polkadot/keyring/types';
 import BN from 'bn.js';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
 import path from 'path';
-import { apiProviderWrapper } from 'scripts/common';
 import { LendingPool } from '@abaxfinance/contract-helpers';
 import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder } from '@abaxfinance/contract-helpers';
+import { mnemonicGenerate } from '@polkadot/util-crypto';
+import { apiProviderWrapper } from 'scripts/common';
 
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);
 
@@ -135,7 +135,7 @@ const keyring = new Keyring();
   console.error(chalk.red(JSON.stringify(e, null, 2)));
   process.exit(1);
 });
-async function supplyNativeTAZEROBalance(usersToUse: { pair: KeyringPair; mnemonic: string }[], i: number, api, signer: KeyringPair) {
+async function supplyNativeTAZEROBalance(usersToUse: { pair: KeyringPair; mnemonic: string }[], i: number, api: ApiPromise, signer: KeyringPair) {
   const user = usersToUse[i];
   if (i % 50 === 0) console.log(new Date(), 'Transfer TAZERO', `${i} users done analyzing balances`);
 
@@ -147,7 +147,7 @@ async function supplyNativeTAZEROBalance(usersToUse: { pair: KeyringPair; mnemon
     await new Promise((resolve, reject) => {
       api.tx.balances
         .transfer(user.pair.address, toE12(10))
-        .signAndSend(signer, (currentResult) => {
+        .signAndSend(signer, (currentResult: any) => {
           const { status } = currentResult;
           if (status.isInBlock) {
             //   console.log(`Completed at block hash #${status.asInBlock.toString()}`);

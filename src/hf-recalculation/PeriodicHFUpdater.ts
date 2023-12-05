@@ -1,36 +1,28 @@
 import { ReturnNumber } from '@727-ventures/typechain-types';
-import {
-  AccountId,
-  BalanceViewer,
-  CompleteReserveData,
-  LendingPool,
-  MarketRule,
-  ReserveData,
-  UserConfig,
-  UserReserveData,
-  getContractObject,
-  replaceRNBNPropsWithStrings,
-} from '@abaxfinance/contract-helpers';
-import { db } from 'db';
-import { assetPrices, lpTrackingData, lpUserConfigs, lpUserDatas } from 'db/schema';
+import type { AccountId, CompleteReserveData, MarketRule, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
+import { BalanceViewer, LendingPool, getContractObject, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
+import { E12bn, E18bn, E6, E6bn, E8 } from '@abaxfinance/utils';
+import { db } from '@db/index';
+import { assetPrices, lpTrackingData, lpUserConfigs, lpUserDatas } from '@db/schema';
+import { nobody } from '@polkadot/keyring/pair/nobody';
+import { BaseActor } from '@src/base-actor/BaseActor';
+import { deployedContracts } from '@src/deployedContracts';
+import { logger } from '@src/logger';
+import type { ReserveDataWithMetadata } from '@src/types';
+import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS, getIsUsedAsCollateral } from '@src/utils';
+import amqplib from 'amqplib';
+import BN from 'bn.js';
 import { eq, inArray, lt } from 'drizzle-orm';
 import { ApiProviderWrapper, sleep } from 'scripts/common';
-import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS, getIsUsedAsCollateral } from 'src/utils';
-import { nobody } from '@polkadot/keyring/pair/nobody';
-import { E12bn, E18bn, E6, E6bn, E8 } from '@abaxfinance/utils';
-import { deployedContracts } from 'src/deployedContracts';
-import BN from 'bn.js';
-import { ReserveDataWithMetadata } from 'src/types';
-import amqplib from 'amqplib';
 import { AMQP_URL, LIQUIDATION_EXCHANGE, LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '../messageQueueConsts';
-import { logger } from 'src/logger';
 const MARKET_RULE_IDS = [0, 1, 2] as const;
 
-export class PeriodicHFUpdater {
+export class PeriodicHFUpdater extends BaseActor {
   fetchDataStrategy; //TODO
   wsEndpoint: string;
 
   constructor() {
+    super();
     const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
@@ -152,10 +144,13 @@ async function fetchProtocolReserveDatas(balanceViewer: BalanceViewer, reserveAd
     reserveAddresses.map((addr) => balanceViewer.query.viewCompleteReserveData(addr).then((res) => [addr, res])),
   );
   const reserveDatasRetVal = reserveDatasRet.map((rt) => [rt[0], (rt[1] as any).value.unwrapRecursively()]) as [string, CompleteReserveData][];
-  return reserveDatasRetVal.reduce((acc, [addr, rd], i) => {
-    acc[addr] = { ...rd, id: i };
-    return acc;
-  }, {} as Record<string, ReserveDataWithMetadata>);
+  return reserveDatasRetVal.reduce(
+    (acc, [addr, rd], i) => {
+      acc[addr] = { ...rd, id: i };
+      return acc;
+    },
+    {} as Record<string, ReserveDataWithMetadata>,
+  );
 }
 
 export const getCollateralPowerE6AndBiggestDeposit = (
@@ -253,10 +248,13 @@ async function getProtocolUserDataFromChain(
       value: { ok: userReservesRet },
     },
   ] = await Promise.all([lendingPool.query.viewUserConfig(userAddress), balanceViewer.query.viewUserReserveDatas(null, userAddress)]);
-  const userReserves = userReservesRet!.reduce((acc, [reserveAddress, reserve]) => {
-    acc[reserveAddress.toString()] = reserve;
-    return acc;
-  }, {} as Record<string, UserReserveData>);
+  const userReserves = userReservesRet!.reduce(
+    (acc, [reserveAddress, reserve]) => {
+      acc[reserveAddress.toString()] = reserve;
+      return acc;
+    },
+    {} as Record<string, UserReserveData>,
+  );
   return {
     userConfig: userConfigRet!,
     userReserves,
@@ -275,15 +273,18 @@ async function getProtocolUserDataFromDB(userAddress: AccountId): Promise<Protoc
     marketRuleId: new ReturnNumber(userConfigRows[0].marketRuleId),
   };
   const userReserveDatas = await db.select().from(lpUserDatas).where(eq(lpUserDatas.address, userAddress.toString()));
-  const userReserves = userReserveDatas.reduce((acc, curr) => {
-    acc[curr.address] = {
-      deposit: new ReturnNumber(curr.deposit),
-      debt: new ReturnNumber(curr.debt),
-      appliedCumulativeDepositIndexE18: new ReturnNumber(curr.appliedCumulativeDepositIndexE18),
-      appliedCumulativeDebtIndexE18: new ReturnNumber(curr.appliedCumulativeDebtIndexE18),
-    };
-    return acc;
-  }, {} as Record<string, UserReserveData>);
+  const userReserves = userReserveDatas.reduce(
+    (acc, curr) => {
+      acc[curr.address] = {
+        deposit: new ReturnNumber(curr.deposit),
+        debt: new ReturnNumber(curr.debt),
+        appliedCumulativeDepositIndexE18: new ReturnNumber(curr.appliedCumulativeDepositIndexE18),
+        appliedCumulativeDebtIndexE18: new ReturnNumber(curr.appliedCumulativeDebtIndexE18),
+      };
+      return acc;
+    },
+    {} as Record<string, UserReserveData>,
+  );
 
   return { userConfig, userReserves, userAddress };
 }
@@ -294,13 +295,16 @@ async function getPricesE18ByReserveAddressFromDb(reserveAddresses: string[]) {
     .from(assetPrices)
     .where(inArray(assetPrices.address, reserveAddresses));
 
-  return pricesE8ByReserveAddressFromDb.reduce((acc, { currentPrice, address }) => {
-    try {
-      acc[address] = new BN((parseFloat(currentPrice) * E8).toString()).mul(E12bn).divn(10 ** 2);
-    } catch (e) {
-      logger.info(currentPrice, address, e);
-      throw e;
-    }
-    return acc;
-  }, {} as Record<string, BN>);
+  return pricesE8ByReserveAddressFromDb.reduce(
+    (acc, { currentPrice, address }) => {
+      try {
+        acc[address] = new BN((parseFloat(currentPrice) * E8).toString()).mul(E12bn).divn(10 ** 2);
+      } catch (e) {
+        logger.info(currentPrice, address, e);
+        throw e;
+      }
+      return acc;
+    },
+    {} as Record<string, BN>,
+  );
 }

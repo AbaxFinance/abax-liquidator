@@ -52,6 +52,6 @@ export class ApiProviderWrapper {
   };
 }
 
-export const sleep = (waitTimeInMs) => new Promise((resolve) => setTimeout(resolve, waitTimeInMs));
+export const sleep = (waitTimeInMs: any) => new Promise((resolve) => setTimeout(resolve, waitTimeInMs));
 
 export const apiProviderWrapper = new ApiProviderWrapper(process.env.WS_ENDPOINT ?? 'ws://127.0.0.1:9944');

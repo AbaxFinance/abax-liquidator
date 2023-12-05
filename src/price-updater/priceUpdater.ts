@@ -1,11 +1,13 @@
-import { db } from 'db';
-import { assetPrices } from 'db/schema';
+import { db } from '@db/index';
+import { assetPrices } from '@db/schema';
 import { sleep } from 'scripts/common';
-import { ONE_SECOND } from 'src/constants';
+import { ONE_SECOND } from '@src/constants';
 import { E8 } from '@abaxfinance/utils';
-import ccxt, { OrderBook } from 'ccxt';
+import ccxt from 'ccxt';
+import type { OrderBook } from 'ccxt';
 import { sql } from 'drizzle-orm';
-import { logger } from 'src/logger';
+import { logger } from '@src/logger';
+import { BaseActor } from '@src/base-actor/BaseActor';
 
 //TOOD better logging
 
@@ -85,7 +87,7 @@ const INIT_ASSET_PRICE_DATA = [
   },
 ];
 
-export class PriceUpdater {
+export class PriceUpdater extends BaseActor {
   async runLoop() {
     const kucoinExchange = new ccxt.kucoin();
     logger.info('Loading kucoin markets....');
@@ -126,7 +128,7 @@ export class PriceUpdater {
       const orderbooks = await Promise.all(pricePromises);
       logger.info('Fetched order book...');
       const currentPricesE8 = orderbooks.map(
-        (curr) => [getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair), curr.ob.bids[0][0] * E8] as [AnyRegisteredAsset, number],
+        (curr) => [getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair), curr.ob.bids[0][0]! * E8] as [AnyRegisteredAsset, number],
       );
 
       const assetPriceData = await db.select().from(assetPrices);

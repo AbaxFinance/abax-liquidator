@@ -1,13 +1,13 @@
 import chalk from 'chalk';
-import { ReserveDataChainUpdater } from 'src/chain-data-updater/reserveDataChainUpdater';
-import { UserDataChainUpdater } from 'src/chain-data-updater/userDataChainUpdater';
-import { EventAnalyzeEnsurer } from 'src/event-feeder/EventAnalyzeEnsurer';
-import { EventListener } from 'src/event-feeder/EventListener';
-import { PeriodicHFUpdater } from 'src/hf-recalculation/PeriodicHFUpdater';
-import { PriceChangeHFUpdater } from 'src/hf-recalculation/PriceChangeHFUpdater';
-import { Liquidator } from 'src/liquidator/liquidator';
-import { logger } from 'src/logger';
-import { PriceUpdater } from 'src/price-updater/priceUpdater';
+import { ReserveDataChainUpdater } from '@src/chain-data-updater/reserveDataChainUpdater';
+import { UserDataChainUpdater } from '@src/chain-data-updater/userDataChainUpdater';
+import { EventAnalyzeEnsurer } from '@src/event-feeder/EventAnalyzeEnsurer';
+import { EventListener } from '@src/event-feeder/EventListener';
+import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
+import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
+import { Liquidator } from '@src/liquidator/liquidator';
+import { logger } from '@src/logger';
+import { PriceUpdater } from '@src/price-updater/priceUpdater';
 
 (async () => {
   if (require.main !== module) return;

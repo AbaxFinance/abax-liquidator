@@ -14,7 +14,7 @@ services:
       - postgres
   postgres:
     container_name: postgres_container
-    image: postgres
+    image: postgres:16.1
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
@@ -23,6 +23,19 @@ services:
       - ./local_postgres_data:/data/postgres
     ports:
       - '5432:5432'
+    networks:
+      - postgres
+    restart: unless-stopped
+  postgres-bp:
+    container_name: postgres-bp_container
+    build:
+      context: './db/backup'
+      dockerfile: Dockerfile
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - ./db/backup/backups:/backups
+      - ./db/backup/pg_backup.config:/work/pg_backup.config
     networks:
       - postgres
     restart: unless-stopped
@@ -41,6 +54,21 @@ services:
     networks:
       - postgres
     restart: unless-stopped
+  price-updater:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'price-updater'
+    container_name: 'price-updater'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: PRICE_UPDATER
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+    networks:
+      - postgres
 
 networks:
   postgres:

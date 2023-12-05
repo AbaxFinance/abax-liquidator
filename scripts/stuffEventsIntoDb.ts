@@ -1,11 +1,11 @@
 import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
 import chalk from 'chalk';
-import { db } from 'db';
+import { db } from '@db/index';
 import { getAnalyzedBlocksFromFile, getPreviousEventsFromFile } from 'scripts/fetchEvents';
 import { analyzedBlocks, events, lpTrackingData } from '../db/schema';
-import { EventWithMeta } from '/home/lukas/repos/abax/abax-liquidator/src/types';
-import { HF_PRIORITY, UPDATE_INTERVAL_BY_HF_PRIORITY } from 'src/constants';
+import type { EventWithMeta } from '@src/types';
+import { HF_PRIORITY, UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
 
 async function pruneDatabase() {
   console.log(`Deleting all rows from events/lpTrackingData/analyzedBlocks...`);

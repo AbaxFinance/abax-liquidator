@@ -10,18 +10,21 @@ import { ApiPromise } from '@polkadot/api';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
-import { db } from 'db';
-import { analyzedBlocks, events, lpTrackingData } from 'db/schema';
+import { db } from '@db/index';
+import { analyzedBlocks, events, lpTrackingData } from '@db/schema';
 import { PostgresError } from 'postgres';
 import { ApiProviderWrapper } from 'scripts/common';
-import { HF_PRIORITY, UPDATE_INTERVAL_BY_HF_PRIORITY } from 'src/constants';
-import { EventWithMeta, EventsFromBlockResult, IWithAbi, IWithAddress } from 'src/types';
-import { getLendingPoolContractAddresses } from 'src/utils';
+import { BaseActor } from '@src/base-actor/BaseActor';
+import { HF_PRIORITY, UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
+import { logger } from '@src/logger';
+import type { EventWithMeta, EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
+import { getLendingPoolContractAddresses } from '@src/utils';
 
-export class EventListener {
+export class EventListener extends BaseActor {
   apiProviderWrapper: ApiProviderWrapper;
 
   constructor() {
+    super();
     const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
@@ -78,7 +81,7 @@ async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: Ev
     .returning({ insertedId: lpTrackingData.id })
     .onConflictDoNothing();
   if (insertedIds.length > 0) {
-    logger.info(new Date(), `pushed ${insertedIds.length} addresses for | block: ${result.blockNumber}`);
+    logger.info(`pushed ${insertedIds.length} addresses for | block: ${result.blockNumber}`);
   }
 }
 
@@ -99,7 +102,7 @@ async function saveToEventsTable(eventsToInsert: EventWithMeta[], contractName: 
     )
     .onConflictDoNothing();
   if (insertedIds.length > 0) {
-    logger.info(new Date(), `pushed ${insertedIds.length} events for ${contractName} | block: ${result.blockNumber}`);
+    logger.info(`pushed ${insertedIds.length} events for ${contractName} | block: ${result.blockNumber}`);
   }
   return insertedIds;
 }

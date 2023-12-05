@@ -1,11 +1,8 @@
 {
-  "ts-node": {
-    "require": ["tsconfig-paths/register"]
-  },
   "compilerOptions": {
     "target": "ESNext",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
@@ -15,13 +12,26 @@
     "allowJs": false,
     "checkJs": false,
     "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
+    // "plugins": [
+    //   {
+    //     "transform": "typescript-transform-paths",
+    //     "exclude": ["*"]
+    //   }
+    // ],
     "paths": {
-      "@polkadot/api/augment": ["./src/azero-testnet/interfaces/augment-api.ts"],
-      "@polkadot/types/augment": ["./src/azero-testnet/interfaces/augment-types.ts"]
+      "@src/*": ["./src/*"],
+      "@db/*": ["./db/*"],
+      "@scripts/*": ["./scripts/*"]
     }
   },
+  // "ts-node": {
+  //   "transpileOnly": true,
+  //   "require": ["typescript-transform-paths/register", "tsconfig-paths/register"]
+  // },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]
 }

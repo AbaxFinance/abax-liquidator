@@ -1,8 +1,7 @@
-import { getContractObject } from '@abaxfinance/contract-helpers';
-import { U128_MAX_VALUE, convertToCurrencyDecimalsStatic, getArgvObj, toE12 } from '@abaxfinance/utils';
-import { ApiPromise } from '@polkadot/api';
+import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from '@abaxfinance/contract-helpers';
+import { U128_MAX_VALUE, getArgvObj, toE12 } from '@abaxfinance/utils';
 import Keyring from '@polkadot/keyring';
-import { KeyringPair } from '@polkadot/keyring/types';
+import type { KeyringPair } from '@polkadot/keyring/types';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import BN from 'bn.js';
 import chalk from 'chalk';
@@ -11,8 +10,6 @@ import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
 import path from 'path';
 import { apiProviderWrapper } from 'scripts/common';
-import { LendingPool } from '@abaxfinance/contract-helpers';
-import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder } from '@abaxfinance/contract-helpers';
 import { deployedContractsGetters } from '../../src/deployedContracts';
 
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);

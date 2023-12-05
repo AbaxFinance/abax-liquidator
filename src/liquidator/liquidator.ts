@@ -1,20 +1,22 @@
-import { ApiProviderWrapper, sleep } from 'scripts/common';
-import { AMQP_URL, LIQUIDATION_EXCHANGE, LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from 'src/messageQueueConsts';
-import amqplib from 'amqplib';
-import winston from 'winston';
-import { LiquidationData } from 'src/types';
 import { LendingPool, Psp22Ownable, getContractObject, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
-import { KeyringPair } from '@polkadot/keyring/types';
 import Keyring from '@polkadot/keyring';
-import { LENDING_POOL_ADDRESS } from 'src/utils';
+import type { KeyringPair } from '@polkadot/keyring/types';
+import { BaseActor } from '@src/base-actor/BaseActor';
+import { logger } from '@src/logger';
+import { AMQP_URL, LIQUIDATION_QUEUE_NAME } from '@src/messageQueueConsts';
+import type { LiquidationData } from '@src/types';
+import { LENDING_POOL_ADDRESS } from '@src/utils';
+import amqplib from 'amqplib';
 import { BN } from 'bn.js';
-import { logger } from 'src/logger';
+import { ApiProviderWrapper } from 'scripts/common';
+import winston from 'winston';
 
-export class Liquidator {
+export class Liquidator extends BaseActor {
   _liquidationSignerSpender?: KeyringPair;
   apiProviderWrapper: ApiProviderWrapper;
 
   constructor() {
+    super();
     const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);

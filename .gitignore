@@ -1,4 +1,4 @@
-
+*.log
 local_postgres_data
 .cache
 .cache/**/*.*
