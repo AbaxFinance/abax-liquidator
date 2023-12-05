@@ -2,5 +2,4 @@
 *Dockerfile*
 *docker-compose*
 node_modules
-*local_postgres_data*
-*logs*
+compose-persistence

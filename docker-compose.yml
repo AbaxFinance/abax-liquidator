@@ -8,9 +8,8 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
-    # volumes:
-    #   - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-    #   - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    volumes:
+      - ./compose-persistence/rabbit/data/:/var/lib/rabbitmq
     networks:
       - local_bridge
   postgres:
@@ -22,7 +21,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       PGDATA: /data/postgres
     volumes:
-      - ./local_postgres_data:/data/postgres
+      - ./compose-persistence/postgres:/data/postgres
       - ./db/pg_hba.conf:/var/lib/postgresql/pg_hba.conf
     command: postgres -c 'hba_file=/var/lib/postgresql/pg_hba.conf'
     ports:
@@ -59,6 +58,8 @@ services:
     networks:
       - local_bridge
     restart: unless-stopped
+    depends_on:
+      - postgres
   price-updater:
     build:
       context: '../'
@@ -67,10 +68,13 @@ services:
     container_name: 'price-updater'
     hostname: 'price-updater'
     restart: always
+    depends_on:
+      - postgres
+      - rabbitmq
     environment:
       ACTOR_TO_RUN: PRICE_UPDATER
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'
@@ -84,10 +88,12 @@ services:
     container_name: 'reservedata-chain-updater'
     hostname: 'reservedata-chain-updater'
     restart: always
+    depends_on:
+      - postgres
     environment:
       ACTOR_TO_RUN: RESERVE_DATA_CHAIN_UPDATER
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'
@@ -101,10 +107,12 @@ services:
     container_name: 'userdata-chain-updater'
     hostname: 'userdata-chain-updater'
     restart: always
+    depends_on:
+      - postgres
     environment:
       ACTOR_TO_RUN: USER_DATA_CHAIN_UPDATER
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'
@@ -118,10 +126,12 @@ services:
     container_name: 'eventanalysis-ensurer'
     hostname: 'eventanalysis-ensurer'
     restart: always
+    depends_on:
+      - postgres
     environment:
       ACTOR_TO_RUN: EVENT_ANALYZE_ENSURER
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'
@@ -135,10 +145,12 @@ services:
     container_name: 'event-listener'
     hostname: 'event-listener'
     restart: always
+    depends_on:
+      - postgres
     environment:
       ACTOR_TO_RUN: EVENT_LISTENER
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'
@@ -152,11 +164,14 @@ services:
     container_name: 'periodic-hf-updater'
     hostname: 'periodic-hf-updater'
     restart: always
+    depends_on:
+      - postgres
+      - rabbitmq
     environment:
       ACTOR_TO_RUN: PERIODIC_HFUPDATER
       AMQP_URL: amqp://rabbitmq
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'
@@ -170,10 +185,13 @@ services:
     container_name: 'price-change-updater'
     hostname: 'price-change-updater'
     restart: always
+    depends_on:
+      - postgres
+      - rabbitmq
     environment:
       ACTOR_TO_RUN: PRICE_CHANGE_HFUPDATER
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'
@@ -187,10 +205,13 @@ services:
     container_name: 'liquidator'
     hostname: 'liquidator'
     restart: always
+    depends_on:
+      - postgres
+      - rabbitmq
     environment:
       ACTOR_TO_RUN: LIQUIDATOR
     volumes:
-      - './logs:/app/logs'
+      - './compose-persistence/logs:/app/logs'
     env_file:
       - '.env.local.docker'
       - '.env.secret'

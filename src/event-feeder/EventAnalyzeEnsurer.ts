@@ -69,7 +69,7 @@ export class EventAnalyzeEnsurer extends BaseActor {
 
   async ensureBlockAnalysis(queue: PQueue, api: ApiPromise, contracts: (LendingPool | AToken | VToken)[]) {
     const blocksToCatchUpToNow = await getBlocksToCatchUpToNow(api);
-    logger.info('total number of blocks to process to catch up to now: ', blocksToCatchUpToNow.length);
+    logger.info(`total number of blocks to process to catch up to now: ${blocksToCatchUpToNow.length}`);
 
     ensureQueueItemsFinishOnProcessExitSignal(queue);
     try {

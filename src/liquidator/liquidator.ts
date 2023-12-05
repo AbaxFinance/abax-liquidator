@@ -29,7 +29,7 @@ export class Liquidator extends BaseActor {
     return this._liquidationSignerSpender;
   }
   async processLiquidationMessage(data: LiquidationData) {
-    console.log(data);
+    logger.info(data);
     const api = await this.apiProviderWrapper.getAndWaitForReady();
     const liquidationSignerSpender = await this.getLiquidationSignerSpender();
     const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, liquidationSignerSpender, api);
@@ -42,7 +42,20 @@ export class Liquidator extends BaseActor {
     //   userChosenMarketRule,
     // );
     const minimumTokenReceivedE18 = 1;
+
+    logger.info([
+      ...Object.entries({
+        userAddress,
+        loanUnderlyingAddress: biggestDebtData.underlyingAddress,
+        collateralUnderlyingAddress: biggestCollateralData.underlyingAddress,
+        minimumTokenReceivedE18: minimumTokenReceivedE18.toString(),
+      }),
+      ...Object.entries(replaceRNBNPropsWithStrings(biggestCollateralData)).map(([k, v]) => [`biggestCollateralData__${k}`, v]),
+      ...Object.entries(replaceRNBNPropsWithStrings(biggestDebtData)).map(([k, v]) => [`biggestLoanData__${k}`, v]),
+    ]);
+
     const reserveTokenToRepay = getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress.toString(), liquidationSignerSpender, api);
+
     const amountToLiquidate = new BN(biggestDebtData.amountRawE6).muln(2);
     await reserveTokenToRepay.tx.approve(lendingPool.address, amountToLiquidate);
     const queryRes = await lendingPool
@@ -73,20 +86,10 @@ export class Liquidator extends BaseActor {
       logger.error('liquidation unsuccessfull');
       logger.error(e);
     }
-    console.table([
-      ...Object.entries({
-        userAddress,
-        loanUnderlyingAddress: biggestDebtData.underlyingAddress,
-        collateralUnderlyingAddress: biggestCollateralData.underlyingAddress,
-        minimumTokenReceivedE18: minimumTokenReceivedE18.toString(),
-      }),
-      ...Object.entries(replaceRNBNPropsWithStrings(biggestCollateralData)).map(([k, v]) => [`biggestCollateralData__${k}`, v]),
-      ...Object.entries(replaceRNBNPropsWithStrings(biggestDebtData)).map(([k, v]) => [`biggestLoanData__${k}`, v]),
-    ]);
   }
   async runLoop() {
     // eslint-disable-next-line no-constant-condition
-    logger.info('Liquidator', 'running...');
+    logger.info('Liquidator running...');
 
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
