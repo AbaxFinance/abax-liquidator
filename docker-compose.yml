@@ -11,7 +11,7 @@ services:
     #   - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
     #   - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
-      - postgres
+      - local_bridge
   postgres:
     container_name: postgres_container
     image: postgres:16.1
@@ -24,7 +24,7 @@ services:
     ports:
       - '5432:5432'
     networks:
-      - postgres
+      - local_bridge
     restart: unless-stopped
   postgres-bp:
     container_name: postgres-bp_container
@@ -37,7 +37,7 @@ services:
       - ./db/backup/backups:/backups
       - ./db/backup/pg_backup.config:/work/pg_backup.config
     networks:
-      - postgres
+      - local_bridge
     restart: unless-stopped
   pgadmin:
     container_name: pgadmin_container
@@ -48,11 +48,10 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
       - pgadmin:/var/lib/pgadmin
-
     ports:
       - '${PGADMIN_PORT:-5050}:80'
     networks:
-      - postgres
+      - local_bridge
     restart: unless-stopped
   price-updater:
     build:
@@ -67,11 +66,125 @@ services:
       - './logs:/app/logs'
     env_file:
       - '.env.local.docker'
+      - '.env.secret'
     networks:
-      - postgres
+      - local_bridge
+  reservedata-chain-updater:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'reservedata-chain-updater'
+    container_name: 'reservedata-chain-updater'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: RESERVE_DATA_CHAIN_UPDATER
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+      - '.env.secret'
+    networks:
+      - local_bridge
+  userdata-chain-updater:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'userdata-chain-updater'
+    container_name: 'userdata-chain-updater'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: USER_DATA_CHAIN_UPDATER
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+      - '.env.secret'
+    networks:
+      - local_bridge
+  eventanalysis-ensurer:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'eventanalysis-ensurer'
+    container_name: 'eventanalysis-ensurer'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: EVENT_ANALYZE_ENSURER
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+      - '.env.secret'
+    networks:
+      - local_bridge
+  event-listener:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'event-listener'
+    container_name: 'event-listener'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: EVENT_LISTENER
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+      - '.env.secret'
+    networks:
+      - local_bridge
+  periodic-hf-updater:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'periodic-hf-updater'
+    container_name: 'periodic-hf-updater'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: PERIODIC_HFUPDATER
+      AMQP_URL: amqp://rabbitmq
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+      - '.env.secret'
+    networks:
+      - local_bridge
+  price-change-updater:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'price-change-updater'
+    container_name: 'price-change-updater'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: PRICE_CHANGE_HFUPDATER
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+      - '.env.secret'
+    networks:
+      - local_bridge
+  liquidator:
+    build:
+      context: '../'
+      dockerfile: abax-liquidator/actor.node.Dockerfile
+    image: 'liquidator'
+    container_name: 'liquidator'
+    restart: always
+    environment:
+      ACTOR_TO_RUN: LIQUIDATOR
+    volumes:
+      - './logs:/app/logs'
+    env_file:
+      - '.env.local.docker'
+      - '.env.secret'
+    networks:
+      - local_bridge
 
 networks:
-  postgres:
+  local_bridge:
     driver: bridge
 volumes:
   pgadmin:

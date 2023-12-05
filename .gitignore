@@ -30,7 +30,7 @@ yarn/install-state.gz
 !.yarn/sdks
 !.yarn/versions
 
-
+.env.secret
 # macOS
 .DS_Store
 
