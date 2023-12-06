@@ -6,7 +6,7 @@ import { EventListener } from '@src/event-feeder/EventListener';
 import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
 import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
 import { Liquidator } from '@src/liquidator/liquidator';
-import { logger } from '@src/logger';
+import { logger } from './logger';
 import { PriceUpdater } from '@src/price-updater/priceUpdater';
 
 (async () => {

@@ -1,36 +1,16 @@
 // HF priorities:
 
-import { AToken, LendingPool, VToken, getContractObject } from '@abaxfinance/contract-helpers';
 import type { UserConfig } from '@abaxfinance/contract-helpers';
+import { AToken, LendingPool, VToken, getContractObject } from '@abaxfinance/contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import type { ReserveDataWithMetadata } from '@src/types';
-import { ONE_MINUTE } from '@src/constants';
 export const arrayRange = (start: number, stop: number, step = 1) =>
   Array.from({ length: (stop - start) / step + 1 }, (_, index) => start + index * step);
 
-// ```
-// (0.00, 1.05]    0 critical 5   min interval
-// (1.05, 1.20]    1 high     10  min interval
-// (1.20, 1.50]    2 medium   15  min interval
-// (1.50, 2.00]    3 low      30  min interval
-// (2.00,  inf]    4 safe     120 min interval
-// ```
-
-export const getUpdateIntervalByHFPriority = (hfPriority: number) => {
-  switch (hfPriority) {
-    case 0:
-      return 5 * ONE_MINUTE;
-    case 1:
-      return 10 * ONE_MINUTE;
-    case 2:
-      return 15 * ONE_MINUTE;
-    case 3:
-      return 30 * ONE_MINUTE;
-    default:
-      return 120 * ONE_MINUTE;
-  }
-};
+export function enumKeys<O extends object, K extends keyof O = keyof O>(obj: O): K[] {
+  return Object.keys(obj).filter((k) => !Number.isNaN(k)) as K[];
+}
 export const LENDING_POOL_ADDRESS = '5GBai32Vbzizw3xidVUwkjzFydaas7s2B8uudgtiguzmW8yn';
 export const BALANCE_VIEWER_ADDRESS = '5C5znDGZwaFTbaoaRJqcd54Mwu7qRYwmydWdez6BkAfRPRcb';
 export const ADAI_ADDRESS = '5GusvrnNEfYThkDxdSUZRca9ScTiVyrF3S76UJEQTUXBDdmT';

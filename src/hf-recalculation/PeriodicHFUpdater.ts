@@ -15,6 +15,8 @@ import BN from 'bn.js';
 import { eq, inArray, lt } from 'drizzle-orm';
 import { ApiProviderWrapper, sleep } from 'scripts/common';
 import { AMQP_URL, LIQUIDATION_EXCHANGE, LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '../messageQueueConsts';
+import { UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
+import { getHFPriority } from '@src/hf-recalculation/utils';
 const MARKET_RULE_IDS = [0, 1, 2] as const;
 
 export class PeriodicHFUpdater extends BaseActor {
@@ -37,7 +39,7 @@ export class PeriodicHFUpdater extends BaseActor {
     await channel.bindQueue(LIQUIDATION_QUEUE_NAME, LIQUIDATION_EXCHANGE, LIQUIDATION_ROUTING_KEY);
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      logger.info('PeriodicHFUpdater', 'running...');
+      logger.info('PeriodicHFUpdater running...');
 
       //TODO chunks
       const addressesToUpdate = (
@@ -86,9 +88,19 @@ export class PeriodicHFUpdater extends BaseActor {
           );
           logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
         }
-        // logger.info(`${userAddress} is safe | HF: ${healthFactor}`);
+        logger.debug(`${userAddress} is safe | HF: ${healthFactor}`);
 
-        //update db
+        const hfUpdatePriority = getHFPriority(healthFactor);
+        await db
+          .update(lpTrackingData)
+          .set({
+            address: userAddress.toString(),
+            healthFactor: healthFactor,
+            updatePriority: 0,
+            updateAtLatest: new Date(Date.now() + UPDATE_INTERVAL_BY_HF_PRIORITY[hfUpdatePriority]),
+          })
+          .where(eq(lpTrackingData.address, userAddress.toString()));
+        logger.debug(`updated hf priority for ${userAddress}`);
       }
       logger.info('sleeping for 5 seconds...');
       await sleep(5 * 1000);

@@ -2,7 +2,6 @@
 local_postgres_data
 .cache
 .cache/**/*.*
-.vscode
 .idea
 test-chain-state
 test-chain-state-bp

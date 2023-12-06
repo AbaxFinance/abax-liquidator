@@ -7,7 +7,7 @@ import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
 import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
 import { Liquidator } from '@src/liquidator/liquidator';
 import { PriceUpdater } from '@src/price-updater/priceUpdater';
-import { logger } from '@src/logger';
+import { logger } from './logger';
 
 enum ACTOR_TYPE {
   RESERVE_DATA_CHAIN_UPDATER = 'RESERVE_DATA_CHAIN_UPDATER',
