@@ -12,4 +12,4 @@ RUN yarn install
 
 # RUN yarn build
 
-CMD ["npx","tsx", "./src/runActor.ts"]
+CMD ["npx","tsx","--inspect=0.0.0.0", "./src/runActor.ts"]

@@ -16,22 +16,12 @@
     "verbatimModuleSyntax": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
-    // "plugins": [
-    //   {
-    //     "transform": "typescript-transform-paths",
-    //     "exclude": ["*"]
-    //   }
-    // ],
     "paths": {
       "@src/*": ["./src/*"],
       "@db/*": ["./db/*"],
       "@scripts/*": ["./scripts/*"]
     }
   },
-  // "ts-node": {
-  //   "transpileOnly": true,
-  //   "require": ["typescript-transform-paths/register", "tsconfig-paths/register"]
-  // },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]
 }

@@ -56,47 +56,48 @@ export class PeriodicHFUpdater extends BaseActor {
 
       for (const { userConfig, userReserves, userAddress } of usersWithReserveDatas) {
         const userAppliedMarketRule = marketRules.get(userConfig.marketRuleId.toNumber())!;
+        let healthFactor = Number.MAX_SAFE_INTEGER - 1;
         const { debtPower, biggestDebtData } = getDebtPowerE6BNAndBiggestLoan(
           reserveDatas,
           pricesE18ByReserveAddress,
           userReserves,
           userAppliedMarketRule,
         );
-        if (debtPower.eqn(0)) continue;
-        const { collateralPower, biggestCollateralData } = getCollateralPowerE6AndBiggestDeposit(
-          userConfig,
-          reserveDatas,
-          pricesE18ByReserveAddress,
-          userReserves,
-          userAppliedMarketRule,
-        );
-        const healthFactor = parseFloat(collateralPower.mul(E6bn).div(debtPower).toString()) / E6;
-        //send message to liquidator if necesary
-        if (collateralPower.lte(debtPower)) {
-          logger.info(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
-
-          channel.publish(
-            LIQUIDATION_EXCHANGE,
-            LIQUIDATION_ROUTING_KEY,
-            Buffer.from(
-              JSON.stringify(replaceRNBNPropsWithStrings({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
-            ),
-            {
-              contentType: 'application/json',
-              persistent: true,
-            },
+        if (!debtPower.eqn(0)) {
+          const { collateralPower, biggestCollateralData } = getCollateralPowerE6AndBiggestDeposit(
+            userConfig,
+            reserveDatas,
+            pricesE18ByReserveAddress,
+            userReserves,
+            userAppliedMarketRule,
           );
-          logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
-        }
-        logger.debug(`${userAddress} is safe | HF: ${healthFactor}`);
+          healthFactor = parseFloat(collateralPower.mul(E6bn).div(debtPower).toString()) / E6;
+          if (collateralPower.lte(debtPower)) {
+            logger.info(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
 
+            channel.publish(
+              LIQUIDATION_EXCHANGE,
+              LIQUIDATION_ROUTING_KEY,
+              Buffer.from(
+                JSON.stringify(replaceRNBNPropsWithStrings({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
+              ),
+              {
+                contentType: 'application/json',
+                persistent: true,
+              },
+            );
+            logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
+          } else {
+            logger.debug(`${userAddress} is safe | HF: ${healthFactor}`);
+          }
+        }
         const hfUpdatePriority = getHFPriority(healthFactor);
         await db
           .update(lpTrackingData)
           .set({
             address: userAddress.toString(),
             healthFactor: healthFactor,
-            updatePriority: 0,
+            updatePriority: hfUpdatePriority,
             updateAtLatest: new Date(Date.now() + UPDATE_INTERVAL_BY_HF_PRIORITY[hfUpdatePriority]),
           })
           .where(eq(lpTrackingData.address, userAddress.toString()));

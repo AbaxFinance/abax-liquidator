@@ -28,8 +28,8 @@ const fileFormat = winston.format.combine(
   winston.format.timestamp({
     format: 'YYYY-MM-DD hh:mm:ss.SSS A',
   }),
-  winston.format.align(),
   messageFormat,
+  winston.format.align(),
 );
 const consoleFormat = winston.format.combine(
   winston.format.colorize({ all: true }),

@@ -9,7 +9,6 @@ import { LENDING_POOL_ADDRESS } from '@src/utils';
 import amqplib from 'amqplib';
 import { BN } from 'bn.js';
 import { ApiProviderWrapper } from 'scripts/common';
-import winston from 'winston';
 
 export class Liquidator extends BaseActor {
   _liquidationSignerSpender?: KeyringPair;
@@ -43,16 +42,12 @@ export class Liquidator extends BaseActor {
     // );
     const minimumTokenReceivedE18 = 1;
 
-    logger.info([
-      ...Object.entries({
-        userAddress,
-        loanUnderlyingAddress: biggestDebtData.underlyingAddress,
-        collateralUnderlyingAddress: biggestCollateralData.underlyingAddress,
-        minimumTokenReceivedE18: minimumTokenReceivedE18.toString(),
-      }),
-      ...Object.entries(replaceRNBNPropsWithStrings(biggestCollateralData)).map(([k, v]) => [`biggestCollateralData__${k}`, v]),
-      ...Object.entries(replaceRNBNPropsWithStrings(biggestDebtData)).map(([k, v]) => [`biggestLoanData__${k}`, v]),
-    ]);
+    logger.info({
+      userAddress,
+      minimumTokenReceivedE18: minimumTokenReceivedE18.toString(),
+      biggestCollateralData: replaceRNBNPropsWithStrings(biggestCollateralData),
+      biggestDebtData: replaceRNBNPropsWithStrings(biggestDebtData),
+    });
 
     const reserveTokenToRepay = getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress.toString(), liquidationSignerSpender, api);
 
@@ -108,7 +103,7 @@ export class Liquidator extends BaseActor {
       async (msg) => {
         logger.info('processing messages');
         if (!msg) {
-          winston.warn('empty message');
+          logger.warn('empty message');
           return;
         }
         await this.processLiquidationMessage(JSON.parse(msg.content.toString()) as LiquidationData);
