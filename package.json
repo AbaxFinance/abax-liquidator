@@ -8,7 +8,7 @@
     "lint:format": "pretty-quick  --loglevel warn --write \"./**/*.{js,ts,tsx,md,json}\" ",
     "postinstall": "husky install",
     "generate-migration": "drizzle-kit generate:pg --out db/migrations --schema db/schema.ts",
-    "migrate": "ts-node db/migrate",
+    "migrate": "tsx db/migrate",
     "build": " rm -rf ./dist && tsc -p . && tsc-alias"
   },
   "dependencies": {
