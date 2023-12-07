@@ -8,6 +8,13 @@
       "when": 1701914639058,
       "tag": "0000_odd_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1701950742968,
+      "tag": "0001_right_eddie_brock",
+      "breakpoints": true
     }
   ]
 }

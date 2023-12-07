@@ -124,7 +124,7 @@ export const lpReserveDatas = pgTable(
   },
   (c) => {
     return {
-      addressIndex: uniqueIndex('address_idx').on(c.address),
+      addressIdIndex: uniqueIndex('address_id_index').on(c.address, c.id),
     };
   },
 );
