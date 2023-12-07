@@ -47,7 +47,7 @@ export async function storeEventsAndErrors(result: EventsFromBlockResult) {
     await db.insert(analyzedBlocks).values({ blockNumber: result.blockNumber });
   } catch (e) {
     if (e instanceof PostgresError && e.message.includes('duplicate key value violates unique constraint')) {
-      logger.warning(`duplicate analysis of block ${result.blockNumber}`);
+      logger.warn(`duplicate analysis of block ${result.blockNumber}`);
       return false;
     } else {
       throw e;

@@ -60,6 +60,20 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+  logrotator:
+    container_name: logrotator
+    hostname: logrotator
+    image: blacklabelops/logrotate
+    environment:
+      LOGS_DIRECTORIES: '/workdir/logs'
+      LOGROTATE_INTERVAL: 'hourly'
+      LOGROTATE_SIZE: '10M'
+      # LOGROTATE_COMPRESSION: 'compress'
+      # LOGROTATE_INTERVAL: "daily"
+      LOGROTATE_LOGFILE: /workdir/logs/logrotatecron.log
+    volumes:
+      - './compose-persistence/logs:/workdir/logs'
+
   price-updater:
     build:
       context: '../'
