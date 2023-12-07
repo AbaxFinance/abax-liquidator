@@ -68,7 +68,7 @@ async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: Ev
     .filter((e) => !!e);
   const uniqueAddresses = [...new Set(allAddresses)];
   logger.info(`${uniqueAddresses.length} user addresses to load....`);
-  const insertedIds = await db
+  const insertedAddresses = await db
     .insert(lpTrackingData)
     .values(
       uniqueAddresses.map((addr) => ({
@@ -78,10 +78,10 @@ async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: Ev
         updateAtLatest: new Date(Date.now() + UPDATE_INTERVAL_BY_HF_PRIORITY[HF_PRIORITY.CRITICAL]),
       })),
     )
-    .returning({ insertedId: lpTrackingData.id })
+    .returning({ address: lpTrackingData.address })
     .onConflictDoNothing();
-  if (insertedIds.length > 0) {
-    logger.info(`pushed ${insertedIds.length} addresses for | block: ${result.blockNumber}`);
+  if (insertedAddresses.length > 0) {
+    logger.info(`pushed ${insertedAddresses.length} addresses for | block: ${result.blockNumber}`);
   }
 }
 

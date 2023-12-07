@@ -1,1 +1,0 @@
-ALTER TABLE "events" ADD COLUMN "verifiedUniqueness" boolean DEFAULT false NOT NULL;

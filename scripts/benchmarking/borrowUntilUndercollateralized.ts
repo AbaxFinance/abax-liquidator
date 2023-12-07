@@ -11,13 +11,12 @@ import path from 'path';
 import { apiProviderWrapper } from 'scripts/common';
 import { LendingPool } from '@abaxfinance/contract-helpers';
 import { Psp22Ownable } from '@abaxfinance/contract-helpers';
+import { LENDING_POOL_ADDRESS } from '@src/utils';
 
 type StoredUser = {
   pair: KeyringPair;
   mnemonic: string;
 };
-
-const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
 
 const usersPath = path.join(path.parse(__filename).dir, 'users.json');
 export const getStoredUsers = () => {
@@ -67,7 +66,7 @@ const keyring = new Keyring();
   const api = await apiProviderWrapper.getAndWaitForReady();
 
   const signer = keyring.createFromUri(seed, {}, 'sr25519');
-  const lendingPool = await getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
+  const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
 
   const storedUsers = getStoredUsers();
   const usersToUse = storedUsers.map((su) => ({ mnemonic: su.mnemonic, pair: keyring.addFromUri(su.mnemonic, {}, 'sr25519') }));
@@ -121,10 +120,10 @@ async function borrowUntilUndercollateralized(
     if (collateralCoeffRes && collateralCoeffRes[1].rawNumber.gtn(0)) {
       collateralCoefficient = collateralCoeffRes[1].rawNumber;
       try {
-        const testUSDC = await getContractObject(Psp22Ownable, reserveDatas.WETH_TEST, user.pair, api);
-        const testDOT = await getContractObject(Psp22Ownable, reserveDatas.BTC_TEST, user.pair, api);
-        const testEth = await getContractObject(Psp22Ownable, reserveDatas.WETH_TEST, user.pair, api);
-        const testAzero = await getContractObject(Psp22Ownable, reserveDatas.BTC_TEST, user.pair, api);
+        const testUSDC = getContractObject(Psp22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+        const testDOT = getContractObject(Psp22Ownable, reserveDatas.BTC_TEST, user.pair, api);
+        const testEth = getContractObject(Psp22Ownable, reserveDatas.WETH_TEST, user.pair, api);
+        const testAzero = getContractObject(Psp22Ownable, reserveDatas.BTC_TEST, user.pair, api);
         const usdcRes = await userSignedLendingPool.query.borrow(
           testUSDC.address,
           user.pair.address,

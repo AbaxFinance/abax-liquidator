@@ -1,3 +1,4 @@
+import { DB_NAME } from '@db/schema';
 import dotenv from 'dotenv';
 dotenv.config({ path: `.env.local` });
 export const getConnectionOptions = () => {
@@ -11,7 +12,7 @@ export const getConnectionOptions = () => {
     password: process.env.POSTGRES_PASSWORD,
     host: process.env.POSTGRES_HOST,
     port: 5432,
-    database: 'liquidator_db',
+    database: DB_NAME,
     debug: true,
     // ssl: true,
   } as {

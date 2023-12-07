@@ -1,27 +1,30 @@
 import { ReturnNumber } from '@727-ventures/typechain-types';
-import type { AccountId, CompleteReserveData, MarketRule, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
+import type { AccountId, MarketRule, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
 import { BalanceViewer, LendingPool, getContractObject, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
 import { E12bn, E18bn, E6, E6bn, E8 } from '@abaxfinance/utils';
 import { db } from '@db/index';
 import { assetPrices, lpTrackingData, lpUserConfigs, lpUserDatas } from '@db/schema';
 import { nobody } from '@polkadot/keyring/pair/nobody';
+import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
+import type { ProtocolUserDataReturnType } from '@src/chain-data-updater/userDataChainUpdater';
+import { queryProtocolReserveDatas, queryProtocolUserData } from '@src/common/chain-data-utils';
+import { MARKET_RULE_IDS, UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
 import { deployedContracts } from '@src/deployedContracts';
+import { getHFPriority } from '@src/hf-recalculation/utils';
 import { logger } from '@src/logger';
 import type { ReserveDataWithMetadata } from '@src/types';
 import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS, getIsUsedAsCollateral } from '@src/utils';
-import amqplib from 'amqplib';
+import amqplib, { type Channel } from 'amqplib';
 import BN from 'bn.js';
 import { eq, inArray, lt } from 'drizzle-orm';
-import { ApiProviderWrapper, sleep } from 'scripts/common';
+import { ApiProviderWrapper } from 'scripts/common';
 import { AMQP_URL, LIQUIDATION_EXCHANGE, LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '../messageQueueConsts';
-import { UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
-import { getHFPriority } from '@src/hf-recalculation/utils';
-const MARKET_RULE_IDS = [0, 1, 2] as const;
 
 export class PeriodicHFUpdater extends BaseActor {
   fetchDataStrategy; //TODO
   wsEndpoint: string;
+  channel?: Channel;
 
   constructor() {
     super();
@@ -30,81 +33,79 @@ export class PeriodicHFUpdater extends BaseActor {
     this.wsEndpoint = wsEndpoint;
   }
 
-  async runLoop() {
+  private async getChannel() {
+    if (this.channel) return this.channel;
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
     await channel.assertExchange(LIQUIDATION_EXCHANGE, 'direct', { durable: true });
     await channel.assertQueue(LIQUIDATION_QUEUE_NAME, { durable: true });
-
     await channel.bindQueue(LIQUIDATION_QUEUE_NAME, LIQUIDATION_EXCHANGE, LIQUIDATION_ROUTING_KEY);
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      logger.info('PeriodicHFUpdater running...');
+    this.channel = channel;
+    return this.channel;
+  }
 
-      //TODO chunks
-      const addressesToUpdate = (
-        await db.select({ address: lpTrackingData.address }).from(lpTrackingData).where(lt(lpTrackingData.updateAtLatest, new Date()))
-      ).map((a) => a.address);
-      logger.info(`Updating HF for ${addressesToUpdate.length} addresses...`);
-      const reserveAddresses = deployedContracts['alephzero-testnet'].filter((c) => c.name.startsWith('psp22')).map((c) => c.address);
+  async loopAction() {
+    const channel = await this.getChannel();
+    const addressesToUpdate = (
+      await db.select({ address: lpTrackingData.address }).from(lpTrackingData).where(lt(lpTrackingData.updateAtLatest, new Date()))
+    ).map((a) => a.address);
+    logger.info(`Updating HF for ${addressesToUpdate.length} addresses...`);
+    const reserveAddresses = deployedContracts['alephzero-testnet'].filter((c) => c.name.startsWith('psp22')).map((c) => c.address);
 
-      //TODO move to strategy START
-      const { usersWithReserveDatas, marketRules, reserveDatas } = await this.getAllDataFromChain(reserveAddresses, addressesToUpdate);
-      //TODO move to strategy END
+    //TODO move to strategy START
+    const { usersWithReserveDatas, marketRules, reserveDatas } = await this.getAllDataFromChain(reserveAddresses, addressesToUpdate);
+    //TODO move to strategy END
 
-      const pricesE18ByReserveAddress = await getPricesE18ByReserveAddressFromDb(reserveAddresses);
+    const pricesE18ByReserveAddress = await getPricesE18ByReserveAddressFromDb(reserveAddresses);
 
-      for (const { userConfig, userReserves, userAddress } of usersWithReserveDatas) {
-        const userAppliedMarketRule = marketRules.get(userConfig.marketRuleId.toNumber())!;
-        let healthFactor = Number.MAX_SAFE_INTEGER - 1;
-        const { debtPower, biggestDebtData } = getDebtPowerE6BNAndBiggestLoan(
+    for (const { userConfig, userReserves, userAddress } of usersWithReserveDatas) {
+      const userAppliedMarketRule = marketRules.get(userConfig.marketRuleId.toNumber())!;
+      let healthFactor = Number.MAX_SAFE_INTEGER - 1;
+      const { debtPower, biggestDebtData } = getDebtPowerE6BNAndBiggestLoan(
+        reserveDatas,
+        pricesE18ByReserveAddress,
+        userReserves,
+        userAppliedMarketRule,
+      );
+      if (!debtPower.eqn(0)) {
+        const { collateralPower, biggestCollateralData } = getCollateralPowerE6AndBiggestDeposit(
+          userConfig,
           reserveDatas,
           pricesE18ByReserveAddress,
           userReserves,
           userAppliedMarketRule,
         );
-        if (!debtPower.eqn(0)) {
-          const { collateralPower, biggestCollateralData } = getCollateralPowerE6AndBiggestDeposit(
-            userConfig,
-            reserveDatas,
-            pricesE18ByReserveAddress,
-            userReserves,
-            userAppliedMarketRule,
-          );
-          healthFactor = parseFloat(collateralPower.mul(E6bn).div(debtPower).toString()) / E6;
-          if (collateralPower.lte(debtPower)) {
-            logger.info(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
+        healthFactor = parseFloat(collateralPower.mul(E6bn).div(debtPower).toString()) / E6;
+        if (collateralPower.lte(debtPower)) {
+          logger.info(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
 
-            channel.publish(
-              LIQUIDATION_EXCHANGE,
-              LIQUIDATION_ROUTING_KEY,
-              Buffer.from(
-                JSON.stringify(replaceRNBNPropsWithStrings({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
-              ),
-              {
-                contentType: 'application/json',
-                persistent: true,
-              },
-            );
-            logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
-          } else {
-            logger.debug(`${userAddress} is safe | HF: ${healthFactor}`);
-          }
+          channel.publish(
+            LIQUIDATION_EXCHANGE,
+            LIQUIDATION_ROUTING_KEY,
+            Buffer.from(
+              JSON.stringify(replaceRNBNPropsWithStrings({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
+            ),
+            {
+              contentType: 'application/json',
+              persistent: true,
+            },
+          );
+          logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
+        } else {
+          logger.debug(`${userAddress} is safe | HF: ${healthFactor}`);
         }
-        const hfUpdatePriority = getHFPriority(healthFactor);
-        await db
-          .update(lpTrackingData)
-          .set({
-            address: userAddress.toString(),
-            healthFactor: healthFactor,
-            updatePriority: hfUpdatePriority,
-            updateAtLatest: new Date(Date.now() + UPDATE_INTERVAL_BY_HF_PRIORITY[hfUpdatePriority]),
-          })
-          .where(eq(lpTrackingData.address, userAddress.toString()));
-        logger.debug(`updated hf priority for ${userAddress}`);
       }
-      logger.info('sleeping for 5 seconds...');
-      await sleep(5 * 1000);
+      const hfUpdatePriority = getHFPriority(healthFactor);
+      await db
+        .update(lpTrackingData)
+        .set({
+          address: userAddress.toString(),
+          healthFactor: healthFactor,
+          updatePriority: hfUpdatePriority,
+          updateAtLatest: new Date(Date.now() + UPDATE_INTERVAL_BY_HF_PRIORITY[hfUpdatePriority]),
+        })
+        .where(eq(lpTrackingData.address, userAddress.toString()));
+      logger.debug(`updated hf priority for ${userAddress}`);
     }
   }
   async getAllDataFromChain(reserveAddresses: string[], userAddresses: string[]) {
@@ -112,28 +113,7 @@ export class PeriodicHFUpdater extends BaseActor {
     const apiProviderWrapper = new ApiProviderWrapper(this.wsEndpoint);
     const apiFromProviderWrapper = await apiProviderWrapper.getAndWaitForReady();
     const balanceViewerL = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, apiFromProviderWrapper);
-    const reserveDatas = await fetchProtocolReserveDatas(balanceViewerL, reserveAddresses);
-
-    const usersWithReserveDatas: ProtocolUserDataReturnType[] = [];
-    const CHUNK_SIZE = 10;
-    const apiProviderWrapperForUserDataFetch = new ApiProviderWrapper(this.wsEndpoint);
-    try {
-      for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
-        const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
-        logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
-        const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
-        const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
-        const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);
-        const currentChunkRes = await Promise.all(currentChunk.map((ad) => getProtocolUserDataFromChain(lendingPool, balanceViewer, ad)));
-        usersWithReserveDatas.push(...currentChunkRes);
-        await api.disconnect();
-        await apiProviderWrapperForUserDataFetch.closeApi();
-      }
-    } catch (e) {
-      logger.info('error while fetching user data...');
-      logger.info(e);
-      process.exit(1);
-    }
+    const reserveDatas = await queryProtocolReserveDatas(balanceViewerL, reserveAddresses);
 
     const marketRules = new Map<number, MarketRule>();
     const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, apiFromProviderWrapper);
@@ -148,22 +128,34 @@ export class PeriodicHFUpdater extends BaseActor {
       // }
     }
     await apiProviderWrapper.closeApi();
+
+    const usersWithReserveDatas = await this.fetchUserReserveDatasFromChain(userAddresses, signer);
     return { usersWithReserveDatas, marketRules, reserveDatas };
   }
-}
 
-async function fetchProtocolReserveDatas(balanceViewer: BalanceViewer, reserveAddresses: string[]) {
-  const reserveDatasRet = await Promise.all(
-    reserveAddresses.map((addr) => balanceViewer.query.viewCompleteReserveData(addr).then((res) => [addr, res])),
-  );
-  const reserveDatasRetVal = reserveDatasRet.map((rt) => [rt[0], (rt[1] as any).value.unwrapRecursively()]) as [string, CompleteReserveData][];
-  return reserveDatasRetVal.reduce(
-    (acc, [addr, rd], i) => {
-      acc[addr] = { ...rd, id: i };
-      return acc;
-    },
-    {} as Record<string, ReserveDataWithMetadata>,
-  );
+  private async fetchUserReserveDatasFromChain(userAddresses: string[], signer: KeyringPair) {
+    const usersWithReserveDatas: ProtocolUserDataReturnType[] = [];
+    const CHUNK_SIZE = 10;
+    const apiProviderWrapperForUserDataFetch = new ApiProviderWrapper(this.wsEndpoint);
+    try {
+      for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
+        const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
+        logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
+        const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
+        const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
+        const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);
+        const currentChunkRes = await Promise.all(currentChunk.map((ad) => queryProtocolUserData(lendingPool, balanceViewer, ad)));
+        usersWithReserveDatas.push(...currentChunkRes);
+        await api.disconnect();
+        await apiProviderWrapperForUserDataFetch.closeApi();
+      }
+    } catch (e) {
+      logger.info('error while fetching user data...');
+      logger.info(e);
+      process.exit(1);
+    }
+    return usersWithReserveDatas;
+  }
 }
 
 export const getCollateralPowerE6AndBiggestDeposit = (
@@ -242,39 +234,6 @@ export const getDebtPowerE6BNAndBiggestLoan = (
   return { debtPower: ret, biggestDebtData };
 };
 
-type ProtocolUserDataReturnType = {
-  userConfig: UserConfig;
-  userReserves: Record<string, UserReserveData>;
-  userAddress: AccountId;
-};
-
-async function getProtocolUserDataFromChain(
-  lendingPool: LendingPool,
-  balanceViewer: BalanceViewer,
-  userAddress: AccountId,
-): Promise<ProtocolUserDataReturnType> {
-  const [
-    {
-      value: { ok: userConfigRet },
-    },
-    {
-      value: { ok: userReservesRet },
-    },
-  ] = await Promise.all([lendingPool.query.viewUserConfig(userAddress), balanceViewer.query.viewUserReserveDatas(null, userAddress)]);
-  const userReserves = userReservesRet!.reduce(
-    (acc, [reserveAddress, reserve]) => {
-      acc[reserveAddress.toString()] = reserve;
-      return acc;
-    },
-    {} as Record<string, UserReserveData>,
-  );
-  return {
-    userConfig: userConfigRet!,
-    userReserves,
-    userAddress,
-  };
-}
-
 async function getProtocolUserDataFromDB(userAddress: AccountId): Promise<ProtocolUserDataReturnType> {
   const userConfigRows = await db.select().from(lpUserConfigs).where(eq(lpUserConfigs.address, userAddress.toString()));
   if (userConfigRows.length > 1) logger.warning(`more than 1 user config in the database for address: ${userAddress.toString()}`);
@@ -291,8 +250,8 @@ async function getProtocolUserDataFromDB(userAddress: AccountId): Promise<Protoc
       acc[curr.address] = {
         deposit: new ReturnNumber(curr.deposit),
         debt: new ReturnNumber(curr.debt),
-        appliedCumulativeDepositIndexE18: new ReturnNumber(curr.appliedCumulativeDepositIndexE18),
-        appliedCumulativeDebtIndexE18: new ReturnNumber(curr.appliedCumulativeDebtIndexE18),
+        appliedDepositIndexE18: new ReturnNumber(curr.appliedCumulativeDepositIndexE18),
+        appliedDebtIndexE18: new ReturnNumber(curr.appliedCumulativeDebtIndexE18),
       };
       return acc;
     },

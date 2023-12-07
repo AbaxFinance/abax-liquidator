@@ -13,6 +13,7 @@ import { LendingPool } from '@abaxfinance/contract-helpers';
 import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder } from '@abaxfinance/contract-helpers';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import { apiProviderWrapper } from 'scripts/common';
+import { LENDING_POOL_ADDRESS, TEST_RESERVES_MINTER_ADDRESS } from '@src/utils';
 
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);
 
@@ -27,10 +28,6 @@ type StoredUser = {
   pair: KeyringPair;
   mnemonic: string;
 };
-
-const LENDING_POOL_ADDRESS = '5C9MoPeD8rEATyW77U6fmUcnzGpvoLvqQ9QTMiA9oByGwffx';
-
-const TEST_RESERVES_MINTER = '5CkfnnGrZkatSe2Jnh5j74wrsvskHjQCiJ6Peq9ZoGKAtxX3';
 
 const usersPath = path.join(path.parse(__filename).dir, 'users.json');
 export const getStoredUsers = () => {
@@ -112,7 +109,7 @@ const keyring = new Keyring();
   queue.start();
   await queue.onIdle();
 
-  const testReservesMinter = await getContractObject(TestReservesMinter, TEST_RESERVES_MINTER, signer, api);
+  const testReservesMinter = await getContractObject(TestReservesMinter, TEST_RESERVES_MINTER_ADDRESS, signer, api);
 
   for (let i = 0; i < usersToUse.length; i++) {
     queue.add(() => mintTestTokensForUser(usersToUse, i, testReservesMinter));

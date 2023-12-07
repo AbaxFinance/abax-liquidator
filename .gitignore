@@ -38,4 +38,4 @@ yarn/install-state.gz
 
 *log.*.json
 
-compose-persistence
+compose-persistence*

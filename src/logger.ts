@@ -15,21 +15,25 @@ const getCircularReplacer = () => {
   };
 };
 const prettyMessage = (message: any) => {
-  if (message.constructor === Object) {
+  if (message?.constructor === Object) {
     return JSON.stringify(message, getCircularReplacer(), 4);
   }
   return message;
 };
 
 const actorNamePrefix = process.env.ACTOR_TO_RUN?.toLocaleLowerCase();
-const messageFormat = winston.format.printf((info) => `[${actorNamePrefix}] [${info.timestamp}] ${info.level}: ${prettyMessage(info.message)}`);
-
+const messageFormat = winston.format.printf((info) => {
+  if (info instanceof Error || info.stack || (info?.name as string)?.endsWith('Error')) {
+    return `[${actorNamePrefix}] [${info.timestamp}] ${info.level}: ${info.stack}`;
+  }
+  return `[${actorNamePrefix}] [${info.timestamp}] ${info.level}: ${prettyMessage(info.message)}`;
+});
 const fileFormat = winston.format.combine(
   winston.format.timestamp({
     format: 'YYYY-MM-DD hh:mm:ss.SSS A',
   }),
-  messageFormat,
   winston.format.align(),
+  messageFormat,
 );
 const consoleFormat = winston.format.combine(
   winston.format.colorize({ all: true }),
@@ -40,28 +44,35 @@ const consoleFormat = winston.format.combine(
   messageFormat,
 );
 
+const commontFileTransportOptions = {
+  dirname: path.join('/app', 'logs'),
+  zippedArchive: true,
+  format: fileFormat,
+  handleExceptions: true,
+  handleRejections: true,
+};
+
 export const logger = winston.createLogger({
   levels: winston.config.syslog.levels,
   level: process.env.LOG_LEVEL?.toLowerCase() || 'info',
+  exitOnError: false,
   transports: [
     new winston.transports.Console({
       format: consoleFormat,
+      handleExceptions: true,
+      handleRejections: true,
     }),
     new winston.transports.DailyRotateFile({
-      dirname: path.join('/app', 'logs'),
+      ...commontFileTransportOptions,
       maxSize: '12m',
       maxFiles: 10,
-      zippedArchive: true,
       filename: `${actorNamePrefix}.log`,
-      format: fileFormat,
     }),
     new winston.transports.DailyRotateFile({
-      dirname: path.join('/app', 'logs'),
+      ...commontFileTransportOptions,
       maxSize: '12m',
       maxFiles: 50,
-      zippedArchive: true,
       filename: `combined.log`,
-      format: fileFormat,
     }),
   ],
 });

@@ -10,6 +10,7 @@ export enum HF_PRIORITY {
   SAFE = 5,
   SAFEST = 6,
 }
+export const MARKET_RULE_IDS = [0, 1, 2] as const;
 
 export const UPDATE_INTERVAL_BY_HF_PRIORITY = {
   [HF_PRIORITY.CRITICAL]: 10 * ONE_SECOND,

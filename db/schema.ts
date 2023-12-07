@@ -1,6 +1,8 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { boolean, char, doublePrecision, integer, json, jsonb, pgTable, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 
+export const DB_NAME = 'liquidator_db';
+
 export const analyzedBlocks = pgTable('analyzedBlocks', {
   blockNumber: integer('blockNumber').primaryKey(),
 });
@@ -26,6 +28,9 @@ export const events = pgTable(
 );
 
 export type InsertEvent = InferInsertModel<typeof events>;
+export type InsertLPUserConfig = InferInsertModel<typeof lpUserConfigs>;
+export type InsertLPUserData = InferInsertModel<typeof lpUserDatas>;
+export type InsertLPReserveData = InferInsertModel<typeof lpReserveDatas>;
 export type SelectAssetPrice = InferSelectModel<typeof assetPrices>;
 
 export const actorsJobs = pgTable(
@@ -44,8 +49,7 @@ export const actorsJobs = pgTable(
 );
 
 export const lpTrackingData = pgTable('lp_trackingData', {
-  id: serial('id').primaryKey(),
-  address: char('address', { length: 48 }).notNull().unique(),
+  address: char('address', { length: 48 }).primaryKey(),
   updatePriority: integer('updatePriority').notNull(),
   healthFactor: doublePrecision('helathFactor').notNull(),
   updateAtLatest: timestamp('updateAtLatest', { withTimezone: true }).notNull(),
@@ -54,8 +58,7 @@ export const lpTrackingData = pgTable('lp_trackingData', {
 export const lpUserDatas = pgTable(
   'lp_userDatas',
   {
-    id: serial('id').primaryKey(),
-    address: char('address', { length: 48 }).notNull(),
+    address: char('address', { length: 48 }).primaryKey(),
     reserveAddress: char('reserveAddress', { length: 48 }).notNull(),
     deposit: varchar('deposit', { length: 256 }).notNull(),
     debt: varchar('debt', { length: 256 }).notNull(),
@@ -73,8 +76,7 @@ export const lpUserDatas = pgTable(
 export const lpUserConfigs = pgTable(
   'lp_userConfigs',
   {
-    id: serial('id').primaryKey(),
-    address: char('address', { length: 48 }).unique().notNull(),
+    address: char('address', { length: 48 }).primaryKey(),
     deposits: varchar('deposits', { length: 128 }).notNull(),
     collaterals: varchar('collaterals', { length: 128 }).notNull(),
     borrows: varchar('borrows', { length: 128 }).notNull(),
@@ -94,7 +96,7 @@ export const lpMarketRules = pgTable('lp_marketRules', {
 export const lpReserveDatas = pgTable(
   'lp_reserveDatas',
   {
-    id: serial('id').primaryKey(),
+    id: integer('id').primaryKey(),
     address: char('address', { length: 48 }).unique().notNull(),
     //restrictions
     maximalTotalDeposit: varchar('maximalTotalDeposit', { length: 256 }),
@@ -102,22 +104,23 @@ export const lpReserveDatas = pgTable(
     minimalCollateral: varchar('minimalCollateral', { length: 128 }).notNull(),
     minimalDebt: varchar('minimalDebt', { length: 128 }).notNull(),
     //indexes
-    cumulativeDepositIndexE18: varchar('cumulativeDepositIndexE18', { length: 128 }).notNull(),
-    cumulativeDebtIndexE18: varchar('cumulativeDebtIndexE18', { length: 128 }).notNull(),
+    depositIndexE18: varchar('depositIndexE18', { length: 128 }).notNull(),
+    debtIndexE18: varchar('debtIndexE18', { length: 128 }).notNull(),
+    indexesUpdateTimestamp: timestamp('indexesUpdateTimestamp', { withTimezone: true }).notNull(),
+    //fees
+    debtFeeE6: varchar('debtFeeE6', { length: 128 }).notNull(),
+    depositFeeE6: varchar('depositFeeE6', { length: 128 }).notNull(),
     //price
-    decimals: varchar('decimals', { length: 128 }).notNull(),
-    tokenPriceE8: varchar('tokenPriceE8', { length: 128 }),
+    decimalMultiplier: varchar('decimalMultiplier', { length: 128 }).notNull(),
     //core data
     activated: boolean('activated').notNull(),
     freezed: boolean('freezed').notNull(),
     totalDeposit: varchar('totalDeposit').notNull(),
-    currentDepositRateE24: varchar('currentDepositRateE24', { length: 128 }).notNull(),
+    currentDepositRateE18: varchar('currentDepositRateE18', { length: 128 }).notNull(),
     totalDebt: varchar('totalDebt', { length: 128 }).notNull(),
-    currentDebtRateE24: varchar('currentDebtRateE24', { length: 128 }).notNull(),
-    indexesUpdateTimestamp: timestamp('indexesUpdateTimestamp', { withTimezone: true }).notNull(),
+    currentDebtRateE18: varchar('currentDebtRateE18', { length: 128 }).notNull(),
     //parameters
-    interestRateModel: jsonb('interestRateModel').notNull(),
-    incomeForSuppliersPartE6: varchar('incomeForSuppliersPartE6', { length: 128 }).notNull(),
+    interestRateModel: jsonb('interestRateModel'),
   },
   (c) => {
     return {

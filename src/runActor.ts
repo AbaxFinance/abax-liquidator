@@ -57,7 +57,7 @@ function createActorToRun(actorType: string) {
   const actor = createActorToRun(actorType);
   await actor.runLoop();
 })().catch((e) => {
-  logger.info('UNHANDLED', e);
-  logger.error(chalk.red(JSON.stringify(e, null, 2)));
+  logger.error('UNHANDLED');
+  logger.error(e);
   process.exit(1);
 });

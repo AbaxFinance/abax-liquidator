@@ -1,21 +1,20 @@
 import { AToken, LendingPool, VToken } from '@abaxfinance/contract-helpers';
-import { ApiPromise } from '@polkadot/api';
-import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { db } from '@db/index';
 import { analyzedBlocks } from '@db/schema';
-import { getTableName, sql } from 'drizzle-orm';
-import PQueue from 'p-queue';
-import type { DefaultAddOptions } from 'p-queue';
-import { TimeSpanFormatter } from 'scripts/benchmarking/utils';
-import { ApiProviderWrapper, sleep } from 'scripts/common';
+import { ApiPromise } from '@polkadot/api';
+import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { BaseActor } from '@src/base-actor/BaseActor';
 import { parseBlockEvents, storeEventsAndErrors } from '@src/event-feeder/EventListener';
 import { logger } from '@src/logger';
 import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
 import { getLatestBlockNumber, getLendingPoolContractAddresses } from '@src/utils';
+import { getTableName, sql } from 'drizzle-orm';
+import PQueue from 'p-queue';
+import { TimeSpanFormatter } from 'scripts/benchmarking/utils';
+import { ApiProviderWrapper } from 'scripts/common';
 
 const QUEUE_CHUNK_SIZE = 10_000;
-const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 44719900;
+const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 48565327;
 const BENCH_BLOCKS_INTERVAL = 500;
 const BENCH_STATS_DIVIDER = BENCH_BLOCKS_INTERVAL / 100;
 
@@ -33,19 +32,14 @@ export class EventAnalyzeEnsurer extends BaseActor {
     this.queue = new PQueue({ concurrency: 30, autoStart: false });
   }
 
-  async runLoop() {
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      logger.info('EventAnalyzeEnsurer', 'running...');
-      const seed = process.env.SEED;
-      if (!seed) throw 'could not determine seed';
+  async loopAction() {
+    const seed = process.env.SEED;
+    if (!seed) throw 'could not determine seed';
 
-      const api = await this.apiProviderWrapper.getAndWaitForReady();
-      const contracts = getLendingPoolContractAddresses(seed, api);
-      await this.ensureBlockAnalysis(this.queue, api, contracts);
-      logger.info('EventAnalyzeEnsurer', 'sleeping for 1 min...');
-      await sleep(1 * 60 * 1000);
-    }
+    const api = await this.apiProviderWrapper.getAndWaitForReady();
+    const contracts = getLendingPoolContractAddresses(seed, api);
+    await this.ensureBlockAnalysis(this.queue, api, contracts);
+    logger.info('EventAnalyzeEnsurer', 'sleeping for 1 min...');
   }
   addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(queue: PQueue, api: ApiPromise, contracts: TContract[], blockNumbers: number[]) {
     logger.info(`adding ${blockNumbers.length} blocks to the queue from range...[${blockNumbers[0]}...${blockNumbers[blockNumbers.length - 1]}]`);

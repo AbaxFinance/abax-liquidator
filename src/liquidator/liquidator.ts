@@ -85,7 +85,6 @@ export class Liquidator extends BaseActor {
   async runLoop() {
     // eslint-disable-next-line no-constant-condition
     logger.info('Liquidator running...');
-
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
     await channel.prefetch(1);
