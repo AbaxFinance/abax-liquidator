@@ -1,0 +1,523 @@
+{
+  "id": "6e9b1a1c-3171-4d23-95ce-0fef8e2ccee2",
+  "prevId": "dca11ee4-2944-444a-9513-03a155bac294",
+  "version": "5",
+  "dialect": "pg",
+  "tables": {
+    "actors_states": {
+      "name": "actors_states",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updateTimestamp": {
+          "name": "updateTimestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jobType": {
+          "name": "jobType",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "actor_idx": {
+          "name": "actor_idx",
+          "columns": [
+            "actor"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "analyzedBlocks": {
+      "name": "analyzedBlocks",
+      "schema": "",
+      "columns": {
+        "blockNumber": {
+          "name": "blockNumber",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "asset_prices": {
+      "name": "asset_prices",
+      "schema": "",
+      "columns": {
+        "name": {
+          "name": "name",
+          "type": "varchar(48)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "char(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currentPriceE8": {
+          "name": "currentPriceE8",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anchorPriceE8": {
+          "name": "anchorPriceE8",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updateTimestamp": {
+          "name": "updateTimestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "name_idx": {
+          "name": "name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "asset_prices_address_unique": {
+          "name": "asset_prices_address_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "address"
+          ]
+        }
+      }
+    },
+    "events": {
+      "name": "events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "contractName": {
+          "name": "contractName",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contractAddress": {
+          "name": "contractAddress",
+          "type": "char(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "blockTimestamp": {
+          "name": "blockTimestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "blockNumber": {
+          "name": "blockNumber",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "blockHash": {
+          "name": "blockHash",
+          "type": "char(66)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hash": {
+          "name": "hash",
+          "type": "char(66)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "name_idx": {
+          "name": "name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "events_hash_unique": {
+          "name": "events_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "hash"
+          ]
+        }
+      }
+    },
+    "lp_marketRules": {
+      "name": "lp_marketRules",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "assetRules": {
+          "name": "assetRules",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "lp_reserveDatas": {
+      "name": "lp_reserveDatas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "char(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "maximalTotalDeposit": {
+          "name": "maximalTotalDeposit",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "maximalTotalDebt": {
+          "name": "maximalTotalDebt",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "minimalCollateral": {
+          "name": "minimalCollateral",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "minimalDebt": {
+          "name": "minimalDebt",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "depositIndexE18": {
+          "name": "depositIndexE18",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "debtIndexE18": {
+          "name": "debtIndexE18",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "indexesUpdateTimestamp": {
+          "name": "indexesUpdateTimestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "debtFeeE6": {
+          "name": "debtFeeE6",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "depositFeeE6": {
+          "name": "depositFeeE6",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decimalMultiplier": {
+          "name": "decimalMultiplier",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activated": {
+          "name": "activated",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freezed": {
+          "name": "freezed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalDeposit": {
+          "name": "totalDeposit",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currentDepositRateE18": {
+          "name": "currentDepositRateE18",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalDebt": {
+          "name": "totalDebt",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currentDebtRateE18": {
+          "name": "currentDebtRateE18",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interestRateModel": {
+          "name": "interestRateModel",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "address_id_index": {
+          "name": "address_id_index",
+          "columns": [
+            "address",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "lp_reserveDatas_address_unique": {
+          "name": "lp_reserveDatas_address_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "address"
+          ]
+        }
+      }
+    },
+    "lp_trackingData": {
+      "name": "lp_trackingData",
+      "schema": "",
+      "columns": {
+        "address": {
+          "name": "address",
+          "type": "char(48)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "updatePriority": {
+          "name": "updatePriority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "helathFactor": {
+          "name": "helathFactor",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updateAtLatest": {
+          "name": "updateAtLatest",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "lp_userConfigs": {
+      "name": "lp_userConfigs",
+      "schema": "",
+      "columns": {
+        "address": {
+          "name": "address",
+          "type": "char(48)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "deposits": {
+          "name": "deposits",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "collaterals": {
+          "name": "collaterals",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "borrows": {
+          "name": "borrows",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marketRuleId": {
+          "name": "marketRuleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "address_idx": {
+          "name": "address_idx",
+          "columns": [
+            "address"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "lp_userDatas": {
+      "name": "lp_userDatas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "char(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reserveAddress": {
+          "name": "reserveAddress",
+          "type": "char(48)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deposit": {
+          "name": "deposit",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "debt": {
+          "name": "debt",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appliedCumulativeDepositIndexE18": {
+          "name": "appliedCumulativeDepositIndexE18",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appliedCumulativeDebtIndexE18": {
+          "name": "appliedCumulativeDebtIndexE18",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "address_idx": {
+          "name": "address_idx",
+          "columns": [
+            "address"
+          ],
+          "isUnique": true
+        },
+        "address_reserve_idx": {
+          "name": "address_reserve_idx",
+          "columns": [
+            "address",
+            "reserveAddress"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

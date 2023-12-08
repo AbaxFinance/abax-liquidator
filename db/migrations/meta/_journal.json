@@ -15,6 +15,13 @@
       "when": 1701950742968,
       "tag": "0001_right_eddie_brock",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1702031702396,
+      "tag": "0002_steep_blink",
+      "breakpoints": true
     }
   ]
 }

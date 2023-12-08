@@ -61,23 +61,23 @@ export async function supplyNativeTAZEROBalance(
   usersToUse: { pair: KeyringPair; mnemonic: string }[],
   i: number,
   api: ApiPromise,
-  signer: KeyringPair,
+  sender: KeyringPair,
 ) {
-  const user = usersToUse[i];
-  if (i % 50 === 0) console.log(new Date(), 'Transfer TAZERO', `${i} users done analyzing balances`);
+  const receiver = usersToUse[i];
+  if (i % 50 === 0 && i !== 0) console.log(new Date(), 'Transfer TAZERO', `${i} users done analyzing balances`);
 
-  const result = (await api.query.system.account(user.pair.address)) as any;
+  const result = (await api.query.system.account(receiver.pair.address)) as any;
   const balanceRaw = result.data.free.toBigInt();
   const balanceReservedRaw = result.data.reserved.toBigInt();
   const balanceTotalRaw: bigint = balanceRaw + balanceReservedRaw;
   if (balanceTotalRaw === 0n) {
     await new Promise((resolve, reject) => {
       api.tx.balances
-        .transfer(user.pair.address, toE12(10))
-        .signAndSend(signer, (currentResult) => {
+        .transferKeepAlive(receiver.pair.address, toE12(10))
+        .signAndSend(sender, (currentResult) => {
           const { status } = currentResult;
           if (status.isInBlock) {
-            //   console.log(`Completed at block hash #${status.asInBlock.toString()}`);
+            // console.log(`Completed at block hash #${status.asInBlock.toString()}`);
             resolve('');
           } else {
             //   console.log(`Current status: ${status.type}`);

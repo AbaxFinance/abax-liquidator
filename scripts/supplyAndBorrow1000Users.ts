@@ -68,11 +68,15 @@ const keyring = new Keyring();
   if (!outputJsonFolder) throw 'could not determine path';
   const wsEndpoint = process.env.WS_ENDPOINT;
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
+  const seed = process.env.SEED;
+  if (!seed) throw 'could not determine seed';
   const api = await apiProviderWrapper.getAndWaitForReady();
 
-  const signer = nobody();
+  const signerFromSeed = keyring.createFromUri(seed, {}, 'sr25519');
 
-  const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
+  const signerNobody = nobody();
+
+  const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signerNobody, api);
 
   const storedUsers = getStoredUsers();
   const shouldInitializeUsers = storedUsers.length === 0;
@@ -85,15 +89,17 @@ const keyring = new Keyring();
 
   fs.writeFileSync(usersPath, JSON.stringify(usersToUse), 'utf-8');
 
-  const queue = new PQueue({ concurrency: 25, autoStart: false });
   for (let i = 0; i < usersToUse.length; i++) {
-    queue.add(() => supplyNativeTAZEROBalance(usersToUse, i, api, signer));
+    await supplyNativeTAZEROBalance(usersToUse, i, api, signerFromSeed);
   }
-  queue.start();
-  await queue.onIdle();
+  // for (let i = 0; i < usersToUse.length; i++) {
+  //   queue.add(() => supplyNativeTAZEROBalance(usersToUse, i, api, signer));
+  // }
+  // queue.start();
+  // await queue.onIdle();
 
-  const testReservesMinter = getContractObject(TestReservesMinter, TEST_RESERVES_MINTER_ADDRESS, signer, api);
-
+  const queue = new PQueue({ concurrency: 25, autoStart: false });
+  const testReservesMinter = getContractObject(TestReservesMinter, TEST_RESERVES_MINTER_ADDRESS, signerNobody, api);
   for (let i = 0; i < usersToUse.length; i++) {
     queue.add(() => mintTestTokensForUser(usersToUse, i, testReservesMinter));
   }
