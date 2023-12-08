@@ -236,8 +236,8 @@ export const getDebtPowerE6BNAndBiggestLoan = (
 
 async function getProtocolUserDataFromDB(userAddress: AccountId): Promise<ProtocolUserDataReturnType> {
   const userConfigRows = await db.select().from(lpUserConfigs).where(eq(lpUserConfigs.address, userAddress.toString()));
-  if (userConfigRows.length > 1) logger.warning(`more than 1 user config in the database for address: ${userAddress.toString()}`);
-  if (userConfigRows.length === 0) logger.warning(`no user config in the database for address: ${userAddress.toString()}`);
+  if (userConfigRows.length > 1) logger.warn(`more than 1 user config in the database for address: ${userAddress.toString()}`);
+  if (userConfigRows.length === 0) logger.warn(`no user config in the database for address: ${userAddress.toString()}`);
   const userConfig: UserConfig = {
     deposits: new ReturnNumber(userConfigRows[0].deposits),
     collaterals: new ReturnNumber(userConfigRows[0].collaterals),

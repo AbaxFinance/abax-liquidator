@@ -3,6 +3,7 @@ import { db } from '@db/index';
 import { analyzedBlocks } from '@db/schema';
 import { ApiPromise } from '@polkadot/api';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
+import { TimeSpanFormatter } from '@scripts/utils';
 import { BaseActor } from '@src/base-actor/BaseActor';
 import { parseBlockEvents, storeEventsAndErrors } from '@src/event-feeder/EventListener';
 import { logger } from '@src/logger';
@@ -10,7 +11,6 @@ import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
 import { getLatestBlockNumber, getLendingPoolContractAddresses } from '@src/utils';
 import { getTableName, sql } from 'drizzle-orm';
 import PQueue from 'p-queue';
-import { TimeSpanFormatter } from 'scripts/benchmarking/utils';
 import { ApiProviderWrapper } from 'scripts/common';
 
 const QUEUE_CHUNK_SIZE = 10_000;

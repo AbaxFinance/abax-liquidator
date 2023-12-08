@@ -35,7 +35,7 @@ export class UserDataChainUpdater extends BaseActor {
         marketRuleId: userConfig.marketRuleId.toNumber(),
       };
       await db.insert(lpUserConfigs).values(userConfigDbValues).onConflictDoUpdate({
-        target: lpUserConfigs.id,
+        target: lpUserConfigs.address,
         set: userConfigDbValues,
       });
       for (const [reserveAddress, userReserve] of Object.entries(userReserves)) {

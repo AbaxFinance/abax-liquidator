@@ -3,5 +3,5 @@
 *docker-compose*
 **/node_modules/**
 **/compose-persistence
-**/compose-persistence-old
+**/compose-persistence-*
 **/target/**

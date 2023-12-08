@@ -58,7 +58,8 @@ export const lpTrackingData = pgTable('lp_trackingData', {
 export const lpUserDatas = pgTable(
   'lp_userDatas',
   {
-    address: char('address', { length: 48 }).primaryKey(),
+    id: serial('id').primaryKey(),
+    address: char('address', { length: 48 }).notNull(),
     reserveAddress: char('reserveAddress', { length: 48 }).notNull(),
     deposit: varchar('deposit', { length: 256 }).notNull(),
     debt: varchar('debt', { length: 256 }).notNull(),
