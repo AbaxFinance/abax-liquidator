@@ -68,8 +68,10 @@ services:
       LOGS_DIRECTORIES: '/workdir/logs'
       LOGROTATE_INTERVAL: 'hourly'
       LOGROTATE_SIZE: '10M'
+      LOGROTATE_PARAMETERS: 'v'
       # LOGROTATE_COMPRESSION: 'compress'
       # LOGROTATE_INTERVAL: "daily"
+      LOG_FILE: '/workdir/logs/logrotator_cron.log'
       LOGROTATE_LOGFILE: /workdir/logs/logrotatecron.log
     volumes:
       - './compose-persistence/logs:/workdir/logs'
@@ -186,7 +188,6 @@ services:
     environment:
       ACTOR_TO_RUN: PERIODIC_HFUPDATER
       AMQP_URL: amqp://rabbitmq
-      LOG_LEVEL: DEBUG
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:
@@ -207,6 +208,7 @@ services:
       - rabbitmq
     environment:
       ACTOR_TO_RUN: PRICE_CHANGE_HFUPDATER
+      LOG_LEVEL: DEBUG
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:

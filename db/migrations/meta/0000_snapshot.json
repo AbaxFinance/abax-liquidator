@@ -1,51 +1,9 @@
 {
-  "id": "e915b41d-7f0d-4be4-9c01-3afbbda9bcc2",
+  "id": "77dcb852-a20a-4cfb-b7d1-daffefac3034",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
   "tables": {
-    "actors_states": {
-      "name": "actors_states",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "actor": {
-          "name": "actor",
-          "type": "char(64)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updateTimestamp": {
-          "name": "updateTimestamp",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "jobType": {
-          "name": "jobType",
-          "type": "varchar(128)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "actor_idx": {
-          "name": "actor_idx",
-          "columns": [
-            "actor"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
     "analyzedBlocks": {
       "name": "analyzedBlocks",
       "schema": "",
@@ -341,10 +299,11 @@
         }
       },
       "indexes": {
-        "address_idx": {
-          "name": "address_idx",
+        "address_id_index": {
+          "name": "address_id_index",
           "columns": [
-            "address"
+            "address",
+            "id"
           ],
           "isUnique": true
         }
@@ -388,6 +347,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "updateTimestamp": {
+          "name": "updateTimestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -428,6 +394,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "updateTimestamp": {
+          "name": "updateTimestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
@@ -450,7 +423,7 @@
         "address": {
           "name": "address",
           "type": "char(48)",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "reserveAddress": {
@@ -482,27 +455,26 @@
           "type": "varchar(256)",
           "primaryKey": false,
           "notNull": true
+        },
+        "updateTimestamp": {
+          "name": "updateTimestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
-      "indexes": {
-        "address_idx": {
-          "name": "address_idx",
-          "columns": [
-            "address"
-          ],
-          "isUnique": true
-        },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
         "address_reserve_idx": {
           "name": "address_reserve_idx",
           "columns": [
             "address",
             "reserveAddress"
-          ],
-          "isUnique": true
+          ]
         }
       },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     }
   },

@@ -6,7 +6,7 @@ import { BaseActor } from '@src/base-actor/BaseActor';
 import { ONE_SECOND } from '@src/constants';
 import { logger } from '@src/logger';
 import { PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME } from '@src/price-updater/priceUpdater';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 
 const LOOP_INTERVAL = process.env.LOOP_INTERVAL ?? 5 * ONE_SECOND;
 export class PriceChangeHFUpdater extends BaseActor {
@@ -16,7 +16,9 @@ export class PriceChangeHFUpdater extends BaseActor {
     const currentAssetPriceData = await db.select().from(assetPrices);
     for (const currentPriceData of currentAssetPriceData) {
       const cachedPriceData = this.cachedAssetPriceData.find((pd) => pd.address === currentPriceData.address);
+      logger.debug(`Processing ${currentPriceData.name} | ${currentPriceData.address}`);
       if (!cachedPriceData) continue;
+      logger.debug(`Checking whether price anchor changed for  ${currentPriceData.name}`);
       if (cachedPriceData.anchorPriceE8 !== currentPriceData.anchorPriceE8) {
         logger.info(
           `Price of ${currentPriceData.name} changed by ${
@@ -36,8 +38,7 @@ async function recalculateHFByAssetAndUpdateDb(assetAddress: string) {
   const userAddresses = await db
     .select({ address: lpTrackingData.address })
     .from(lpTrackingData)
-    .rightJoin(lpUserDatas, eq(lpTrackingData.address, lpUserDatas.address))
-    .where(eq(lpUserDatas.reserveAddress, assetAddress));
+    .innerJoin(lpUserDatas, eq(lpTrackingData.address, lpUserDatas.address))
+    .where(and(eq(lpUserDatas.reserveAddress, assetAddress), ne(lpUserDatas.debt, '0')));
   logger.info(`Affected addresses count: ${userAddresses.length}`);
-  logger.debug(userAddresses);
 }

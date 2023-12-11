@@ -9,7 +9,7 @@ import { parseBlockEvents, storeEventsAndErrors } from '@src/event-feeder/EventL
 import { logger } from '@src/logger';
 import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
 import { getLatestBlockNumber, getLendingPoolContractAddresses } from '@src/utils';
-import { getTableName, sql } from 'drizzle-orm';
+import { eq, getTableName, sql } from 'drizzle-orm';
 import PQueue from 'p-queue';
 import { ApiProviderWrapper } from 'scripts/common';
 
@@ -155,6 +155,15 @@ async function getLastBlockNumberInDb() {
   const lastBlockNumberRes = await db.execute<{ maxblocknumber: number }>(
     sql.raw(`SELECT max("${analyzedBlocks.blockNumber.name}") as maxblocknumber FROM "${getTableName(analyzedBlocks)}"`),
   );
+  const startBlockNumberQueryRes = await db
+    .select({ blockNumber: analyzedBlocks.blockNumber })
+    .from(analyzedBlocks)
+    .where(eq(analyzedBlocks.blockNumber, START_BLOCK_NUMBER_PRE_DEPLOYMENT));
+  if (startBlockNumberQueryRes.length === 0) {
+    const fakeGenesisBlock = START_BLOCK_NUMBER_PRE_DEPLOYMENT - 100;
+    logger.warn(`starting block missing in db. Populating db with fake analyzed genesis block ${fakeGenesisBlock}`);
+    await db.insert(analyzedBlocks).values({ blockNumber: fakeGenesisBlock }).onConflictDoNothing();
+  }
   const lastBlockNumberInDb = lastBlockNumberRes[0]?.maxblocknumber ?? START_BLOCK_NUMBER_PRE_DEPLOYMENT;
   return lastBlockNumberInDb;
 }

@@ -24,42 +24,12 @@ export class UserDataChainUpdater extends BaseActor {
     this.wsEndpoint = wsEndpoint;
   }
   async loopAction(): Promise<void> {
-    const userReserveDatas = await this.getUserReserveDatasFromChain();
-
-    for (const { userConfig, userReserves, userAddress } of userReserveDatas) {
-      const userConfigDbValues: InsertLPUserConfig = {
-        address: userAddress.toString(),
-        borrows: userConfig.borrows.toString(),
-        collaterals: userConfig.collaterals.toString(),
-        deposits: userConfig.collaterals.toString(),
-        marketRuleId: userConfig.marketRuleId.toNumber(),
-      };
-      await db.insert(lpUserConfigs).values(userConfigDbValues).onConflictDoUpdate({
-        target: lpUserConfigs.address,
-        set: userConfigDbValues,
-      });
-      for (const [reserveAddress, userReserve] of Object.entries(userReserves)) {
-        const userDataDbValues: InsertLPUserData = {
-          address: userAddress.toString(),
-          reserveAddress,
-          appliedCumulativeDebtIndexE18: userReserve.appliedDebtIndexE18.toString(),
-          appliedCumulativeDepositIndexE18: userReserve.appliedDepositIndexE18.toString(),
-          debt: userReserve.debt.toString(),
-          deposit: userReserve.deposit.toString(),
-        };
-        await db.insert(lpUserDatas).values(userDataDbValues).onConflictDoUpdate({
-          target: lpUserDatas.id,
-          set: userDataDbValues,
-        });
-      }
-    }
-  }
-
-  async getUserReserveDatasFromChain() {
     const signer = nobody();
-    const userAddresses = (await db.select({ address: lpTrackingData.address }).from(lpTrackingData)).map((a) => a.address);
-    const userReserveDatas = await this.fetchUserReserveDatas(userAddresses, signer);
-    return userReserveDatas;
+    const userAddresses = await this.getAllAddresses();
+    await this.fetchUserReserveDatas(userAddresses, signer);
+  }
+  async getAllAddresses() {
+    return (await db.select({ address: lpTrackingData.address }).from(lpTrackingData)).map((a) => a.address);
   }
   private async fetchUserReserveDatas(userAddresses: string[], signer: KeyringPair) {
     const usersWithReserveDatas: ProtocolUserDataReturnType[] = [];
@@ -69,11 +39,10 @@ export class UserDataChainUpdater extends BaseActor {
       for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
         const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
         logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
-        const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
-        const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
-        const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);
-        const currentChunkRes = await Promise.all(currentChunk.map((ad) => queryProtocolUserData(lendingPool, balanceViewer, ad)));
-        usersWithReserveDatas.push(...currentChunkRes);
+        const { currentChunkRes, api } = await this.fetchFromChain(apiProviderWrapperForUserDataFetch, signer, currentChunk);
+        for (const { userConfig, userReserves, userAddress } of currentChunkRes) {
+          await this.updateDb(userAddress, userConfig, userReserves);
+        }
         await api.disconnect();
         await apiProviderWrapperForUserDataFetch.closeApi();
       }
@@ -83,5 +52,44 @@ export class UserDataChainUpdater extends BaseActor {
       process.exit(1);
     }
     return usersWithReserveDatas;
+  }
+
+  private async fetchFromChain(apiProviderWrapperForUserDataFetch: ApiProviderWrapper, signer: KeyringPair, currentChunk: string[]) {
+    const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
+    const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
+    const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);
+    const currentChunkRes = await Promise.all(currentChunk.map((ad) => queryProtocolUserData(lendingPool, balanceViewer, ad)));
+    return { currentChunkRes, api };
+  }
+
+  private async updateDb(userAddress: AccountId, userConfig: UserConfig, userReserves: Record<string, UserReserveData>) {
+    const userConfigDbValues: InsertLPUserConfig = {
+      address: userAddress.toString(),
+      borrows: userConfig.borrows.toString(),
+      collaterals: userConfig.collaterals.toString(),
+      deposits: userConfig.collaterals.toString(),
+      marketRuleId: userConfig.marketRuleId.toNumber(),
+    };
+    await db.insert(lpUserConfigs).values(userConfigDbValues).onConflictDoUpdate({
+      target: lpUserConfigs.address,
+      set: userConfigDbValues,
+    });
+    for (const [reserveAddress, userReserve] of Object.entries(userReserves)) {
+      const userDataDbValues: InsertLPUserData = {
+        address: userAddress.toString(),
+        reserveAddress,
+        appliedCumulativeDebtIndexE18: userReserve.appliedDebtIndexE18.toString(),
+        appliedCumulativeDepositIndexE18: userReserve.appliedDepositIndexE18.toString(),
+        debt: userReserve.debt.toString(),
+        deposit: userReserve.deposit.toString(),
+      };
+      await db
+        .insert(lpUserDatas)
+        .values(userDataDbValues)
+        .onConflictDoUpdate({
+          target: [lpUserDatas.address, lpUserDatas.reserveAddress],
+          set: userDataDbValues,
+        });
+    }
   }
 }

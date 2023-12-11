@@ -17,6 +17,7 @@ import { LENDING_POOL_ADDRESS, TEST_RESERVES_MINTER_ADDRESS } from '@src/utils';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import { supplyNativeTAZEROBalance } from '@scripts/fundWalletWithTestTokens';
+import { ReturnNumber } from '@727-ventures/typechain-types';
 
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);
 
@@ -87,7 +88,7 @@ const keyring = new Keyring();
         .map(() => getRandomSigner(keyring))
     : storedUsers.map((su) => ({ mnemonic: su.mnemonic, pair: keyring.addFromUri(su.mnemonic, {}, 'sr25519') }));
 
-  fs.writeFileSync(usersPath, JSON.stringify(usersToUse), 'utf-8');
+  if (shouldInitializeUsers) fs.writeFileSync(usersPath, JSON.stringify(usersToUse), 'utf-8');
 
   for (let i = 0; i < usersToUse.length; i++) {
     await supplyNativeTAZEROBalance(usersToUse, i, api, signerFromSeed);
@@ -157,7 +158,9 @@ async function mintTestTokensForUser(usersToUse: { pair: KeyringPair; mnemonic: 
   const queryRes = await userSignedTestReservesMinter.query.mint(amountsToMint as any, user.pair.address);
   if (isNil(queryRes.value.ok?.err)) {
     await userSignedTestReservesMinter.tx.mint(amountsToMint as any, user.pair.address);
-  } else if (!isEqual(queryRes.value.ok?.err, TestReservesMinterErrorBuilder.AlreadyMinted())) {
+  } else if (isEqual(queryRes.value.ok?.err, TestReservesMinterErrorBuilder.AlreadyMinted())) {
+    console.log('mint tokens', `already minted for user: ${user.pair.address}`);
+  } else {
     console.log('mint tokens', `error occured for user: ${user.pair.address}`, queryRes.value.ok?.err);
   }
 }
@@ -167,9 +170,15 @@ async function approveSupplyAndBorrow(api: ApiPromise, usersToUse: { pair: Keyri
   if (i % 50 === 0) console.log(new Date(), 'Approve & Supply & Borrow', `${i} users done`);
   const userSignedLendingPool = lendingPool.withSigner(user.pair);
 
-  const {
-    value: { ok: collateralCoeffRes },
-  } = await userSignedLendingPool.query.getUserFreeCollateralCoefficient(user.pair.address);
+  let collateralCoeffRes: [boolean, ReturnNumber] | undefined = [true, new ReturnNumber(0)] as const;
+  try {
+    const {
+      value: { ok: collateralCoeff },
+    } = await userSignedLendingPool.query.getUserFreeCollateralCoefficient(user.pair.address);
+    collateralCoeffRes = collateralCoeff;
+  } catch (e) {
+    console.log(e);
+  }
 
   if (!collateralCoeffRes || collateralCoeffRes[1].rawNumber.eqn(0)) {
     try {
@@ -186,19 +195,19 @@ async function approveSupplyAndBorrow(api: ApiPromise, usersToUse: { pair: Keyri
       (
         await userSignedLendingPool.query.deposit(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('AZERO_TEST', 60_000), [])
       ).value.unwrapRecursively();
-      await userSignedLendingPool.tx.deposit(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('AZERO_TEST', 60000), []);
+      await userSignedLendingPool.tx.deposit(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('AZERO_TEST', 60_000), []);
       (await userSignedLendingPool.query.setAsCollateral(testEth.address, true)).value.unwrapRecursively();
       await userSignedLendingPool.tx.setAsCollateral(testEth.address, true);
       (await userSignedLendingPool.query.setAsCollateral(testAzero.address, true)).value.unwrapRecursively();
       await userSignedLendingPool.tx.setAsCollateral(testAzero.address, true);
       (
-        await userSignedLendingPool.query.borrow(testEth.address, user.pair.address, convertToCurrencyDecimalsStatic('WETH_TEST', 20), [])
+        await userSignedLendingPool.query.borrow(testEth.address, user.pair.address, convertToCurrencyDecimalsStatic('WETH_TEST', 5), [])
       ).value.unwrapRecursively();
-      await userSignedLendingPool.tx.borrow(testEth.address, user.pair.address, convertToCurrencyDecimalsStatic('WETH_TEST', 20), []);
+      await userSignedLendingPool.tx.borrow(testEth.address, user.pair.address, convertToCurrencyDecimalsStatic('WETH_TEST', 5), []);
       (
-        await userSignedLendingPool.query.borrow(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('AZERO_TEST', 30_000), [])
+        await userSignedLendingPool.query.borrow(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('AZERO_TEST', 20_000), [])
       ).value.unwrapRecursively();
-      await userSignedLendingPool.tx.borrow(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('AZERO_TEST', 30000), []);
+      await userSignedLendingPool.tx.borrow(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('AZERO_TEST', 20_000), []);
     } catch (e) {
       console.error(new Date(), `user no. ${i} (${user.pair.address})`, e);
     }

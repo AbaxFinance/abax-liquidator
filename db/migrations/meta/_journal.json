@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1701914639058,
-      "tag": "0000_odd_doctor_faustus",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1701950742968,
-      "tag": "0001_right_eddie_brock",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1702031702396,
-      "tag": "0002_steep_blink",
+      "when": 1702048551549,
+      "tag": "0000_lazy_cable",
       "breakpoints": true
     }
   ]

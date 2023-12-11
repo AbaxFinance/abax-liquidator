@@ -1,5 +1,18 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import { boolean, char, doublePrecision, integer, json, jsonb, pgTable, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  char,
+  doublePrecision,
+  integer,
+  json,
+  jsonb,
+  pgTable,
+  primaryKey,
+  serial,
+  timestamp,
+  uniqueIndex,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 export const DB_NAME = 'liquidator_db';
 
@@ -33,43 +46,28 @@ export type InsertLPUserData = InferInsertModel<typeof lpUserDatas>;
 export type InsertLPReserveData = InferInsertModel<typeof lpReserveDatas>;
 export type SelectAssetPrice = InferSelectModel<typeof assetPrices>;
 
-export const actorsJobs = pgTable(
-  'actors_states',
-  {
-    id: serial('id').primaryKey(),
-    actor: char('actor', { length: 64 }).notNull(),
-    updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).notNull(),
-    jobType: varchar('jobType', { length: 128 }).notNull(),
-  },
-  (c) => {
-    return {
-      actorIndex: uniqueIndex('actor_idx').on(c.actor),
-    };
-  },
-);
-
 export const lpTrackingData = pgTable('lp_trackingData', {
   address: char('address', { length: 48 }).primaryKey(),
   updatePriority: integer('updatePriority').notNull(),
   healthFactor: doublePrecision('helathFactor').notNull(),
   updateAtLatest: timestamp('updateAtLatest', { withTimezone: true }).notNull(),
+  updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const lpUserDatas = pgTable(
   'lp_userDatas',
   {
-    id: serial('id').primaryKey(),
     address: char('address', { length: 48 }).notNull(),
     reserveAddress: char('reserveAddress', { length: 48 }).notNull(),
     deposit: varchar('deposit', { length: 256 }).notNull(),
     debt: varchar('debt', { length: 256 }).notNull(),
     appliedCumulativeDepositIndexE18: varchar('appliedCumulativeDepositIndexE18', { length: 256 }).notNull(),
     appliedCumulativeDebtIndexE18: varchar('appliedCumulativeDebtIndexE18', { length: 256 }).notNull(),
+    updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).notNull().defaultNow(),
   },
-  (c) => {
+  (t) => {
     return {
-      addressIndex: uniqueIndex('address_idx').on(c.address),
-      addressReserveIndex: uniqueIndex('address_reserve_idx').on(c.address, c.reserveAddress),
+      pk: primaryKey({ name: 'address_reserve_idx', columns: [t.address, t.reserveAddress] }),
     };
   },
 );
@@ -82,6 +80,7 @@ export const lpUserConfigs = pgTable(
     collaterals: varchar('collaterals', { length: 128 }).notNull(),
     borrows: varchar('borrows', { length: 128 }).notNull(),
     marketRuleId: integer('marketRuleId').notNull(),
+    updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).notNull().defaultNow(),
   },
   (c) => {
     return {

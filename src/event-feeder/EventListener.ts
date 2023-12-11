@@ -41,7 +41,6 @@ export class EventListener extends BaseActor {
     listenToNewEvents(api, contracts);
   }
 }
-// let blockAlreadyAnalyzed = (await db.select().from(analyzedBlocks).where(eq(analyzedBlocks.blockNumber, result.blockNumber)).limit(1)).length > 0;
 export async function storeEventsAndErrors(result: EventsFromBlockResult) {
   try {
     await db.insert(analyzedBlocks).values({ blockNumber: result.blockNumber });
@@ -66,8 +65,13 @@ async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: Ev
   const allAddresses: string[] = eventsToInsert
     .flatMap((e) => [e.event.caller, e.event.from, e.event.to, e.event.user, e.event.onBehalfOf])
     .filter((e) => !!e);
+  if (allAddresses.length === 0) {
+    logger.warn(`Events present but no unique addresses to log. Block hash: ${result.blockHash}`);
+    return;
+  }
   const uniqueAddresses = [...new Set(allAddresses)];
   logger.info(`${uniqueAddresses.length} user addresses to load....`);
+
   const insertedAddresses = await db
     .insert(lpTrackingData)
     .values(
@@ -80,9 +84,7 @@ async function saveToLpTrackingTable(eventsToInsert: EventWithMeta[], result: Ev
     )
     .returning({ address: lpTrackingData.address })
     .onConflictDoNothing();
-  if (insertedAddresses.length > 0) {
-    logger.info(`pushed ${insertedAddresses.length} addresses for | block: ${result.blockNumber}`);
-  }
+  logger.info(`pushed ${insertedAddresses.length} addresses for | block: ${result.blockNumber}`);
 }
 
 async function saveToEventsTable(eventsToInsert: EventWithMeta[], contractName: string, result: EventsFromBlockResult) {

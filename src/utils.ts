@@ -41,3 +41,16 @@ export async function getLatestBlockNumber(api: ApiPromise) {
 export const getIsUsedAsCollateral = (userConfig: UserConfig, reserve: ReserveDataWithMetadata) => {
   return ((userConfig.collaterals.toNumber() >> reserve.id) & 1) === 1;
 };
+
+export const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (_, value: unknown) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return undefined;
+      }
+      seen.add(value);
+    }
+    return value;
+  };
+};

@@ -3,26 +3,27 @@ import path from 'path';
 
 const actorNamePrefix = process.env.ACTOR_TO_RUN?.toLocaleLowerCase();
 
+const GLOBAL_LOGGER_LEVEL = process.env.LOG_LEVEL?.toLowerCase() || 'info';
+
 const transport = pino.transport({
   targets: [
     {
+      level: GLOBAL_LOGGER_LEVEL,
       target: 'pino/file',
       options: { destination: path.join('/app', 'logs', `${actorNamePrefix}.log`), mkdir: true },
     },
-    {
-      target: 'pino/file',
-      options: { destination: path.join('/app', 'logs', `combined.log`), mkdir: true },
-    },
-    {
-      target: 'pino/file',
-    },
+    { level: GLOBAL_LOGGER_LEVEL, target: 'pino/file', options: { destination: path.join('/app', 'logs', `combined.log`), mkdir: true } },
+    { level: GLOBAL_LOGGER_LEVEL, target: 'pino/file' },
   ],
 });
 
-export const logger = pino(
-  {
-    level: process.env.LOG_LEVEL?.toLowerCase() || 'info',
-    timestamp: pino.stdTimeFunctions.isoTime,
-  },
-  transport,
-);
+export const logger = pino({ level: GLOBAL_LOGGER_LEVEL, timestamp: pino.stdTimeFunctions.isoTime }, transport);
+
+logger.fatal(`LOG LEVEL: ${logger.level}`);
+logger.fatal(`LOG LEVEL: ${logger.level}`);
+logger.fatal(`LOG LEVEL: ${logger.level}`);
+logger.fatal(`LOG LEVEL: ${logger.level}`);
+logger.fatal(`LOG LEVEL: ${logger.level}`);
+logger.fatal(`LOG LEVEL: ${logger.level}`);
+logger.fatal(`LOG LEVEL: ${logger.level}`);
+logger.fatal(`LOG LEVEL: ${logger.level}`);
