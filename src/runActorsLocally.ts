@@ -1,7 +1,7 @@
 import { ReserveDataChainUpdater } from '@src/chain-data-updater/ReserveDataChainUpdater';
 import { UserDataChainUpdater } from '@src/chain-data-updater/UserDataChainUpdater';
-import { PastBlocksProcessor } from '@src/event-processing/PastBlocksProcessor';
 import { EventListener } from '@src/event-processing/EventListener';
+import { PastBlocksProcessor } from '@src/event-processing/PastBlocksProcessor';
 import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
 import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
 import { Liquidator } from '@src/liquidator/Liquidator';

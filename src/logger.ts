@@ -1,5 +1,5 @@
-import pino from 'pino';
 import path from 'path';
+import pino from 'pino';
 
 const actorNamePrefix = process.env.ACTOR_TO_RUN?.toLocaleLowerCase();
 

@@ -1,10 +1,9 @@
 import type { MarketRule } from '@abaxfinance/contract-helpers';
 import { BalanceViewer, LendingPool, getContractObject } from '@abaxfinance/contract-helpers';
 import { nobody } from '@polkadot/keyring/pair/nobody';
-import type { KeyringPair } from '@polkadot/keyring/types';
 import { queryProtocolReserveDatas, queryProtocolUserData } from '@src/common/chain-data-utils';
 import { MARKET_RULE_IDS } from '@src/constants';
-import { deployedContracts, deployedContractsGetters } from '@src/deployedContracts';
+import { deployedContractsGetters } from '@src/deployedContracts';
 import type { DataFetchStrategy, ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import { logger } from '@src/logger';
 import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS } from '@src/utils';

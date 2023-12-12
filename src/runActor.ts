@@ -1,12 +1,12 @@
-import { PastBlocksProcessor } from '@src/event-processing/PastBlocksProcessor';
-import { EventListener } from '@src/event-processing/EventListener';
-import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
-import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
-import { OffChainPriceUpdater } from '@src/price-updating/OffChainPriceUpdater';
-import { logger } from './logger';
 import { ReserveDataChainUpdater } from '@src/chain-data-updater/ReserveDataChainUpdater';
 import { UserDataChainUpdater } from '@src/chain-data-updater/UserDataChainUpdater';
+import { EventListener } from '@src/event-processing/EventListener';
+import { PastBlocksProcessor } from '@src/event-processing/PastBlocksProcessor';
+import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
+import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
 import { Liquidator } from '@src/liquidator/Liquidator';
+import { OffChainPriceUpdater } from '@src/price-updating/OffChainPriceUpdater';
+import { logger } from './logger';
 
 enum ACTOR_TYPE {
   RESERVE_DATA_CHAIN_UPDATER = 'RESERVE_DATA_CHAIN_UPDATER',

@@ -1,8 +1,6 @@
 import { db } from '@db/index';
-import { assetPrices, lpTrackingData, lpUserDatas } from '@db/schema';
 import type { SelectAssetPrice } from '@db/schema';
-import { sleep } from '@scripts/common';
-import { BaseActor } from '@src/base-actor/BaseActor';
+import { assetPrices, lpTrackingData, lpUserDatas } from '@db/schema';
 import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';
 import { ONE_SECOND } from '@src/constants';
 import { deployedContractsGetters } from '@src/deployedContracts';

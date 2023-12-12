@@ -1,8 +1,7 @@
 import { db } from '@db/index';
 import { lpTrackingData } from '@db/schema';
-import { sleep } from '@scripts/common';
 import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';
-import { deployedContracts, deployedContractsGetters } from '@src/deployedContracts';
+import { deployedContractsGetters } from '@src/deployedContracts';
 import { DbDataFetchStrategy } from '@src/hf-recalculation/DbDataFetchStrategy';
 import { PriceDbFetchStrategy } from '@src/hf-recalculation/PriceDbFetchStrategy';
 import { updateHFAndSendLiquidatationRequests } from '@src/hf-recalculation/hfUpdateUtils';
