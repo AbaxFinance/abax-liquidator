@@ -30,7 +30,7 @@ export interface IWithAbi {
   abi: Abi;
 }
 
-export type ReserveDataWithMetadata = CompleteReserveData & {
+export type ReserveDataWithMetadata = Omit<CompleteReserveData, 'tokens'> & {
   id: number;
 };
 

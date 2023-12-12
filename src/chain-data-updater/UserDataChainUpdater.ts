@@ -1,50 +1,32 @@
-import { BalanceViewer, LendingPool, getContractObject, type AccountId, type UserConfig, type UserReserveData } from '@abaxfinance/contract-helpers';
+import { type AccountId, type UserConfig, type UserReserveData } from '@abaxfinance/contract-helpers';
 import { db } from '@db/index';
 import { lpTrackingData, lpUserConfigs, lpUserDatas, type InsertLPUserConfig, type InsertLPUserData } from '@db/schema';
-import { nobody } from '@polkadot/keyring/pair/nobody';
-import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
-import { queryProtocolUserData } from '@src/common/chain-data-utils';
+import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
+import type { ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import { logger } from '@src/logger';
-import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS } from '@src/utils';
-import { ApiProviderWrapper } from 'scripts/common';
-
-export type ProtocolUserDataReturnType = {
-  userConfig: UserConfig;
-  userReserves: Record<string, UserReserveData>;
-  userAddress: AccountId;
-};
 
 export class UserDataChainUpdater extends BaseActor {
-  wsEndpoint: string;
-  constructor() {
-    super();
-    const wsEndpoint = process.env.WS_ENDPOINT;
-    if (!wsEndpoint) throw 'could not determine wsEndpoint';
-    this.wsEndpoint = wsEndpoint;
-  }
+  fetchStrategy = new ChainDataFetchStrategy();
+
   async loopAction(): Promise<void> {
-    const signer = nobody();
     const userAddresses = await this.getAllAddresses();
-    await this.fetchUserReserveDatas(userAddresses, signer);
+    await this.updateUserReserveDatas(userAddresses);
   }
   async getAllAddresses() {
     return (await db.select({ address: lpTrackingData.address }).from(lpTrackingData)).map((a) => a.address);
   }
-  private async fetchUserReserveDatas(userAddresses: string[], signer: KeyringPair) {
+  private async updateUserReserveDatas(userAddresses: string[]) {
     const usersWithReserveDatas: ProtocolUserDataReturnType[] = [];
     const CHUNK_SIZE = 10;
-    const apiProviderWrapperForUserDataFetch = new ApiProviderWrapper(this.wsEndpoint);
     try {
       for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
         const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
         logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
-        const { currentChunkRes, api } = await this.fetchFromChain(apiProviderWrapperForUserDataFetch, signer, currentChunk);
+        const currentChunkRes = await this.fetchStrategy.fetchUserReserveDatas(currentChunk);
         for (const { userConfig, userReserves, userAddress } of currentChunkRes) {
           await this.updateDb(userAddress, userConfig, userReserves);
         }
-        await api.disconnect();
-        await apiProviderWrapperForUserDataFetch.closeApi();
       }
     } catch (e) {
       logger.info('error while fetching user data...');
@@ -52,14 +34,6 @@ export class UserDataChainUpdater extends BaseActor {
       process.exit(1);
     }
     return usersWithReserveDatas;
-  }
-
-  private async fetchFromChain(apiProviderWrapperForUserDataFetch: ApiProviderWrapper, signer: KeyringPair, currentChunk: string[]) {
-    const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
-    const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
-    const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);
-    const currentChunkRes = await Promise.all(currentChunk.map((ad) => queryProtocolUserData(lendingPool, balanceViewer, ad)));
-    return { currentChunkRes, api };
   }
 
   private async updateDb(userAddress: AccountId, userConfig: UserConfig, userReserves: Record<string, UserReserveData>) {

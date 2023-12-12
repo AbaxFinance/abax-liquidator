@@ -1,5 +1,5 @@
 import type { AccountId, BalanceViewer, CompleteReserveData, LendingPool, UserReserveData } from '@abaxfinance/contract-helpers';
-import type { ProtocolUserDataReturnType } from '@src/chain-data-updater/userDataChainUpdater';
+import type { ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import type { ReserveDataWithMetadata } from '@src/types';
 
 export async function queryProtocolReserveDatas(balanceViewer: BalanceViewer, reserveAddresses: string[]) {

@@ -1,10 +1,10 @@
-import { handleEventReturn } from '@727-ventures/typechain-types';
+import { handleEventReturn } from 'wookashwackomytest-typechain-types';
 import {
   EVENT_DATA_TYPE_DESCRIPTIONS_A_TOKEN,
   EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL,
   EVENT_DATA_TYPE_DESCRIPTIONS_V_TOKEN,
   getEventTypeDescription,
-  replaceRNBNPropsWithStrings,
+  replaceNumericPropsWithStrings,
 } from '@abaxfinance/contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
@@ -152,7 +152,7 @@ export function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
           } satisfies EventWithMeta;
           eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] = [
             ...(eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] ?? []),
-            replaceRNBNPropsWithStrings(eventRetWithMeta),
+            replaceNumericPropsWithStrings(eventRetWithMeta),
           ];
         }
       }

@@ -17,7 +17,7 @@ import { LENDING_POOL_ADDRESS, TEST_RESERVES_MINTER_ADDRESS } from '@src/utils';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import { supplyNativeTAZEROBalance } from '@scripts/fundWalletWithTestTokens';
-import { ReturnNumber } from '@727-ventures/typechain-types';
+import { ReturnNumber } from 'wookashwackomytest-typechain-types';
 
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);
 

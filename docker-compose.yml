@@ -115,8 +115,6 @@ services:
       - '.env.secret'
     networks:
       - local_bridge
-    ports:
-      - 9229:9229
   userdata-chain-updater:
     build:
       context: '../'
@@ -236,6 +234,8 @@ services:
       - '.env.secret'
     networks:
       - local_bridge
+    ports:
+      - 9229:9229
 
 networks:
   local_bridge:

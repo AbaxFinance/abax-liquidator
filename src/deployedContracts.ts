@@ -42,6 +42,7 @@ function createGetters(deployedContractsToUse: ChainContractInfo[]) {
     getReserveName: (address: string) => deployedContractsToUse.find((c) => c.address === address)?.reserveName as string,
     getReserveUnderlyingAddress: (reserveName: string) =>
       deployedContractsToUse.find((c) => c.name.startsWith('psp22') && c.reserveName === reserveName)!.address,
+    getReserveUnderlyingAssetContracts: () => deployedContractsToUse.filter((c) => c.name.startsWith('psp22')),
     getATokenAddress: (reserveName: string) => deployedContractsToUse.find((c) => c.name === 'a_token' && c.reserveName === reserveName)!.address,
     getVTokenAddress: (reserveName: string) => deployedContractsToUse.find((c) => c.name === 'v_token' && c.reserveName === reserveName)!.address,
   };

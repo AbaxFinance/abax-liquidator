@@ -1,4 +1,4 @@
-import { LendingPool, Psp22Ownable, getContractObject, replaceRNBNPropsWithStrings } from '@abaxfinance/contract-helpers';
+import { LendingPool, Psp22Ownable, getContractObject, replaceNumericPropsWithStrings } from '@abaxfinance/contract-helpers';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
@@ -45,8 +45,8 @@ export class Liquidator extends BaseActor {
     logger.info({
       userAddress,
       minimumTokenReceivedE18: minimumTokenReceivedE18.toString(),
-      biggestCollateralData: replaceRNBNPropsWithStrings(biggestCollateralData),
-      biggestDebtData: replaceRNBNPropsWithStrings(biggestDebtData),
+      biggestCollateralData: replaceNumericPropsWithStrings(biggestCollateralData),
+      biggestDebtData: replaceNumericPropsWithStrings(biggestDebtData),
     });
 
     const reserveTokenToRepay = getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress.toString(), liquidationSignerSpender, api);
@@ -76,7 +76,7 @@ export class Liquidator extends BaseActor {
           minimumTokenReceivedE18,
           [],
         );
-      logger.info(replaceRNBNPropsWithStrings(tx));
+      logger.info(replaceNumericPropsWithStrings(tx));
     } catch (e) {
       logger.error('liquidation unsuccessfull');
       logger.error(e);
@@ -100,17 +100,17 @@ export class Liquidator extends BaseActor {
     await channel.consume(
       LIQUIDATION_QUEUE_NAME,
       async (msg) => {
-        logger.info('processing messages');
         if (!msg) {
           logger.warn('empty message');
           return;
         }
+        logger.info(`processing message ${msg.properties.messageId}`);
         await this.processLiquidationMessage(JSON.parse(msg.content.toString()) as LiquidationData);
         channel.ack(msg);
       },
       {
         noAck: false,
-        consumerTag: 'email_consumer',
+        consumerTag: 'liquidator_consumer',
       },
     );
     logger.info('Liquidator [*] Waiting for messages. To exit press CTRL+C');

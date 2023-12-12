@@ -18,12 +18,3 @@ const transport = pino.transport({
 });
 
 export const logger = pino({ level: GLOBAL_LOGGER_LEVEL, timestamp: pino.stdTimeFunctions.isoTime }, transport);
-
-logger.fatal(`LOG LEVEL: ${logger.level}`);
-logger.fatal(`LOG LEVEL: ${logger.level}`);
-logger.fatal(`LOG LEVEL: ${logger.level}`);
-logger.fatal(`LOG LEVEL: ${logger.level}`);
-logger.fatal(`LOG LEVEL: ${logger.level}`);
-logger.fatal(`LOG LEVEL: ${logger.level}`);
-logger.fatal(`LOG LEVEL: ${logger.level}`);
-logger.fatal(`LOG LEVEL: ${logger.level}`);

@@ -1,18 +1,5 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import {
-  boolean,
-  char,
-  doublePrecision,
-  integer,
-  json,
-  jsonb,
-  pgTable,
-  primaryKey,
-  serial,
-  timestamp,
-  uniqueIndex,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { boolean, char, doublePrecision, integer, jsonb, pgTable, primaryKey, serial, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 
 export const DB_NAME = 'liquidator_db';
 
@@ -90,7 +77,15 @@ export const lpUserConfigs = pgTable(
 );
 export const lpMarketRules = pgTable('lp_marketRules', {
   id: integer('id').primaryKey(),
-  assetRules: json('assetRules'),
+  assetRules: jsonb('assetRules').$type<
+    | Array<{
+        collateralCoefficientE6: string | null;
+        borrowCoefficientE6: string | null;
+        penaltyE6: string | null;
+      } | null>
+    | null
+    | undefined
+  >(),
 });
 
 export const lpReserveDatas = pgTable(
@@ -120,7 +115,7 @@ export const lpReserveDatas = pgTable(
     totalDebt: varchar('totalDebt', { length: 128 }).notNull(),
     currentDebtRateE18: varchar('currentDebtRateE18', { length: 128 }).notNull(),
     //parameters
-    interestRateModel: jsonb('interestRateModel'),
+    interestRateModel: jsonb('interestRateModel').$type<[string, string, string, string, string, string, string]>(),
   },
   (c) => {
     return {

@@ -1,13 +1,12 @@
-import chalk from 'chalk';
-import { ReserveDataChainUpdater } from '@src/chain-data-updater/reserveDataChainUpdater';
-import { UserDataChainUpdater } from '@src/chain-data-updater/userDataChainUpdater';
 import { EventAnalyzeEnsurer } from '@src/event-feeder/EventAnalyzeEnsurer';
 import { EventListener } from '@src/event-feeder/EventListener';
 import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
 import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
-import { Liquidator } from '@src/liquidator/liquidator';
-import { PriceUpdater } from '@src/price-updater/priceUpdater';
+import { PriceUpdater } from '@src/price-updater/PriceUpdater';
 import { logger } from './logger';
+import { ReserveDataChainUpdater } from '@src/chain-data-updater/ReserveDataChainUpdater';
+import { UserDataChainUpdater } from '@src/chain-data-updater/UserDataChainUpdater';
+import { Liquidator } from '@src/liquidator/Liquidator';
 
 enum ACTOR_TYPE {
   RESERVE_DATA_CHAIN_UPDATER = 'RESERVE_DATA_CHAIN_UPDATER',
