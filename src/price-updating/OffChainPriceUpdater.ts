@@ -82,7 +82,7 @@ const INIT_ASSET_PRICE_DATA = [
   },
 ];
 
-export class PriceUpdater extends BaseActor {
+export class OffChainPriceUpdater extends BaseActor {
   async loopAction() {
     const kucoinExchange = new ccxt.kucoin();
     logger.debug('Loading kucoin markets....');

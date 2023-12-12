@@ -88,7 +88,7 @@ services:
       - postgres
       - rabbitmq
     environment:
-      ACTOR_TO_RUN: PRICE_UPDATER
+      ACTOR_TO_RUN: OFFCHAIN_PRICE_UPDATER
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:
@@ -145,7 +145,7 @@ services:
     depends_on:
       - postgres
     environment:
-      ACTOR_TO_RUN: EVENT_ANALYZE_ENSURER
+      ACTOR_TO_RUN: PAST_BLOCKS_PROCESSOR
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:

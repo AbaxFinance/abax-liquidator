@@ -1,12 +1,12 @@
 import { ReserveDataChainUpdater } from '@src/chain-data-updater/ReserveDataChainUpdater';
 import { UserDataChainUpdater } from '@src/chain-data-updater/UserDataChainUpdater';
-import { EventAnalyzeEnsurer } from '@src/event-feeder/EventAnalyzeEnsurer';
-import { EventListener } from '@src/event-feeder/EventListener';
+import { PastBlocksProcessor } from '@src/event-processing/PastBlocksProcessor';
+import { EventListener } from '@src/event-processing/EventListener';
 import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
 import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
 import { Liquidator } from '@src/liquidator/Liquidator';
 import { logger } from '@src/logger';
-import { PriceUpdater } from '@src/price-updater/PriceUpdater';
+import { OffChainPriceUpdater } from '@src/price-updating/OffChainPriceUpdater';
 
 //OBSOLETE: USED FOR REFERENCE PURPOSES
 
@@ -17,10 +17,10 @@ import { PriceUpdater } from '@src/price-updater/PriceUpdater';
   const reserveDataChainUpdater = new ReserveDataChainUpdater();
   const priceChangeHFUpdater = new PriceChangeHFUpdater();
   const periodicHFUpdater = new PeriodicHFUpdater();
-  const priceUpdater = new PriceUpdater();
+  const priceUpdater = new OffChainPriceUpdater();
   const liquidator = new Liquidator();
   const eventListenerFeeder = new EventListener();
-  const eventAnalyzeEnsurer = new EventAnalyzeEnsurer();
+  const eventAnalyzeEnsurer = new PastBlocksProcessor();
 
   // eslint-disable-next-line array-bracket-newline
   const res = await Promise.all([

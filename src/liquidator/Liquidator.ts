@@ -4,7 +4,7 @@ import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
 import { logger } from '@src/logger';
 import { AMQP_URL, LIQUIDATION_QUEUE_NAME } from '@src/messageQueueConsts';
-import type { LiquidationData } from '@src/types';
+import type { LiquidationRequestData } from '@src/types';
 import { LENDING_POOL_ADDRESS } from '@src/utils';
 import amqplib from 'amqplib';
 import { BN } from 'bn.js';
@@ -27,7 +27,7 @@ export class Liquidator extends BaseActor {
     this._liquidationSignerSpender = keyring.createFromUri(process.env.SEED ?? '', {}, 'sr25519');
     return this._liquidationSignerSpender;
   }
-  async processLiquidationMessage(data: LiquidationData) {
+  async processLiquidationMessage(data: LiquidationRequestData) {
     logger.info(data);
     const api = await this.apiProviderWrapper.getAndWaitForReady();
     const liquidationSignerSpender = await this.getLiquidationSignerSpender();
@@ -104,8 +104,7 @@ export class Liquidator extends BaseActor {
           logger.warn('empty message');
           return;
         }
-        logger.info(`processing message ${msg.properties.messageId}`);
-        await this.processLiquidationMessage(JSON.parse(msg.content.toString()) as LiquidationData);
+        await this.processLiquidationMessage(JSON.parse(msg.content.toString()) as LiquidationRequestData);
         channel.ack(msg);
       },
       {

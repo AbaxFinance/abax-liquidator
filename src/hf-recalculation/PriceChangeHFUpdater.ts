@@ -10,7 +10,7 @@ import { DbDataFetchStrategy } from '@src/hf-recalculation/DbDataFetchStrategy';
 import { PriceDbFetchStrategy } from '@src/hf-recalculation/PriceDbFetchStrategy';
 import { updateHFAndSendLiquidatationRequests } from '@src/hf-recalculation/hfUpdateUtils';
 import { logger } from '@src/logger';
-import { PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME } from '@src/price-updater/PriceUpdater';
+import { PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME } from '@src/price-updating/OffChainPriceUpdater';
 import { and, eq, inArray, ne } from 'drizzle-orm';
 
 const LOOP_INTERVAL = process.env.LOOP_INTERVAL ?? 5 * ONE_SECOND;

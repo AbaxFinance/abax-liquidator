@@ -5,7 +5,7 @@ import { ApiPromise } from '@polkadot/api';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { TimeSpanFormatter } from '@scripts/utils';
 import { BaseActor } from '@src/base-actor/BaseActor';
-import { parseBlockEvents, storeEventsAndErrors } from '@src/event-feeder/EventListener';
+import { parseBlockEvents, storeEventsAndErrors } from '@src/event-processing/EventListener';
 import { logger } from '@src/logger';
 import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
 import { getLatestBlockNumber, getLendingPoolContractAddresses } from '@src/utils';
@@ -18,7 +18,7 @@ const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 48565327;
 const BENCH_BLOCKS_INTERVAL = 500;
 const BENCH_STATS_DIVIDER = BENCH_BLOCKS_INTERVAL / 100;
 
-export class EventAnalyzeEnsurer extends BaseActor {
+export class PastBlocksProcessor extends BaseActor {
   apiProviderWrapper: ApiProviderWrapper;
   queue: any;
   blockBenchCounter = 0;

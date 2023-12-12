@@ -12,7 +12,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=e290ca&locator=abax-liquidator%40workspace%3A.":
+"@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=6da639&locator=abax-liquidator%40workspace%3A.":
   version: 0.1.0-alpha.0
   resolution: "@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=6da639&locator=abax-liquidator%40workspace%3A."
   peerDependencies:
@@ -22,7 +22,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@abaxfinance/utils@file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=d84ee7&locator=abax-liquidator%40workspace%3A.":
+"@abaxfinance/utils@file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=d38f20&locator=abax-liquidator%40workspace%3A.":
   version: 0.1.0-alpha.0
   resolution: "@abaxfinance/utils@file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=d38f20&locator=abax-liquidator%40workspace%3A."
   dependencies:
@@ -1505,8 +1505,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "abax-liquidator@workspace:."
   dependencies:
-    "@abaxfinance/contract-helpers": "file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=e290ca&locator=abax-liquidator%40workspace%3A."
-    "@abaxfinance/utils": "file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=d84ee7&locator=abax-liquidator%40workspace%3A."
+    "@abaxfinance/contract-helpers": "file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=6da639&locator=abax-liquidator%40workspace%3A."
+    "@abaxfinance/utils": "file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=d38f20&locator=abax-liquidator%40workspace%3A."
     "@polkadot/api": 10.11.1
     "@polkadot/api-contract": ^10.11.1
     "@polkadot/keyring": ^12.6.1

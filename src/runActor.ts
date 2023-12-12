@@ -1,8 +1,8 @@
-import { EventAnalyzeEnsurer } from '@src/event-feeder/EventAnalyzeEnsurer';
-import { EventListener } from '@src/event-feeder/EventListener';
+import { PastBlocksProcessor } from '@src/event-processing/PastBlocksProcessor';
+import { EventListener } from '@src/event-processing/EventListener';
 import { PeriodicHFUpdater } from '@src/hf-recalculation/PeriodicHFUpdater';
 import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater';
-import { PriceUpdater } from '@src/price-updater/PriceUpdater';
+import { OffChainPriceUpdater } from '@src/price-updating/OffChainPriceUpdater';
 import { logger } from './logger';
 import { ReserveDataChainUpdater } from '@src/chain-data-updater/ReserveDataChainUpdater';
 import { UserDataChainUpdater } from '@src/chain-data-updater/UserDataChainUpdater';
@@ -11,12 +11,12 @@ import { Liquidator } from '@src/liquidator/Liquidator';
 enum ACTOR_TYPE {
   RESERVE_DATA_CHAIN_UPDATER = 'RESERVE_DATA_CHAIN_UPDATER',
   USER_DATA_CHAIN_UPDATER = 'USER_DATA_CHAIN_UPDATER',
-  EVENT_ANALYZE_ENSURER = 'EVENT_ANALYZE_ENSURER',
+  PAST_BLOCKS_PROCESSOR = 'PAST_BLOCKS_PROCESSOR',
   EVENT_LISTENER = 'EVENT_LISTENER',
   PERIODIC_HFUPDATER = 'PERIODIC_HFUPDATER',
   PRICE_CHANGE_HFUPDATER = 'PRICE_CHANGE_HFUPDATER',
   LIQUIDATOR = 'LIQUIDATOR',
-  PRICE_UPDATER = 'PRICE_UPDATER',
+  OFFCHAIN_PRICE_UPDATER = 'OFFCHAIN_PRICE_UPDATER',
 }
 
 function createActorToRun(actorType: string) {
@@ -27,8 +27,8 @@ function createActorToRun(actorType: string) {
     case ACTOR_TYPE.USER_DATA_CHAIN_UPDATER: {
       return new UserDataChainUpdater();
     }
-    case ACTOR_TYPE.EVENT_ANALYZE_ENSURER: {
-      return new EventAnalyzeEnsurer();
+    case ACTOR_TYPE.PAST_BLOCKS_PROCESSOR: {
+      return new PastBlocksProcessor();
     }
     case ACTOR_TYPE.EVENT_LISTENER: {
       return new EventListener();
@@ -42,8 +42,8 @@ function createActorToRun(actorType: string) {
     case ACTOR_TYPE.LIQUIDATOR: {
       return new Liquidator();
     }
-    case ACTOR_TYPE.PRICE_UPDATER: {
-      return new PriceUpdater();
+    case ACTOR_TYPE.OFFCHAIN_PRICE_UPDATER: {
+      return new OffChainPriceUpdater();
     }
   }
   throw new Error('Unsupported actor type');
