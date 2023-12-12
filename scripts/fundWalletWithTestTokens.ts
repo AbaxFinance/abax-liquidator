@@ -1,14 +1,14 @@
 import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from '@abaxfinance/contract-helpers';
 import { getArgvObj, toE12 } from '@abaxfinance/utils';
+import type { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
+import { apiProviderWrapper } from '@scripts/common';
 import { SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, getRandomSigner } from '@scripts/supplyAndBorrow1000Users';
 import chalk from 'chalk';
 import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
-import { apiProviderWrapper } from 'scripts/common';
 import { deployedContractsGetters } from '../src/deployedContracts';
-import type { ApiPromise } from '@polkadot/api';
 
 const keyring = new Keyring();
 (async (args: Record<string, unknown>) => {

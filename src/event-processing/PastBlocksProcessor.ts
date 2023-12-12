@@ -11,7 +11,7 @@ import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
 import { getLatestBlockNumber, getLendingPoolContractAddresses } from '@src/utils';
 import { eq, getTableName, sql } from 'drizzle-orm';
 import PQueue from 'p-queue';
-import { ApiProviderWrapper } from 'scripts/common';
+import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 
 const QUEUE_CHUNK_SIZE = 10_000;
 const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 48565327;

@@ -4,13 +4,13 @@ import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import type { KeyringPair } from '@polkadot/keyring/types';
+import { apiProviderWrapper } from '@scripts/common';
 import { getStoredUsers } from '@scripts/supplyAndBorrow1000Users';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { LENDING_POOL_ADDRESS } from '@src/utils';
 import BN from 'bn.js';
 import chalk from 'chalk';
 import PQueue from 'p-queue';
-import { apiProviderWrapper } from 'scripts/common';
 
 const keyring = new Keyring();
 (async (args: Record<string, unknown>) => {

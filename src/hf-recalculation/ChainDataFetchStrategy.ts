@@ -7,7 +7,7 @@ import { deployedContractsGetters } from '@src/deployedContracts';
 import type { DataFetchStrategy, ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import { logger } from '@src/logger';
 import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS } from '@src/utils';
-import { ApiProviderWrapper } from 'scripts/common';
+import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 export class ChainDataFetchStrategy implements DataFetchStrategy {
   wsEndpoint: string;
 

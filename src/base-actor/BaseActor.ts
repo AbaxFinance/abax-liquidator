@@ -1,6 +1,6 @@
 import { ONE_SECOND } from '@src/constants';
 import { logger } from '@src/logger';
-import { sleep } from 'scripts/common';
+import { sleep } from '@src/utils';
 
 const LOOP_INTERVAL = process.env.LOOP_INTERVAL ? parseInt(process.env.LOOP_INTERVAL) : 5 * ONE_SECOND;
 export abstract class BaseActor {

@@ -54,3 +54,5 @@ export const getCircularReplacer = () => {
     return value;
   };
 };
+
+export const sleep = (waitTimeInMs: any) => new Promise((resolve) => setTimeout(resolve, waitTimeInMs));

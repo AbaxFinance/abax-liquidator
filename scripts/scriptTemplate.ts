@@ -1,6 +1,6 @@
 import { getArgvObj } from '@abaxfinance/utils';
+import { apiProviderWrapper } from '@scripts/common';
 import chalk from 'chalk';
-import { apiProviderWrapper } from 'scripts/common';
 
 (async (args: Record<string, unknown>) => {
   if (require.main !== module) return;

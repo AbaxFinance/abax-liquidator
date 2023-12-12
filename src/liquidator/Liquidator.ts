@@ -8,7 +8,7 @@ import type { LiquidationRequestData } from '@src/types';
 import { LENDING_POOL_ADDRESS } from '@src/utils';
 import amqplib from 'amqplib';
 import { BN } from 'bn.js';
-import { ApiProviderWrapper } from 'scripts/common';
+import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 
 export class Liquidator extends BaseActor {
   _liquidationSignerSpender?: KeyringPair;

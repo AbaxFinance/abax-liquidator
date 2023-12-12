@@ -17,7 +17,7 @@ import { logger } from '@src/logger';
 import type { EventWithMeta, EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
 import { getLendingPoolContractAddresses } from '@src/utils';
 import { PostgresError } from 'postgres';
-import { ApiProviderWrapper } from 'scripts/common';
+import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 import { handleEventReturn } from 'wookashwackomytest-typechain-types';
 
 export class EventListener extends BaseActor {
