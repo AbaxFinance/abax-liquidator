@@ -5,6 +5,7 @@ import Keyring from '@polkadot/keyring';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { apiProviderWrapper } from '@scripts/common';
+import { supplyNativeTAZEROBalance } from '@scripts/fundWalletWithTestTokens';
 import { getStoredUsers } from '@scripts/supplyAndBorrow1000Users';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { LENDING_POOL_ADDRESS } from '@src/utils';
@@ -21,19 +22,23 @@ const keyring = new Keyring();
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
   const api = await apiProviderWrapper.getAndWaitForReady();
 
-  const signer = nobody();
-  const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
+  const seed = process.env.SEED;
+  if (!seed) throw 'could not determine seed';
+
+  const signerWithFunds = keyring.createFromUri(seed, {}, 'sr25519');
+
+  const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signerWithFunds, api);
 
   const storedUsers = getStoredUsers();
   const usersToUse = storedUsers.map((su) => ({ mnemonic: su.mnemonic, pair: keyring.addFromUri(su.mnemonic, {}, 'sr25519') }));
 
-  const queue = new PQueue({ concurrency: 25, autoStart: false });
+  const queue = new PQueue({ concurrency: 1, autoStart: false });
 
   // for (let i = 0; i < usersToUse.length; i++) {
-  //   await borrowUntilUndercollateralized(usersToUse, i, lendingPool);
+  //   await borrowUntilUndercollateralized(api, usersToUse, i, lendingPool, signerWithFunds);
   // }
   for (let i = 0; i < 10; i++) {
-    queue.add(() => borrowUntilUndercollateralized(api, usersToUse, i, lendingPool));
+    queue.add(() => borrowUntilUndercollateralized(api, usersToUse, i, lendingPool, signerWithFunds));
   }
 
   queue.start();
@@ -53,6 +58,7 @@ async function borrowUntilUndercollateralized(
   usersToUse: { pair: KeyringPair; mnemonic: string }[],
   i: number,
   lendingPool: LendingPool,
+  signerWithFunds: KeyringPair,
 ) {
   const user = usersToUse[i];
   if (i % 50 === 0) console.log(new Date(), 'Borrow until undercollateralized', `${i} users done`);
@@ -76,54 +82,65 @@ async function borrowUntilUndercollateralized(
     if (collateralCoeffRes && collateralCoeffRes[1].rawNumber.gtn(0)) {
       collateralCoefficient = collateralCoeffRes[1].rawNumber;
       try {
-        const testUSDC = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('WETH_TEST'), user.pair, api);
-        const testDOT = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('BTC_TEST'), user.pair, api);
+        const testUSDC = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('USDC_TEST'), user.pair, api);
+        const testDOT = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('DOT_TEST'), user.pair, api);
         const testEth = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('WETH_TEST'), user.pair, api);
-        const testAzero = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('BTC_TEST'), user.pair, api);
+        const testBtc = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('BTC_TEST'), user.pair, api);
+
         const usdcRes = await userSignedLendingPool.query.borrow(
           testUSDC.address,
           user.pair.address,
-          convertToCurrencyDecimalsStatic('USDC_TEST', 1),
+          convertToCurrencyDecimalsStatic('USDC_TEST', 0.5),
           [],
         );
         try {
           usdcRes.value.unwrapRecursively();
-          await userSignedLendingPool.tx.borrow(testUSDC.address, user.pair.address, convertToCurrencyDecimalsStatic('USDC_TEST', 1), []);
-        } catch (e) {
+          await userSignedLendingPool.tx.borrow(testUSDC.address, user.pair.address, convertToCurrencyDecimalsStatic('USDC_TEST', 0.5), []);
+        } catch (e: any) {
+          if (e?.error?.message.includes('account balance too low')) await supplyNativeTAZEROBalance(api, user.pair, signerWithFunds);
           console.error(new Date(), `usdcRes`, `user no. ${i} (${user.pair.address})`, e);
         }
-        const dotRes = await userSignedLendingPool.query.borrow(testDOT.address, user.pair.address, 100, []);
+        const dotRes = await userSignedLendingPool.query.borrow(
+          testDOT.address,
+          user.pair.address,
+          convertToCurrencyDecimalsStatic('DOT_TEST', 0.5),
+          [],
+        );
         try {
           dotRes.value.unwrapRecursively();
-          await userSignedLendingPool.tx.borrow(testDOT.address, user.pair.address, 100, []);
-        } catch (e) {
+          await userSignedLendingPool.tx.borrow(testDOT.address, user.pair.address, convertToCurrencyDecimalsStatic('DOT_TEST', 0.5), []);
+        } catch (e: any) {
+          if (e?.error?.message.includes('account balance too low')) await supplyNativeTAZEROBalance(api, user.pair, signerWithFunds);
           console.error(new Date(), `dotRes`, `user no. ${i} (${user.pair.address})`, e);
         }
         const ethBorrowRes = await userSignedLendingPool.query.borrow(
           testEth.address,
           user.pair.address,
-          convertToCurrencyDecimalsStatic('WETH_TEST', 0.5),
+          convertToCurrencyDecimalsStatic('WETH_TEST', 0.0005),
           [],
         );
         try {
           ethBorrowRes.value.unwrapRecursively();
-          await userSignedLendingPool.tx.borrow(testEth.address, user.pair.address, convertToCurrencyDecimalsStatic('WETH_TEST', 0.05), []);
-        } catch (e) {
+          await userSignedLendingPool.tx.borrow(testEth.address, user.pair.address, convertToCurrencyDecimalsStatic('WETH_TEST', 0.0005), []);
+        } catch (e: any) {
+          if (e?.error?.message.includes('account balance too low')) await supplyNativeTAZEROBalance(api, user.pair, signerWithFunds);
           console.error(new Date(), `ethBorrowRes`, `user no. ${i} (${user.pair.address})`, e);
         }
         const btcRes = await userSignedLendingPool.query.borrow(
-          testAzero.address,
+          testBtc.address,
           user.pair.address,
-          convertToCurrencyDecimalsStatic('BTC_TEST', 0.0001),
+          convertToCurrencyDecimalsStatic('BTC_TEST', 0.00005),
           [],
         );
         try {
           btcRes.value.unwrapRecursively();
-          await userSignedLendingPool.tx.borrow(testAzero.address, user.pair.address, convertToCurrencyDecimalsStatic('BTC_TEST', 0.0001), []);
-        } catch (e) {
+          await userSignedLendingPool.tx.borrow(testBtc.address, user.pair.address, convertToCurrencyDecimalsStatic('BTC_TEST', 0.00005), []);
+        } catch (e: any) {
+          if (e?.error?.message.includes('account balance too low')) await supplyNativeTAZEROBalance(api, user.pair, signerWithFunds);
           console.error(new Date(), `btcRes`, `user no. ${i} (${user.pair.address})`, e);
         }
-      } catch (e) {
+      } catch (e: any) {
+        if (e?.error?.message.includes('account balance too low')) await supplyNativeTAZEROBalance(api, user.pair, signerWithFunds);
         console.error(new Date(), `user no. ${i} (${user.pair.address})`, e);
       }
     } else {

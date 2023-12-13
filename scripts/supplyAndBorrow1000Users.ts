@@ -6,7 +6,7 @@ import { nobody } from '@polkadot/keyring/pair/nobody';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import { apiProviderWrapper } from '@scripts/common';
-import { supplyNativeTAZEROBalance } from '@scripts/fundWalletWithTestTokens';
+import { supplyNativeTAZEROBalanceArr } from '@scripts/fundWalletWithTestTokens';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { LENDING_POOL_ADDRESS, TEST_RESERVES_MINTER_ADDRESS } from '@src/utils';
 import BN from 'bn.js';
@@ -31,7 +31,7 @@ export type StoredUser = {
   mnemonic: string;
 };
 
-export const usersPath = path.join(path.parse(__filename).dir, 'users.json');
+export const usersPath = path.join(path.parse(__filename).dir, 'generated_users.json');
 export const getStoredUsers = () => {
   try {
     return JSON.parse(fs.readFileSync(usersPath, 'utf8')) as Omit<StoredUser, 'pair'>[]; // returning pair is unsafe as keyring pair does not get serialized properly
@@ -89,7 +89,7 @@ const keyring = new Keyring();
   if (shouldInitializeUsers) fs.writeFileSync(usersPath, JSON.stringify(usersToUse), 'utf-8');
 
   for (let i = 0; i < usersToUse.length; i++) {
-    await supplyNativeTAZEROBalance(usersToUse, i, api, signerFromSeed);
+    await supplyNativeTAZEROBalanceArr(usersToUse, i, api, signerFromSeed);
   }
   // for (let i = 0; i < usersToUse.length; i++) {
   //   queue.add(() => supplyNativeTAZEROBalance(usersToUse, i, api, signer));

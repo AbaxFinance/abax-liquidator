@@ -5,7 +5,7 @@ import { insertPricesIntoDb } from '@src/price-updating/common';
 import { PRICE_SOURCE } from '@src/price-updating/consts';
 import { BN } from 'bn.js';
 import { zip } from 'lodash';
-import { E8 } from '@abaxfinance/utils';
+import { E8, E6 } from '@abaxfinance/utils';
 
 type AnyRegisteredAsset = 'AZERO' | 'BTC' | 'USDC' | 'ETH' | 'DOT' | 'DAI';
 type QueryString =
@@ -50,8 +50,10 @@ export class DIAOraclePriceUpdater extends BaseActor {
     const queryRes = await diaOracle.query.getLatestPrices(Object.values(QUERY_STRING_BY_RESERVE_NAME));
 
     const currentPricesE8: [AnyRegisteredAsset, number][] = zip(Object.keys(QUERY_STRING_BY_RESERVE_NAME), queryRes.value.ok!).map(
-      ([reserveName, oracleRes]) =>
-        [reserveName!, oracleRes![1].rawNumber.div(new BN((10 ** 2).toString())).toNumber() / E8] as [AnyRegisteredAsset, number],
+      ([reserveName, oracleRes]) => {
+        const divisor = new BN((10 ** 4).toString());
+        return [reserveName!, parseInt(oracleRes![1].rawNumber.div(divisor).toString()) / E6] as [AnyRegisteredAsset, number];
+      },
     );
 
     await insertPricesIntoDb(currentPricesE8, PRICE_SOURCE.DIA_ORACLE);

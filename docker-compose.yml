@@ -89,6 +89,7 @@ services:
       - rabbitmq
     environment:
       ACTOR_TO_RUN: OFFCHAIN_PRICE_UPDATER
+      LOOP_INTERVAL: 2
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:
@@ -109,6 +110,7 @@ services:
       - rabbitmq
     environment:
       ACTOR_TO_RUN: DIA_ORACLE_PRICE_UPDATER
+      LOOP_INTERVAL: 2
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:
@@ -154,13 +156,13 @@ services:
       - '.env.secret'
     networks:
       - local_bridge
-  eventanalysis-ensurer:
+  past-blocks-processor:
     build:
       context: '../'
       dockerfile: abax-liquidator/actor.node.Dockerfile
     image: 'liquidation-node-actor'
-    container_name: 'eventanalysis-ensurer'
-    hostname: 'eventanalysis-ensurer'
+    container_name: 'past-blocks-processor'
+    hostname: 'past-blocks-processor'
     restart: unless-stopped
     depends_on:
       - postgres

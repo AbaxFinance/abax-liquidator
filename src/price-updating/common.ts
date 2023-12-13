@@ -14,22 +14,25 @@ export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, n
   logger.debug('Inserting asset prices...');
 
   const updateTs = new Date();
-  const valuesToInsert = (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA).map((apd) => {
-    const currentPriceE8 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
-    return {
-      address: apd.address,
-      name: apd.name,
-      updateTimestamp: updateTs,
-      currentPriceE8: currentPriceE8.toString(),
-      anchorPriceE8:
-        // // eslint-disable-next-line no-constant-condition
-        // true || //TODO
-        Math.abs(parseInt(apd.anchorPriceE8) - currentPriceE8) / parseInt(apd.anchorPriceE8) > PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[apd.name]
-          ? currentPriceE8.toString()
-          : apd.anchorPriceE8,
-      source: priceSource,
-    } as InsertAssetPrice;
-  });
+  const valuesToInsert = (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA)
+    .map((apd) => {
+      const currentPriceE8 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
+      if (apd.currentPriceE8 === currentPriceE8) return null;
+      return {
+        address: apd.address,
+        name: apd.name,
+        updateTimestamp: updateTs,
+        currentPriceE8: currentPriceE8.toString(),
+        anchorPriceE8:
+          // // eslint-disable-next-line no-constant-condition
+          // true || //TODO
+          Math.abs(parseInt(apd.anchorPriceE8) - currentPriceE8) / parseInt(apd.anchorPriceE8) > PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[apd.name]
+            ? currentPriceE8.toString()
+            : apd.anchorPriceE8,
+        source: priceSource,
+      } as InsertAssetPrice;
+    })
+    .filter((v) => !!v) as InsertAssetPrice[];
   await db
     .insert(assetPrices)
     .values(valuesToInsert)
