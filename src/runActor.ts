@@ -7,6 +7,7 @@ import { PriceChangeHFUpdater } from '@src/hf-recalculation/PriceChangeHFUpdater
 import { Liquidator } from '@src/liquidator/Liquidator';
 import { OffChainPriceUpdater } from '@src/price-updating/OffChainPriceUpdater';
 import { logger } from './logger';
+import { DIAOraclePriceUpdater } from '@src/price-updating/DIAOraclePriceUpdater';
 
 enum ACTOR_TYPE {
   RESERVE_DATA_CHAIN_UPDATER = 'RESERVE_DATA_CHAIN_UPDATER',
@@ -17,6 +18,7 @@ enum ACTOR_TYPE {
   PRICE_CHANGE_HFUPDATER = 'PRICE_CHANGE_HFUPDATER',
   LIQUIDATOR = 'LIQUIDATOR',
   OFFCHAIN_PRICE_UPDATER = 'OFFCHAIN_PRICE_UPDATER',
+  DIA_ORACLE_PRICE_UPDATER = 'DIA_ORACLE_PRICE_UPDATER',
 }
 
 function createActorToRun(actorType: string) {
@@ -44,6 +46,9 @@ function createActorToRun(actorType: string) {
     }
     case ACTOR_TYPE.OFFCHAIN_PRICE_UPDATER: {
       return new OffChainPriceUpdater();
+    }
+    case ACTOR_TYPE.DIA_ORACLE_PRICE_UPDATER: {
+      return new DIAOraclePriceUpdater();
     }
   }
   throw new Error('Unsupported actor type');

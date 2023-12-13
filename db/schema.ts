@@ -30,6 +30,7 @@ export const events = pgTable(
 export type InsertEvent = InferInsertModel<typeof events>;
 export type InsertLPUserConfig = InferInsertModel<typeof lpUserConfigs>;
 export type InsertLPUserData = InferInsertModel<typeof lpUserDatas>;
+export type InsertAssetPrice = InferInsertModel<typeof assetPrices>;
 export type InsertLPReserveData = InferInsertModel<typeof lpReserveDatas>;
 export type SelectAssetPrice = InferSelectModel<typeof assetPrices>;
 
@@ -127,15 +128,16 @@ export const lpReserveDatas = pgTable(
 export const assetPrices = pgTable(
   'asset_prices',
   {
-    name: varchar('name', { length: 48 }).primaryKey(),
-    address: char('address', { length: 48 }).unique().notNull(),
+    name: varchar('name', { length: 48 }).notNull(),
+    address: char('address', { length: 48 }).notNull(),
     currentPriceE8: varchar('currentPriceE8', { length: 128 }).notNull(),
     anchorPriceE8: varchar('anchorPriceE8', { length: 128 }).notNull(),
     updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).defaultNow().notNull(),
+    source: integer('source').notNull(),
   },
-  (c) => {
+  (t) => {
     return {
-      nameIndex: uniqueIndex('name_idx').on(c.name),
+      pk: primaryKey({ name: 'ap_address_source_idx', columns: [t.address, t.source] }),
     };
   },
 );

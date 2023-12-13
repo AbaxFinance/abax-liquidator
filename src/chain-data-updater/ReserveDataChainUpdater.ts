@@ -6,13 +6,6 @@ import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStra
 
 export class ReserveDataChainUpdater extends BaseActor {
   fetchStrategy = new ChainDataFetchStrategy();
-  wsEndpoint: string;
-  constructor() {
-    super();
-    const wsEndpoint = process.env.WS_ENDPOINT;
-    if (!wsEndpoint) throw 'could not determine wsEndpoint';
-    this.wsEndpoint = wsEndpoint;
-  }
   async loopAction(): Promise<void> {
     const reserveDatas = await this.fetchStrategy.fetchReserveDatas();
     for (const [reserveAddress, reserveData] of Object.entries(reserveDatas)) {

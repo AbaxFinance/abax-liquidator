@@ -15,7 +15,7 @@ import { BaseActor } from '@src/base-actor/BaseActor';
 import { HF_PRIORITY, UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
 import { logger } from '@src/logger';
 import type { EventWithMeta, EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
-import { getLendingPoolContractAddresses } from '@src/utils';
+import { getLendingPoolContracts } from '@src/utils';
 import { PostgresError } from 'postgres';
 import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 import { handleEventReturn } from 'wookashwackomytest-typechain-types';
@@ -32,12 +32,10 @@ export class EventListener extends BaseActor {
 
   async runLoop() {
     // eslint-disable-next-line no-constant-condition
-    logger.info('EventFeeder', 'running...');
-    const seed = process.env.SEED;
-    if (!seed) throw 'could not determine seed';
+    logger.info('EventFeeder running...');
 
     const api = await this.apiProviderWrapper.getAndWaitForReady();
-    const contracts = getLendingPoolContractAddresses(seed, api);
+    const contracts = getLendingPoolContracts(api);
     listenToNewEvents(api, contracts);
   }
 }

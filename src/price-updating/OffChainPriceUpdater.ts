@@ -1,15 +1,17 @@
 import { E8 } from '@abaxfinance/utils';
 import { db } from '@db/index';
-import { assetPrices } from '@db/schema';
+import { assetPrices, type InsertAssetPrice } from '@db/schema';
 import { BaseActor } from '@src/base-actor/BaseActor';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { logger } from '@src/logger';
+import { insertPricesIntoDb } from '@src/price-updating/common';
+import { PRICE_SOURCE, type AnyRegisteredAsset, INIT_ASSET_PRICE_DATA, PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME } from '@src/price-updating/consts';
+import { getKeyByValue } from '@src/utils';
 import type { OrderBook } from 'ccxt';
 import ccxt from 'ccxt';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 type AnyMarket = 'AZERO/USDT' | 'BTC/USDT' | 'USDC/USDT' | 'ETH/USDT' | 'DOT/USDT' | 'USDT/DAI';
-type AnyRegisteredAsset = 'AZERO' | 'BTC' | 'USDC' | 'ETH' | 'DOT' | 'DAI';
 
 const MARKET_SYMBOLS_BY_RESERVE_NAME = {
   AZERO: 'AZERO/USDT',
@@ -19,68 +21,6 @@ const MARKET_SYMBOLS_BY_RESERVE_NAME = {
   DOT: 'DOT/USDT',
   DAI: 'USDT/DAI', //TODO
 } satisfies Record<AnyRegisteredAsset, AnyMarket>;
-
-export const PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME = {
-  AZERO: 0.02,
-  BTC: 0.02,
-  USDC: 0.02,
-  ETH: 0.02,
-  DOT: 0.02,
-  DAI: 0.02, //TODO
-} satisfies Record<AnyRegisteredAsset, number>;
-export function recordEntries<K extends PropertyKey, T>(object: Record<K, T>) {
-  return Object.entries(object) as [K, T][];
-}
-
-function getKeyByValue<K extends PropertyKey, T>(obj: Record<K, T>, value: T) {
-  const foundKey = recordEntries(obj).find(([, name]) => value === name)![0];
-  return foundKey;
-}
-
-const INIT_ASSET_PRICE_DATA = [
-  {
-    name: 'AZERO',
-    address: deployedContractsGetters.getReserveUnderlyingAddress('AZERO_TEST'),
-    currentPriceE8: 0,
-    anchorPriceE8: 0,
-    updateTimestamp: 0,
-  },
-  {
-    name: 'BTC',
-    address: deployedContractsGetters.getReserveUnderlyingAddress('BTC_TEST'),
-    currentPriceE8: 0,
-    anchorPriceE8: 0,
-    updateTimestamp: 0,
-  },
-  {
-    name: 'USDC',
-    address: deployedContractsGetters.getReserveUnderlyingAddress('USDC_TEST'),
-    currentPriceE8: 0,
-    anchorPriceE8: 0,
-    updateTimestamp: 0,
-  },
-  {
-    name: 'ETH',
-    address: deployedContractsGetters.getReserveUnderlyingAddress('WETH_TEST'),
-    currentPriceE8: 0,
-    anchorPriceE8: 0,
-    updateTimestamp: 0,
-  },
-  {
-    name: 'DOT',
-    address: deployedContractsGetters.getReserveUnderlyingAddress('DOT_TEST'),
-    currentPriceE8: 0,
-    anchorPriceE8: 0,
-    updateTimestamp: 0,
-  },
-  {
-    name: 'DAI',
-    address: deployedContractsGetters.getReserveUnderlyingAddress('DAI_TEST'),
-    currentPriceE8: 0,
-    anchorPriceE8: 0,
-    updateTimestamp: 0,
-  },
-];
 
 export class OffChainPriceUpdater extends BaseActor {
   async loopAction() {
@@ -109,33 +49,6 @@ export class OffChainPriceUpdater extends BaseActor {
       (curr) => [getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair), curr.ob.bids[0][0]! * E8] as [AnyRegisteredAsset, number],
     );
 
-    const assetPriceData = await db.select().from(assetPrices);
-    logger.debug('Inserting data...');
-
-    const updateTs = new Date();
-    const valuesToInsert = (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA).map((apd) => {
-      const currentPriceE8 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
-      return {
-        address: apd.address,
-        name: apd.name,
-        updateTimestamp: updateTs,
-        currentPriceE8: currentPriceE8.toString(),
-        anchorPriceE8:
-          // eslint-disable-next-line no-constant-condition
-          true || //TODO
-          Math.abs(parseInt(apd.anchorPriceE8) - currentPriceE8) / parseInt(apd.anchorPriceE8) > PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[apd.name]
-            ? currentPriceE8.toString()
-            : apd.anchorPriceE8,
-      };
-    });
-    await db
-      .insert(assetPrices)
-      .values(valuesToInsert)
-      .onConflictDoUpdate({
-        target: assetPrices.address,
-        set: {
-          ...Object.fromEntries(Object.keys(assetPrices).map((x) => [x, sql.raw(`excluded."${x}"`)])),
-        },
-      });
+    await insertPricesIntoDb(currentPricesE8, PRICE_SOURCE.KUCOIN);
   }
 }

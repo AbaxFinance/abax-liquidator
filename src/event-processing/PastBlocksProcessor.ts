@@ -8,7 +8,7 @@ import { BaseActor } from '@src/base-actor/BaseActor';
 import { parseBlockEvents, storeEventsAndErrors } from '@src/event-processing/EventListener';
 import { logger } from '@src/logger';
 import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
-import { getLatestBlockNumber, getLendingPoolContractAddresses } from '@src/utils';
+import { getLatestBlockNumber, getLendingPoolContracts } from '@src/utils';
 import { eq, getTableName, sql } from 'drizzle-orm';
 import PQueue from 'p-queue';
 import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
@@ -33,11 +33,8 @@ export class PastBlocksProcessor extends BaseActor {
   }
 
   async loopAction() {
-    const seed = process.env.SEED;
-    if (!seed) throw 'could not determine seed';
-
     const api = await this.apiProviderWrapper.getAndWaitForReady();
-    const contracts = getLendingPoolContractAddresses(seed, api);
+    const contracts = getLendingPoolContracts(api);
     await this.ensureBlockAnalysis(this.queue, api, contracts);
     logger.info('EventAnalyzeEnsurer', 'sleeping for 1 min...');
   }

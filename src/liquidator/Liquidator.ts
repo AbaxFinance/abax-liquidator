@@ -1,4 +1,4 @@
-import { LendingPool, Psp22Ownable, getContractObject, replaceNumericPropsWithStrings } from '@abaxfinance/contract-helpers';
+import { LendingPool, LendingPoolErrorBuilder, Psp22Ownable, getContractObject, replaceNumericPropsWithStrings } from '@abaxfinance/contract-helpers';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
@@ -13,11 +13,13 @@ import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 export class Liquidator extends BaseActor {
   _liquidationSignerSpender?: KeyringPair;
   apiProviderWrapper: ApiProviderWrapper;
+  wsEndpoint: string;
 
   constructor() {
     super();
     const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
+    this.wsEndpoint = wsEndpoint;
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
   }
   async getLiquidationSignerSpender() {
@@ -53,6 +55,16 @@ export class Liquidator extends BaseActor {
 
     const amountToLiquidate = new BN(biggestDebtData.amountRawE6).muln(2);
     await reserveTokenToRepay.tx.approve(lendingPool.address, amountToLiquidate);
+
+    //DEBUG
+    const queryResD = await lendingPool.query.getUserFreeCollateralCoefficient(userAddress);
+    logger.info({
+      userAddress,
+      collateralized: replaceNumericPropsWithStrings(queryResD.value.ok)[0],
+      collateralCoefficient: replaceNumericPropsWithStrings(queryResD.value.ok)[1],
+    });
+    //DEBUG
+
     const queryRes = await lendingPool
       .withSigner(liquidationSignerSpender)
       .query.liquidate(
@@ -80,14 +92,16 @@ export class Liquidator extends BaseActor {
     } catch (e) {
       logger.error('liquidation unsuccessfull');
       logger.error(e);
+      if (LendingPoolErrorBuilder.Collaterized() === e) return false;
     }
+    return true;
   }
   async runLoop() {
     // eslint-disable-next-line no-constant-condition
     logger.info('Liquidator running...');
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
-    await channel.prefetch(1);
+    await channel.prefetch(5);
 
     process.once('SIGINT', async () => {
       logger.info('got sigint, closing connection');
@@ -99,13 +113,18 @@ export class Liquidator extends BaseActor {
 
     await channel.consume(
       LIQUIDATION_QUEUE_NAME,
-      async (msg) => {
+      (msg) => {
+        // has to be synchronous function otherwise channel.ack does not work
         if (!msg) {
           logger.warn('empty message');
           return;
         }
-        await this.processLiquidationMessage(JSON.parse(msg.content.toString()) as LiquidationRequestData);
-        channel.ack(msg);
+        this.processLiquidationMessage(JSON.parse(msg.content.toString()) as LiquidationRequestData)
+          .then((res) => {
+            if (res) channel.ack(msg);
+            else channel.nack(msg);
+          })
+          .catch(() => channel.nack(msg));
       },
       {
         noAck: false,

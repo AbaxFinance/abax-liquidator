@@ -3,7 +3,7 @@
 import type { UserConfig } from '@abaxfinance/contract-helpers';
 import { AToken, LendingPool, VToken, getContractObject } from '@abaxfinance/contract-helpers';
 import { ApiPromise } from '@polkadot/api';
-import Keyring from '@polkadot/keyring';
+import { nobody } from '@polkadot/keyring/pair/nobody';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import type { ReserveDataWithMetadata } from '@src/types';
 export const arrayRange = (start: number, stop: number, step = 1) =>
@@ -16,10 +16,8 @@ export const LENDING_POOL_ADDRESS = deployedContractsGetters.getAddress('lending
 export const BALANCE_VIEWER_ADDRESS = deployedContractsGetters.getAddress('balance_viewer');
 export const TEST_RESERVES_MINTER_ADDRESS = deployedContractsGetters.getAddress('test_reserves_minter');
 
-export function getLendingPoolContractAddresses(seed: string, api: ApiPromise) {
-  const keyring = new Keyring();
-  const signer = keyring.createFromUri(seed, {}, 'sr25519');
-
+export function getLendingPoolContracts(api: ApiPromise) {
+  const signer = nobody();
   const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
   const aTokens = deployedContractsGetters.contractInfoRaw
     .filter((c) => c.name === 'a_token')
@@ -54,5 +52,14 @@ export const getCircularReplacer = () => {
     return value;
   };
 };
+
+export function recordEntries<K extends PropertyKey, T>(object: Record<K, T>) {
+  return Object.entries(object) as [K, T][];
+}
+
+export function getKeyByValue<K extends PropertyKey, T>(obj: Record<K, T>, value: T) {
+  const foundKey = recordEntries(obj).find(([, v]) => value === v)![0];
+  return foundKey;
+}
 
 export const sleep = (waitTimeInMs: any) => new Promise((resolve) => setTimeout(resolve, waitTimeInMs));

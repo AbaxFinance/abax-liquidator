@@ -10,11 +10,13 @@ import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS } from '@src/utils';
 import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 export class ChainDataFetchStrategy implements DataFetchStrategy {
   wsEndpoint: string;
+  apiProviderWrapper: ApiProviderWrapper;
 
   constructor() {
     const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
+    this.apiProviderWrapper = new ApiProviderWrapper(this.wsEndpoint);
   }
 
   async fetchReserveDatas(reserveAddressesArg?: string[]) {
@@ -23,18 +25,16 @@ export class ChainDataFetchStrategy implements DataFetchStrategy {
       reserveAddresses = deployedContractsGetters.getReserveUnderlyingAssetContracts().map((c) => c.address);
     }
     const signer = nobody();
-    const apiProviderWrapper = new ApiProviderWrapper(this.wsEndpoint);
-    const apiFromProviderWrapper = await apiProviderWrapper.getAndWaitForReady();
+    const apiFromProviderWrapper = await this.apiProviderWrapper.getAndWaitForReady();
     const balanceViewerL = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, apiFromProviderWrapper);
     const reserveDatas = await queryProtocolReserveDatas(balanceViewerL, reserveAddresses);
-    await apiProviderWrapper.closeApi();
+    await this.apiProviderWrapper.closeApi();
     return reserveDatas;
   }
 
   async fetchMarketRules() {
     const signer = nobody();
-    const apiProviderWrapper = new ApiProviderWrapper(this.wsEndpoint);
-    const apiFromProviderWrapper = await apiProviderWrapper.getAndWaitForReady();
+    const apiFromProviderWrapper = await this.apiProviderWrapper.getAndWaitForReady();
     const marketRules = new Map<number, MarketRule>();
     const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, apiFromProviderWrapper);
     for (const id of MARKET_RULE_IDS) {
