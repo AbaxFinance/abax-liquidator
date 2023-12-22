@@ -54,7 +54,7 @@ export class ChainDataFetchStrategy implements DataFetchStrategy {
     try {
       for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
         const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
-        logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
+        if (userAddresses.length > CHUNK_SIZE) logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
         const api = await apiProviderWrapperForUserDataFetch.getAndWaitForReadyNoCache();
         const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, signer, api);
         const balanceViewer = getContractObject(BalanceViewer, BALANCE_VIEWER_ADDRESS, signer, api);

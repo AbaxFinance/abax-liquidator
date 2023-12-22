@@ -1,14 +1,23 @@
-import { LendingPool, LendingPoolErrorBuilder, Psp22Ownable, getContractObject, replaceNumericPropsWithStrings } from '@abaxfinance/contract-helpers';
+import {
+  ApiProviderWrapper,
+  LendingPool,
+  LendingPoolErrorBuilder,
+  Psp22Ownable,
+  getContractObject,
+  replaceNumericPropsWithStrings,
+} from '@abaxfinance/contract-helpers';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
+import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
+import { getCollateralPowerE6AndBiggestDeposit, getDebtPowerE6BNAndBiggestLoan } from '@src/hf-recalculation/utils';
 import { logger } from '@src/logger';
 import { AMQP_URL, LIQUIDATION_QUEUE_NAME } from '@src/messageQueueConsts';
+import { DIAOraclePriceFetchStrategy } from '@src/price-updating/price-fetch-strategy/DIAOraclePriceFetchStrategy';
 import type { LiquidationRequestData } from '@src/types';
 import { LENDING_POOL_ADDRESS } from '@src/utils';
 import amqplib from 'amqplib';
-import { BN } from 'bn.js';
-import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
+import BN from 'bn.js';
 
 export class Liquidator extends BaseActor {
   _liquidationSignerSpender?: KeyringPair;
@@ -29,19 +38,21 @@ export class Liquidator extends BaseActor {
     this._liquidationSignerSpender = keyring.createFromUri(process.env.SEED ?? '', {}, 'sr25519');
     return this._liquidationSignerSpender;
   }
-  async processLiquidationMessage(data: LiquidationRequestData) {
-    logger.info(data);
+  async tryLiquidate(
+    userAddress: string,
+    biggestDebtData: {
+      amountRawE6: string;
+      underlyingAddress: string;
+    },
+    biggestCollateralData: {
+      amountRawE6: string;
+      underlyingAddress: string;
+    },
+  ) {
     const api = await this.apiProviderWrapper.getAndWaitForReady();
     const liquidationSignerSpender = await this.getLiquidationSignerSpender();
     const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, liquidationSignerSpender, api);
-    const { biggestDebtData, userAddress, biggestCollateralData } = data;
-    // const minimumTokenReceivedE18 = calculateMinimumTokenReceivedE18(
-    //   biggestDebtData,
-    //   biggestCollateralData,
-    //   reserveDatas,
-    //   priceMap,
-    //   userChosenMarketRule,
-    // );
+    // const minimumTokenReceivedE18 = calculateMinimumTokenReceivedE18();
     const minimumTokenReceivedE18 = 1;
 
     logger.info({
@@ -92,16 +103,64 @@ export class Liquidator extends BaseActor {
     } catch (e) {
       logger.error('liquidation unsuccessfull');
       logger.error(e);
-      if (LendingPoolErrorBuilder.Collaterized() === e) return false;
+      if (LendingPoolErrorBuilder.Collaterized() === e) {
+        logger.warn('user was collateralized');
+        return false;
+      }
     }
     return true;
   }
+  async processLiquidationMessage(data: LiquidationRequestData) {
+    logger.info('Processing message...');
+    logger.info(data);
+    return this.tryLiquidate(data.userAddress, data.biggestDebtData, data.biggestCollateralData);
+  }
+  async liquidateUsingChainData(userAddress: string) {
+    const dataFetchStrategy = new ChainDataFetchStrategy();
+    const priceFetchStrategy = new DIAOraclePriceFetchStrategy();
+
+    const reserveDatas = await dataFetchStrategy.fetchReserveDatas();
+    const marketRules = await dataFetchStrategy.fetchMarketRules();
+    const [{ userConfig, userReserves }] = await dataFetchStrategy.fetchUserReserveDatas([userAddress]);
+    const userAppliedMarketRule = marketRules.get(userConfig.marketRuleId.toNumber())!;
+    const pricesE18ByReserveAddress = (await priceFetchStrategy.fetchPricesE18()).reduce(
+      (acc, [address, currentPriceE18]) => {
+        try {
+          acc[address] = new BN(currentPriceE18);
+        } catch (e) {
+          logger.info({ currentPriceE18, address, e });
+          throw e;
+        }
+        return acc;
+      },
+      {} as Record<string, BN>,
+    );
+    const { debtPower, biggestDebtData } = getDebtPowerE6BNAndBiggestLoan(
+      reserveDatas,
+      pricesE18ByReserveAddress,
+      userReserves,
+      userAppliedMarketRule,
+    );
+    const { collateralPower, biggestCollateralData } = getCollateralPowerE6AndBiggestDeposit(
+      userConfig,
+      reserveDatas,
+      pricesE18ByReserveAddress,
+      userReserves,
+      userAppliedMarketRule,
+    );
+    if (collateralPower.gt(debtPower)) {
+      logger.warn(`address ${userAddress} incorrectly submitted for liquidation`);
+      return false;
+    }
+    return this.tryLiquidate(userAddress, replaceNumericPropsWithStrings(biggestDebtData), replaceNumericPropsWithStrings(biggestCollateralData));
+  }
+
   async runLoop() {
     // eslint-disable-next-line no-constant-condition
     logger.info('Liquidator running...');
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
-    await channel.prefetch(5);
+    await channel.prefetch(1);
 
     process.once('SIGINT', async () => {
       logger.info('got sigint, closing connection');
@@ -119,10 +178,23 @@ export class Liquidator extends BaseActor {
           logger.warn('empty message');
           return;
         }
-        this.processLiquidationMessage(JSON.parse(msg.content.toString()) as LiquidationRequestData)
+        const liquidationRequest = JSON.parse(msg.content.toString()) as LiquidationRequestData;
+        this.processLiquidationMessage(liquidationRequest)
           .then((res) => {
-            if (res) channel.ack(msg);
-            else channel.nack(msg);
+            if (res) {
+              logger.info('acking message');
+              channel.ack(msg);
+            } else {
+              this.liquidateUsingChainData(liquidationRequest.userAddress).then((fallbackRes) => {
+                if (fallbackRes) {
+                  logger.info('after fallback | acking message');
+                  channel.ack(msg);
+                } else {
+                  logger.info('nacking message');
+                  channel.nack(msg);
+                }
+              });
+            }
           })
           .catch(() => channel.nack(msg));
       },
@@ -134,57 +206,3 @@ export class Liquidator extends BaseActor {
     logger.info('Liquidator [*] Waiting for messages. To exit press CTRL+C');
   }
 }
-
-// function calculateMinimumTokenReceivedE18(
-//   loanData: {
-//     amountInHuman: number;
-//     amountRaw: BN;
-//     symbol: RESERVE_NAMES_TYPE;
-//     underlyingAddress: string;
-//     decimalDenominator: BN;
-//   },
-//   collateralData: {
-//     amountRaw: BN;
-//     amountInHuman: number;
-//     symbol: RESERVE_NAMES_TYPE;
-//     underlyingAddress: string;
-//     decimalDenominator: BN;
-//   },
-//   reserveDatas: Record<RESERVE_NAMES_TYPE, ReserveData & { underlyingAddress: AccountId }>,
-//   prices: Map<RESERVE_NAMES_TYPE, number>,
-//   userChosenMarketRule: MarketRule,
-// ) {
-//   const assetToRepayPriceE8 = new BN((prices.get(loanData.symbol)! * E8).toString());
-//   const assetToTakePriceE8 = new BN((prices.get(collateralData.symbol)! * E8).toString());
-//   const reserveDataToRepay = reserveDatas[loanData.symbol];
-//   const reserveDataToTake = reserveDatas[collateralData.symbol];
-//   const penaltyToRepayE6 = userChosenMarketRule[reserveDataToRepay.id]!.penaltyE6!.rawNumber!;
-//   const penaltyToTakeE6 = userChosenMarketRule[reserveDataToTake.id]!.penaltyE6!.rawNumber!;
-//   const amountToRepay = loanData.amountRaw;
-
-//   let amountToTake = amountToRepay
-//     .mul(assetToRepayPriceE8.mul(reserveDataToTake.decimals.rawNumber).mul(E6bn.add(penaltyToRepayE6).add(penaltyToTakeE6)))
-//     .div(assetToTakePriceE8.mul(reserveDataToRepay.decimals.rawNumber).mul(E6bn));
-
-//   if (amountToTake.gt(collateralData.amountRaw)) {
-//     amountToTake = collateralData.amountRaw;
-//   }
-//   const receivedForOneRepaidTokenE18 = amountToTake.mul(E18bn).div(amountToRepay);
-
-//   return receivedForOneRepaidTokenE18.muln(0.95);
-
-//   // const penaltyMultiplier = new BN(E6).add(penaltyToRepayE6).add(penaltyToTakeE6);
-//   // const receivedForOneRepaidToken =
-//   //   reserveDataToTake.decimals.rawNumber
-//   //     .muln(assetToRepayPrice)
-//   //     .mul(penaltyMultiplier)
-//   //     .div(reserveDataToRepay.decimals.rawNumber)
-//   //     .divn(E6)
-//   //     .toNumber() / assetToTakePrice;
-
-//   // const amountToRepay = loanData.amountRaw.muln(receivedForOneRepaidToken).gte(collateralData.amountRaw)
-//   //   ? loanData.amountRaw.muln(receivedForOneRepaidToken)
-//   //   : collateralData.amountRaw;
-
-//   // return amountToRepay.mul(E18bn).div(loanData.amountRaw);
-// }

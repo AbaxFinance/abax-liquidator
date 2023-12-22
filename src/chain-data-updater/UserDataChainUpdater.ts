@@ -1,13 +1,18 @@
 import { type AccountId, type UserConfig, type UserReserveData } from '@abaxfinance/contract-helpers';
 import { db } from '@db/index';
 import { lpTrackingData, lpUserConfigs, lpUserDatas, type InsertLPUserConfig, type InsertLPUserData } from '@db/schema';
-import { BaseActor } from '@src/base-actor/BaseActor';
+import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';
 import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
 import type { ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import { logger } from '@src/logger';
+import { USER_DATA_QUEUE_NAME, USER_DATA_ROUTING_KEY } from '../messageQueueConsts';
 
-export class UserDataChainUpdater extends BaseActor {
+export class UserDataChainUpdater extends BaseMessagingActor {
   fetchStrategy = new ChainDataFetchStrategy();
+
+  constructor() {
+    super(USER_DATA_QUEUE_NAME, USER_DATA_ROUTING_KEY);
+  }
 
   async loopAction(): Promise<void> {
     const userAddresses = await this.getAllAddresses();
@@ -22,7 +27,7 @@ export class UserDataChainUpdater extends BaseActor {
     try {
       for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
         const currentChunk = userAddresses.slice(i, i + CHUNK_SIZE);
-        logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
+        if (userAddresses.length > CHUNK_SIZE) logger.info(`fetching user data chunk (${i}-${i + CHUNK_SIZE})...`);
         const currentChunkRes = await this.fetchStrategy.fetchUserReserveDatas(currentChunk);
         for (const { userConfig, userReserves, userAddress } of currentChunkRes) {
           await this.updateDb(userAddress, userConfig, userReserves);

@@ -2,12 +2,12 @@ import { db } from '@db/index';
 import type { SelectAssetPrice } from '@db/schema';
 import { assetPrices, lpTrackingData, lpUserDatas } from '@db/schema';
 import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';
-import { ONE_SECOND } from '@src/constants';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { DbDataFetchStrategy } from '@src/hf-recalculation/DbDataFetchStrategy';
 import { PriceDbFetchStrategy } from '@src/hf-recalculation/PriceDbFetchStrategy';
 import { updateHFAndSendLiquidatationRequests } from '@src/hf-recalculation/hfUpdateUtils';
 import { logger } from '@src/logger';
+import { LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '@src/messageQueueConsts';
 import { PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME } from '@src/price-updating/consts';
 import { and, eq, inArray, ne } from 'drizzle-orm';
 
@@ -15,6 +15,9 @@ export class PriceChangeHFUpdater extends BaseMessagingActor {
   lpDataFetchStrategy = new DbDataFetchStrategy(); //TODO DI
   priceFetchStrategy = new PriceDbFetchStrategy();
   cachedAssetPriceData: SelectAssetPrice[] = [];
+  constructor() {
+    super(LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY);
+  }
   async loopAction() {
     logger.info('PriceChangeHFUpdater running...');
     const priceDatasFromDb = await db.select().from(assetPrices);
@@ -24,7 +27,7 @@ export class PriceChangeHFUpdater extends BaseMessagingActor {
       logger.debug(`Processing ${priceDataFromDb.name} | ${priceDataFromDb.address}`);
       if (!cachedPriceData) continue;
       logger.debug(`Checking whether price anchor changed for  ${priceDataFromDb.name}`);
-      if (cachedPriceData.anchorPriceE8 !== priceDataFromDb.anchorPriceE8) {
+      if (cachedPriceData.anchorPriceE18 !== priceDataFromDb.anchorPriceE18) {
         logger.info(
           `Price of ${priceDataFromDb.name} changed by ${
             PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[priceDataFromDb.name] * 100
@@ -49,6 +52,10 @@ export class PriceChangeHFUpdater extends BaseMessagingActor {
         .innerJoin(lpUserDatas, eq(lpTrackingData.address, lpUserDatas.address))
         .where(and(inArray(lpUserDatas.reserveAddress, assetAddresses), ne(lpUserDatas.debt, '0')))
     ).map((a) => a.address);
+    if (addressesToUpdate.length === 0) {
+      logger.info('No addresses to update...');
+      return;
+    }
     logger.info(`Affected addresses count: ${addressesToUpdate.length}`);
 
     const reserveAddresses = deployedContractsGetters.getReserveUnderlyingAssetContracts().map((c) => c.address);

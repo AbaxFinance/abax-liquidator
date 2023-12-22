@@ -1,5 +1,11 @@
 import { LendingPool, Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from '@abaxfinance/contract-helpers';
-import { U128_MAX_VALUE, convertToCurrencyDecimalsStatic, getArgvObj } from '@abaxfinance/utils';
+import {
+  SUPPORTED_CURRENCIES_DECIMALS,
+  U128_MAX_VALUE,
+  convertNumberOrStringToBN,
+  convertToCurrencyDecimalsStatic,
+  getArgvObj,
+} from '@abaxfinance/utils';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import { nobody } from '@polkadot/keyring/pair/nobody';
@@ -38,25 +44,6 @@ export const getStoredUsers = () => {
   } catch (e) {
     console.warn(`Unable to retrieve previous users `);
     return [];
-  }
-};
-export const SUPPORTED_CURRENCIES_SYMBOLS = ['DAI_TEST', 'AZERO_TEST', 'USDC_TEST', 'WETH_TEST', 'DOT_TEST', 'BTC_TEST'] as const;
-export type SUPPORTED_CURRENCIES_TYPE = (typeof SUPPORTED_CURRENCIES_SYMBOLS)[number];
-
-export const SUPPORTED_CURRENCIES_DECIMALS = {
-  DAI_TEST: 6,
-  AZERO_TEST: 12,
-  USDC_TEST: 6,
-  WETH_TEST: 18,
-  DOT_TEST: 12,
-  BTC_TEST: 8,
-} as Record<SUPPORTED_CURRENCIES_TYPE, number>;
-
-export const convertNumberOrStringToBN = (amount: BN | number | string) => {
-  try {
-    return new BN(amount);
-  } catch {
-    return new BN(amount.toString());
   }
 };
 

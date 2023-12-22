@@ -12,19 +12,19 @@ export class PriceDbFetchStrategy {
     logger.debug(`Fetching prices using ${getKeyByValue(PRICE_SOURCE, priceSource)}`);
     const pricesE8ByReserveAddressFromDb = reserveAddresses
       ? await db
-          .select({ currentPrice: assetPrices.currentPriceE8, address: assetPrices.address })
+          .select({ currentPriceE18: assetPrices.currentPriceE18, address: assetPrices.address })
           .from(assetPrices)
           .where(and(inArray(assetPrices.address, reserveAddresses), eq(assetPrices.source, priceSource)))
       : await db
-          .select({ currentPrice: assetPrices.currentPriceE8, address: assetPrices.address })
+          .select({ currentPriceE18: assetPrices.currentPriceE18, address: assetPrices.address })
           .from(assetPrices)
           .where(eq(assetPrices.source, priceSource));
     return pricesE8ByReserveAddressFromDb.reduce(
-      (acc, { currentPrice, address }) => {
+      (acc, { currentPriceE18, address }) => {
         try {
-          acc[address] = new BN((parseFloat(currentPrice) * E8).toString()).mul(E12bn).divn(10 ** 2);
+          acc[address] = new BN(currentPriceE18);
         } catch (e) {
-          logger.info({ currentPrice, address, e });
+          logger.info({ currentPriceE18, address, e });
           throw e;
         }
         return acc;

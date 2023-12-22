@@ -41,7 +41,7 @@ export class DbDataFetchStrategy implements DataFetchStrategy {
             totalDebt: new ReturnNumber(curr.totalDebt),
             currentDebtRateE18: new ReturnNumber(curr.currentDebtRateE18),
           },
-          interestRateModel: curr.interestRateModel as InterestRateModel,
+          interestRateModel: (curr.interestRateModel ? curr.interestRateModel.map((n) => parseInt(n)) : curr.interestRateModel) as InterestRateModel,
         };
         return acc;
       },

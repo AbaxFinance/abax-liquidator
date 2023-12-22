@@ -130,8 +130,8 @@ export const assetPrices = pgTable(
   {
     name: varchar('name', { length: 48 }).notNull(),
     address: char('address', { length: 48 }).notNull(),
-    currentPriceE8: varchar('currentPriceE8', { length: 128 }).notNull(),
-    anchorPriceE8: varchar('anchorPriceE8', { length: 128 }).notNull(),
+    currentPriceE18: varchar('currentPriceE18', { length: 128 }).notNull(),
+    anchorPriceE18: varchar('anchorPriceE18', { length: 128 }).notNull(),
     updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).defaultNow().notNull(),
     source: integer('source').notNull(),
   },

@@ -8,7 +8,7 @@ export abstract class BaseActor {
   async runLoop(): Promise<void> {
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      logger.info(`${this.constructor.name} running loop...`);
+      logger.info(`${this.constructor.name} running action...`);
       await this.loopAction();
       logger.info(`${this.constructor.name} sleeping for ${LOOP_INTERVAL / 1000} seconds...`);
       await sleep(LOOP_INTERVAL);

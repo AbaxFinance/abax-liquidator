@@ -59,9 +59,7 @@
       "indexes": {
         "name_idx": {
           "name": "name_idx",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": true
         }
       },
@@ -71,9 +69,7 @@
         "asset_prices_address_unique": {
           "name": "asset_prices_address_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "address"
-          ]
+          "columns": ["address"]
         }
       }
     },
@@ -139,9 +135,7 @@
       "indexes": {
         "name_idx": {
           "name": "name_idx",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": true
         }
       },
@@ -151,9 +145,7 @@
         "events_hash_unique": {
           "name": "events_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "hash"
-          ]
+          "columns": ["hash"]
         }
       }
     },
@@ -301,10 +293,7 @@
       "indexes": {
         "address_id_index": {
           "name": "address_id_index",
-          "columns": [
-            "address",
-            "id"
-          ],
+          "columns": ["address", "id"],
           "isUnique": true
         }
       },
@@ -314,9 +303,7 @@
         "lp_reserveDatas_address_unique": {
           "name": "lp_reserveDatas_address_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "address"
-          ]
+          "columns": ["address"]
         }
       }
     },
@@ -406,9 +393,7 @@
       "indexes": {
         "address_idx": {
           "name": "address_idx",
-          "columns": [
-            "address"
-          ],
+          "columns": ["address"],
           "isUnique": true
         }
       },
@@ -469,10 +454,7 @@
       "compositePrimaryKeys": {
         "address_reserve_idx": {
           "name": "address_reserve_idx",
-          "columns": [
-            "address",
-            "reserveAddress"
-          ]
+          "columns": ["address", "reserveAddress"]
         }
       },
       "uniqueConstraints": {}

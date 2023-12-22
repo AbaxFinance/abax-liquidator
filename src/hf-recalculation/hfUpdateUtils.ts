@@ -6,7 +6,7 @@ import { UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
 import type { ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import { getCollateralPowerE6AndBiggestDeposit, getDebtPowerE6BNAndBiggestLoan, getHFPriority } from '@src/hf-recalculation/utils';
 import { logger } from '@src/logger';
-import type { ReserveDataWithMetadata } from '@src/types';
+import type { LiquidationRequestData, ReserveDataWithMetadata } from '@src/types';
 import amqplib from 'amqplib';
 import type BN from 'bn.js';
 import { eq } from 'drizzle-orm';
@@ -36,6 +36,7 @@ export async function updateHFAndSendLiquidatationRequests(
         userAppliedMarketRule,
       );
       healthFactor = parseFloat(collateralPower.mul(E6bn).div(debtPower).toString()) / E6;
+      // eslint-disable-next-line no-constant-condition
       if (collateralPower.lte(debtPower)) {
         logger.info(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
         logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
@@ -43,9 +44,21 @@ export async function updateHFAndSendLiquidatationRequests(
           LIQUIDATION_EXCHANGE,
           LIQUIDATION_ROUTING_KEY,
           Buffer.from(
-            JSON.stringify(replaceNumericPropsWithStrings({ userAddress, debtPower, biggestDebtData, collateralPower, biggestCollateralData })),
+            JSON.stringify(
+              replaceNumericPropsWithStrings({
+                healthFactor,
+                userAddress,
+                debtPower,
+                biggestDebtData,
+                collateralPower,
+                biggestCollateralData,
+              }) as LiquidationRequestData,
+            ),
           ),
           {
+            headers: {
+              'x-deduplication-header': userAddress.toString(),
+            },
             contentType: 'application/json',
             persistent: true,
           },
@@ -62,6 +75,7 @@ export async function updateHFAndSendLiquidatationRequests(
         healthFactor: healthFactor,
         updatePriority: hfUpdatePriority,
         updateAtLatest: new Date(Date.now() + UPDATE_INTERVAL_BY_HF_PRIORITY[hfUpdatePriority]),
+        updateTimestamp: new Date(),
       })
       .where(eq(lpTrackingData.address, userAddress.toString()));
     logger.debug(`updated hf priority for ${userAddress}`);

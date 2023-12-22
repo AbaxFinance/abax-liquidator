@@ -1,5 +1,5 @@
 import { db } from '@db/index';
-import { assetPrices, type InsertAssetPrice } from '@db/schema';
+import { assetPrices, type InsertAssetPrice, type SelectAssetPrice } from '@db/schema';
 import { logger } from '@src/logger';
 import {
   INIT_ASSET_PRICE_DATA,
@@ -7,28 +7,37 @@ import {
   type PRICE_SOURCE,
   PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME,
 } from '@src/price-updating/consts';
+import BN from 'bn.js';
 import { eq, sql } from 'drizzle-orm';
+import { E6, E6bn } from '@abaxfinance/utils';
 
-export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, number][], priceSource: PRICE_SOURCE) {
-  const assetPriceData = await db.select().from(assetPrices).where(eq(assetPrices.source, priceSource));
+export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, BN][], priceSource: PRICE_SOURCE) {
+  const assetPriceData: SelectAssetPrice[] = await db.select().from(assetPrices).where(eq(assetPrices.source, priceSource));
   logger.debug('Inserting asset prices...');
 
   const updateTs = new Date();
-  const valuesToInsert = (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA)
+  const valuesToInsert = (
+    (assetPriceData.length > 0 ? assetPriceData : INIT_ASSET_PRICE_DATA) as {
+      name: string;
+      address: string;
+      currentPriceE18: string;
+      anchorPriceE18: string;
+      updateTimestamp: number;
+    }[]
+  )
     .map((apd) => {
-      const currentPriceE8 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
-      if (apd.currentPriceE8 === currentPriceE8) return null;
+      const currentPriceE18 = currentPricesE8.find((cp) => cp[0] === apd.name)![1];
+      if (new BN(apd.currentPriceE18).eq(currentPriceE18)) return null;
       return {
         address: apd.address,
         name: apd.name,
         updateTimestamp: updateTs,
-        currentPriceE8: currentPriceE8.toString(),
-        anchorPriceE8:
-          // // eslint-disable-next-line no-constant-condition
-          // true || //TODO
-          Math.abs(parseInt(apd.anchorPriceE8) - currentPriceE8) / parseInt(apd.anchorPriceE8) > PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[apd.name]
-            ? currentPriceE8.toString()
-            : apd.anchorPriceE8,
+        currentPriceE18: currentPriceE18.toString(),
+        anchorPriceE18:
+          new BN(apd.anchorPriceE18).sub(currentPriceE18).abs().mul(E6bn).div(new BN(apd.anchorPriceE18)).toNumber() / E6 >
+          PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[apd.name]
+            ? currentPriceE18.toString()
+            : apd.anchorPriceE18,
         source: priceSource,
       } as InsertAssetPrice;
     })

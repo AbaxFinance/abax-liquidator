@@ -1,10 +1,10 @@
 import { LendingPool, Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from '@abaxfinance/contract-helpers';
-import { getArgvObj } from '@abaxfinance/utils';
+import { SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, getArgvObj } from '@abaxfinance/utils';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { apiProviderWrapper } from '@scripts/common';
 import { supplyNativeTAZEROBalanceArr } from '@scripts/fundWalletWithTestTokens';
-import { SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, getRandomSigner } from '@scripts/supplyAndBorrow1000Users';
+import { getRandomSigner } from '@scripts/supplyAndBorrow1000Users';
 import chalk from 'chalk';
 import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
