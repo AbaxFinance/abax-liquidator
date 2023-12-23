@@ -9,7 +9,6 @@ import {
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
-import { deployedContractsGetters } from '@src/deployedContracts';
 import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
 import { getCollateralPowerE6AndBiggestDeposit, getDebtPowerE6BNAndBiggestLoan } from '@src/hf-recalculation/utils';
 import { logger } from '@src/logger';
@@ -67,7 +66,7 @@ export class Liquidator extends BaseActor {
 
     const reserveTokenToRepay = getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress.toString(), liquidationSignerSpender, api);
 
-    const amountToLiquidate = new BN(biggestDebtData.amountRawE6).muln(2);
+    const amountToLiquidate = new BN(biggestDebtData.amountRawE6).muln(2); //TODO remove muln2
     const approveQueryRes = await reserveTokenToRepay.query.approve(lendingPool.address, amountToLiquidate);
     try {
       approveQueryRes.value.unwrapRecursively();

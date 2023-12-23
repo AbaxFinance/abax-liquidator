@@ -23,11 +23,11 @@ export const UPDATE_INTERVAL_BY_HF_PRIORITY = {
 } satisfies Record<HF_PRIORITY, number>;
 
 export const HF_RANGE_BY_HF_PRIORITY = {
-  [HF_PRIORITY.CRITICAL]: [0.0, 1.05] as const,
-  [HF_PRIORITY.VERY_HIGH]: [1.05, 1.1] as const,
-  [HF_PRIORITY.HIGH]: [1.1, 1.5] as const,
-  [HF_PRIORITY.MEDIUM]: [1.5, 1.8] as const,
-  [HF_PRIORITY.LOW]: [1.8, 2.5] as const,
-  [HF_PRIORITY.SAFE]: [2.5, 3.5] as const,
-  [HF_PRIORITY.SAFEST]: [3.5, Number.MAX_SAFE_INTEGER] as const,
+  [HF_PRIORITY.CRITICAL]: [0.0, 1.005] as const,
+  [HF_PRIORITY.VERY_HIGH]: [1.005, 1.05] as const,
+  [HF_PRIORITY.HIGH]: [1.05, 1.1] as const,
+  [HF_PRIORITY.MEDIUM]: [1.1, 1.3] as const,
+  [HF_PRIORITY.LOW]: [1.3, 1.8] as const,
+  [HF_PRIORITY.SAFE]: [1.8, 2.5] as const,
+  [HF_PRIORITY.SAFEST]: [2.5, Number.MAX_SAFE_INTEGER] as const,
 } satisfies Record<HF_PRIORITY, [number, number]>;
