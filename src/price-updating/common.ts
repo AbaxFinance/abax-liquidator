@@ -34,7 +34,7 @@ export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, B
         updateTimestamp: updateTs,
         currentPriceE18: currentPriceE18.toString(),
         anchorPriceE18:
-          new BN(apd.anchorPriceE18).sub(currentPriceE18).abs().mul(E6bn).div(new BN(apd.anchorPriceE18)).toNumber() / E6 >
+          parseInt(new BN(apd.anchorPriceE18).sub(currentPriceE18).abs().mul(E6bn).div(new BN(apd.anchorPriceE18)).toString()) / E6 >
           PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[apd.name]
             ? currentPriceE18.toString()
             : apd.anchorPriceE18,
@@ -42,6 +42,10 @@ export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, B
       } as InsertAssetPrice;
     })
     .filter((v) => !!v) as InsertAssetPrice[];
+  if (valuesToInsert.length === 0) {
+    logger.info(`No price change for price source ${priceSource}`);
+    return;
+  }
   await db
     .insert(assetPrices)
     .values(valuesToInsert)

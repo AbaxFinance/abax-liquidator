@@ -1,4 +1,4 @@
-import { E12, E6bn } from '@abaxfinance/utils';
+import { E12, E6bn, E6, E12bn, E8 } from '@abaxfinance/utils';
 import { logger } from '@src/logger';
 import { PRICE_SOURCE, type AnyRegisteredAsset } from '@src/price-updating/consts';
 import type { PriceFetchStrategy } from '@src/price-updating/price-fetch-strategy/PriceFetchStrategy';
@@ -40,10 +40,18 @@ export class KuCoinPriceFetchStrategy implements PriceFetchStrategy {
     logger.debug('fetching order book...');
     const orderbooks = await Promise.all(pricePromises);
     logger.debug('Fetched order book...');
-    const currentPricesE18 = orderbooks.map(
-      (curr) =>
-        [getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair), new BN(curr.ob.bids[0][0]! * E12).mul(E6bn)] as [AnyRegisteredAsset, BN],
-    );
+    const currentPricesE18 = orderbooks.map((curr) => {
+      logger.info(`${getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair)} | original value  ${curr.ob.bids[0][0]}`);
+      logger.info(`${getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair)} | value after mul ${(curr.ob.bids[0][0]! * E8).toString()}`);
+      logger.info(
+        `${getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair)} | value passed to BN ${Math.floor(curr.ob.bids[0][0]! * E8).toString()}`,
+      );
+      const E4bn = new BN((10 ** 4).toString());
+      return [
+        getKeyByValue(MARKET_SYMBOLS_BY_RESERVE_NAME, curr.marketPair),
+        new BN(Math.floor(curr.ob.bids[0][0]! * E8).toString()).mul(E6bn).mul(E4bn),
+      ] as [AnyRegisteredAsset, BN];
+    });
 
     return currentPricesE18;
   }

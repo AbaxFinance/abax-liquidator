@@ -9,15 +9,18 @@ import {
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { BaseActor } from '@src/base-actor/BaseActor';
+import { deployedContractsGetters } from '@src/deployedContracts';
 import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
 import { getCollateralPowerE6AndBiggestDeposit, getDebtPowerE6BNAndBiggestLoan } from '@src/hf-recalculation/utils';
 import { logger } from '@src/logger';
 import { AMQP_URL, LIQUIDATION_QUEUE_NAME } from '@src/messageQueueConsts';
+import { RESERVE_UNDERLYING_ADDRESS_BY_NAME } from '@src/price-updating/consts';
 import { DIAOraclePriceFetchStrategy } from '@src/price-updating/price-fetch-strategy/DIAOraclePriceFetchStrategy';
 import type { LiquidationRequestData } from '@src/types';
 import { LENDING_POOL_ADDRESS } from '@src/utils';
 import amqplib from 'amqplib';
 import BN from 'bn.js';
+import { isEqual } from 'lodash';
 
 export class Liquidator extends BaseActor {
   _liquidationSignerSpender?: KeyringPair;
@@ -65,7 +68,14 @@ export class Liquidator extends BaseActor {
     const reserveTokenToRepay = getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress.toString(), liquidationSignerSpender, api);
 
     const amountToLiquidate = new BN(biggestDebtData.amountRawE6).muln(2);
-    await reserveTokenToRepay.tx.approve(lendingPool.address, amountToLiquidate);
+    const approveQueryRes = await reserveTokenToRepay.query.approve(lendingPool.address, amountToLiquidate);
+    try {
+      approveQueryRes.value.unwrapRecursively();
+      await reserveTokenToRepay.tx.approve(lendingPool.address, amountToLiquidate);
+    } catch (e) {
+      logger.error(`failed to approve: reason ${JSON.stringify(e)}`); //TODO
+      return false;
+    }
 
     //DEBUG
     const queryResD = await lendingPool.query.getUserFreeCollateralCoefficient(userAddress);
@@ -103,7 +113,7 @@ export class Liquidator extends BaseActor {
     } catch (e) {
       logger.error('liquidation unsuccessfull');
       logger.error(e);
-      if (LendingPoolErrorBuilder.Collaterized() === e) {
+      if (isEqual(LendingPoolErrorBuilder.Collaterized(), e)) {
         logger.warn('user was collateralized');
         return false;
       }
@@ -124,11 +134,12 @@ export class Liquidator extends BaseActor {
     const [{ userConfig, userReserves }] = await dataFetchStrategy.fetchUserReserveDatas([userAddress]);
     const userAppliedMarketRule = marketRules.get(userConfig.marketRuleId.toNumber())!;
     const pricesE18ByReserveAddress = (await priceFetchStrategy.fetchPricesE18()).reduce(
-      (acc, [address, currentPriceE18]) => {
+      (acc, [reserveName, currentPriceE18]) => {
         try {
+          const address = RESERVE_UNDERLYING_ADDRESS_BY_NAME[reserveName]; //TODO
           acc[address] = new BN(currentPriceE18);
         } catch (e) {
-          logger.info({ currentPriceE18, address, e });
+          logger.info({ currentPriceE18, reserveName, e });
           throw e;
         }
         return acc;
@@ -150,7 +161,11 @@ export class Liquidator extends BaseActor {
     );
     if (collateralPower.gt(debtPower)) {
       logger.warn(`address ${userAddress} incorrectly submitted for liquidation`);
-      return false;
+      return true;
+    }
+    if (collateralPower.eqn(0) && debtPower.eqn(0)) {
+      logger.warn(`Unexpected Behavior: collateralPower & debtPower equal to zero`);
+      return true;
     }
     return this.tryLiquidate(userAddress, replaceNumericPropsWithStrings(biggestDebtData), replaceNumericPropsWithStrings(biggestCollateralData));
   }
@@ -160,7 +175,7 @@ export class Liquidator extends BaseActor {
     logger.info('Liquidator running...');
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
-    await channel.prefetch(1);
+    await channel.prefetch(1); //TODO increase the number once everything works fine
 
     process.once('SIGINT', async () => {
       logger.info('got sigint, closing connection');
@@ -185,15 +200,21 @@ export class Liquidator extends BaseActor {
               logger.info('acking message');
               channel.ack(msg);
             } else {
-              this.liquidateUsingChainData(liquidationRequest.userAddress).then((fallbackRes) => {
-                if (fallbackRes) {
-                  logger.info('after fallback | acking message');
-                  channel.ack(msg);
-                } else {
-                  logger.info('nacking message');
-                  channel.nack(msg);
-                }
-              });
+              this.liquidateUsingChainData(liquidationRequest.userAddress)
+                .then((fallbackRes) => {
+                  if (fallbackRes) {
+                    logger.info('after fallback | acking message');
+                    channel.ack(msg);
+                  } else {
+                    logger.info('nacking message');
+                    channel.nack(msg);
+                  }
+                })
+                .catch((e) => {
+                  logger.error('UNHANDLED');
+                  logger.error(e);
+                  process.exit(1);
+                });
             }
           })
           .catch(() => channel.nack(msg));
