@@ -1,0 +1,1 @@
+ALTER TABLE "lp_trackingData" RENAME COLUMN "helathFactor" TO "healthFactor";

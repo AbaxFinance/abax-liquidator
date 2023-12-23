@@ -161,7 +161,7 @@ export class Liquidator extends BaseActor {
     );
     if (collateralPower.gt(debtPower)) {
       logger.warn(`address ${userAddress} incorrectly submitted for liquidation`);
-      return true;
+      return true; //TODO enum
     }
     if (collateralPower.eqn(0) && debtPower.eqn(0)) {
       logger.warn(`Unexpected Behavior: collateralPower & debtPower equal to zero`);

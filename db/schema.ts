@@ -37,7 +37,7 @@ export type SelectAssetPrice = InferSelectModel<typeof assetPrices>;
 export const lpTrackingData = pgTable('lp_trackingData', {
   address: char('address', { length: 48 }).primaryKey(),
   updatePriority: integer('updatePriority').notNull(),
-  healthFactor: doublePrecision('helathFactor').notNull(),
+  healthFactor: doublePrecision('healthFactor').notNull(),
   updateAtLatest: timestamp('updateAtLatest', { withTimezone: true }).notNull(),
   updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).notNull().defaultNow(),
 });
