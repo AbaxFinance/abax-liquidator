@@ -35,13 +35,13 @@ yarn install
 docker-compose up -d
 ```
 
+This will build and start all the required containers defined in the `docker-compose.yml` file.
+
 6. Run db migration to handle database setup & configuration
 
 ```shell
 yarn migrate
 ```
-
-This will build and start all the required containers defined in the `docker-compose.yml` file.
 
 4. Access misc services management UIs:
 
