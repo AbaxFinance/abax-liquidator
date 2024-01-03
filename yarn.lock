@@ -14,20 +14,20 @@ __metadata:
 
 "@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=6da639&locator=abax-liquidator%40workspace%3A.":
   version: 0.1.0-alpha.0
-  resolution: "@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=6da639&locator=abax-liquidator%40workspace%3A."
+  resolution: "@abaxfinance/contract-helpers@file:../abax-sdk/packages/contract-helpers#../abax-sdk/packages/contract-helpers::hash=1c4be6&locator=abax-liquidator%40workspace%3A."
   peerDependencies:
     bn.js: ^5.2.1
     wookashwackomytest-typechain-types: 0.0.8
-  checksum: 47a204f7404902535ce7f89b6d081d9678fb2114009234fd67c326e5a115c79755d967ebb59cbed57eaf5e4cf3c73a9a924eaaac46c42173e7b4e9f6b153a1fb
+  checksum: fb2b861768c50def4da11992ceba52057d69a69333fe0d841572af3cae231e3242de8614e3c04977c0a71795f7667864e07c079106b808aa3d7fb5fa00fc2f5f
   languageName: node
   linkType: hard
 
 "@abaxfinance/utils@file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=d38f20&locator=abax-liquidator%40workspace%3A.":
   version: 0.1.0-alpha.0
-  resolution: "@abaxfinance/utils@file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=d38f20&locator=abax-liquidator%40workspace%3A."
+  resolution: "@abaxfinance/utils@file:../abax-sdk/packages/utils#../abax-sdk/packages/utils::hash=daf295&locator=abax-liquidator%40workspace%3A."
   dependencies:
     from-exponential: ^1.1.1
-  checksum: 8bc477de2ac7993a7c937d17ed73d606846c39b9ba5a9306f10348dd0c1ce5704a25f1682c590289d303e2464a72ff004e2cfd944d55e94d9b4bfa88fbdd845f
+  checksum: c3fa2317b4dd0e27f391c834b7508ec552690ce2fc653fb552eb0b5b2101cfa04c19f3cca8aaa595b3c7a3e9b8390d7f822da32df1e4234e92e99ec4005ab910
   languageName: node
   linkType: hard
 
