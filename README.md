@@ -43,13 +43,13 @@ This will build and start all the required containers defined in the `docker-com
 yarn migrate
 ```
 
-4. Access misc services management UIs:
+7. Access misc services management UIs:
 
 - RabbitMQ: http://localhost:15672 (username: guest, password: guest)
 - PostgreSQL: localhost:5432 (username: postgres, password: changeme)
 - pgAdmin: http://localhost:5050 (username: pgadmin4@pgadmin.org, password: admin)
 
-5. Stop the services:
+8. To stop the services:
 
 ```shell
 docker-compose down
