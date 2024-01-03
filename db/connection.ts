@@ -5,8 +5,6 @@ export const getConnectionOptions = () => {
   if (!process.env.POSTGRES_USER) throw new Error('POSTGRES_USER variable missing');
   if (!process.env.POSTGRES_PASSWORD) throw new Error('POSTGRES_PASSWORD variable missing');
   if (!process.env.POSTGRES_HOST) throw new Error('POSTGRES_HOST variable missing');
-  //   DATABASE_URL='postgres://postgres:changeme@127.0.0.1:5432/liquidator_db'
-  //   if (asConnectionString)
   return {
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,

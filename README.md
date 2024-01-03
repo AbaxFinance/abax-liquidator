@@ -23,10 +23,22 @@ cd abax-liquidator
 
 3. Change name of `.env.secret.example` to `.env.secret` and provide a seed phrase of the address that shall be a spender/receiver of liquidations.
 
-4. Start the services:
+4. install dependencies
+
+```shell
+yarn install
+```
+
+5. Start the services:
 
 ```shell
 docker-compose up -d
+```
+
+6. Run db migration to handle database setup & configuration
+
+```shell
+yarn migrate
 ```
 
 This will build and start all the required containers defined in the `docker-compose.yml` file.
