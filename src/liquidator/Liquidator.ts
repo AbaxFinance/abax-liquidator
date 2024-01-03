@@ -97,18 +97,18 @@ export class Liquidator extends BaseActor {
       );
     try {
       queryRes.value.unwrapRecursively();
-      logger.info('Succesfully queried liquidation');
-      // const tx = await lendingPool
-      //   .withSigner(liquidationSignerSpender)
-      //   .tx.liquidate(
-      //     userAddress,
-      //     biggestDebtData.underlyingAddress,
-      //     biggestCollateralData.underlyingAddress,
-      //     amountToLiquidate,
-      //     minimumTokenReceivedE18,
-      //     [],
-      //   );
-      // logger.info(replaceNumericPropsWithStrings(tx));
+      logger.debug('Succesfully queried liquidation');
+      const tx = await lendingPool
+        .withSigner(liquidationSignerSpender)
+        .tx.liquidate(
+          userAddress,
+          biggestDebtData.underlyingAddress,
+          biggestCollateralData.underlyingAddress,
+          amountToLiquidate,
+          minimumTokenReceivedE18,
+          [],
+        );
+      logger.info(`Liquidation success: ${tx.blockHash?.toString()} | events: ${JSON.stringify(tx.events)}`);
     } catch (e) {
       logger.error('liquidation unsuccessfull');
       logger.error(e);
