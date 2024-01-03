@@ -37,7 +37,7 @@ export class Liquidator extends BaseActor {
     await this.apiProviderWrapper.getAndWaitForReady();
     if (this._liquidationSignerSpender) return this._liquidationSignerSpender;
     const keyring = new Keyring();
-    this._liquidationSignerSpender = keyring.createFromUri(process.env.SEED ?? '', {}, 'sr25519');
+    this._liquidationSignerSpender = keyring.createFromUri(process.env.LIQUIDATOR_SPENDER_SEED ?? '', {}, 'sr25519');
     return this._liquidationSignerSpender;
   }
   async tryLiquidate(
@@ -70,7 +70,7 @@ export class Liquidator extends BaseActor {
     const approveQueryRes = await reserveTokenToRepay.query.approve(lendingPool.address, amountToLiquidate);
     try {
       approveQueryRes.value.unwrapRecursively();
-      await reserveTokenToRepay.tx.approve(lendingPool.address, amountToLiquidate);
+      await reserveTokenToRepay.tx.approve(lendingPool.address, amountToLiquidate); //TODO handle unhandled rejections
     } catch (e) {
       logger.error(`failed to approve: reason ${JSON.stringify(e)}`); //TODO
       return false;
