@@ -3,9 +3,6 @@ local_postgres_data
 .cache
 .cache/**/*.*
 .idea
-test-chain-state
-test-chain-state-bp
-test-chain-state-tmp
 *.log
 dist
 
@@ -39,3 +36,4 @@ yarn/install-state.gz
 *log.*.json
 
 compose-persistence*
+db/backup/backups
