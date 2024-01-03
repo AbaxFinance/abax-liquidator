@@ -1,6 +1,6 @@
 import { DB_NAME } from '@db/schema';
 import dotenv from 'dotenv';
-dotenv.config({ path: `.env.local` });
+dotenv.config({ path: `.env.migration` });
 export const getConnectionOptions = () => {
   if (!process.env.POSTGRES_USER) throw new Error('POSTGRES_USER variable missing');
   if (!process.env.POSTGRES_PASSWORD) throw new Error('POSTGRES_PASSWORD variable missing');
