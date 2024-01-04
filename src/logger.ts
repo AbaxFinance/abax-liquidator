@@ -1,7 +1,7 @@
 import path from 'path';
 import pino from 'pino';
 
-const actorNamePrefix = process.env.ACTOR_TO_RUN?.toLocaleLowerCase();
+const destinationLogFileName = process.env.LOG_FILENAME?.toLocaleLowerCase() ?? process.env.ACTOR_TO_RUN?.toLocaleLowerCase();
 
 const GLOBAL_LOGGER_LEVEL = process.env.LOG_LEVEL?.toLowerCase() || 'info';
 
@@ -18,7 +18,7 @@ const transport = pino.transport({
           {
             level: GLOBAL_LOGGER_LEVEL,
             target: 'pino/file',
-            options: createCommonLogTargetOptions(`${actorNamePrefix}.log`),
+            options: createCommonLogTargetOptions(`${destinationLogFileName}.log`),
           },
           {
             level: GLOBAL_LOGGER_LEVEL,

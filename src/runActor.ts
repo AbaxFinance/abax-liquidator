@@ -8,11 +8,13 @@ import { Liquidator } from '@src/liquidator/Liquidator';
 import { OffChainPriceUpdater } from '@src/price-updating/OffChainPriceUpdater';
 import { logger } from './logger';
 import { DIAOraclePriceUpdater } from '@src/price-updating/DIAOraclePriceUpdater';
+import { ChunkBlockProcessor } from '@src/event-processing/ChunkBlockProcessor';
 
 enum ACTOR_TYPE {
   RESERVE_DATA_CHAIN_UPDATER = 'RESERVE_DATA_CHAIN_UPDATER',
   USER_DATA_CHAIN_UPDATER = 'USER_DATA_CHAIN_UPDATER',
   PAST_BLOCKS_PROCESSOR = 'PAST_BLOCKS_PROCESSOR',
+  CHUNK_BLOCK_PROCESSOR = 'CHUNK_BLOCK_PROCESSOR',
   EVENT_LISTENER = 'EVENT_LISTENER',
   PERIODIC_HFUPDATER = 'PERIODIC_HFUPDATER',
   PRICE_CHANGE_HFUPDATER = 'PRICE_CHANGE_HFUPDATER',
@@ -31,6 +33,9 @@ function createActorToRun(actorType: string) {
     }
     case ACTOR_TYPE.PAST_BLOCKS_PROCESSOR: {
       return new PastBlocksProcessor();
+    }
+    case ACTOR_TYPE.CHUNK_BLOCK_PROCESSOR: {
+      return new ChunkBlockProcessor();
     }
     case ACTOR_TYPE.EVENT_LISTENER: {
       return new EventListener();

@@ -12,14 +12,13 @@ import {
 import { getContractsToListenEvents } from '@src/event-processing/utils';
 import { logger } from '@src/logger';
 import type { EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
-import { getLatestBlockNumber } from '@src/utils';
 import PQueue from 'p-queue';
 
 const QUEUE_CHUNK_SIZE = 20_000;
 const BENCH_BLOCKS_INTERVAL = 500;
 const BENCH_STATS_DIVIDER = BENCH_BLOCKS_INTERVAL / 100;
 
-export class PastBlocksProcessor extends BaseActor {
+export class ChunkBlockProcessor extends BaseActor {
   apiProviderWrapper: ApiProviderWrapper;
   queue: any;
   blockBenchCounter = 0;
@@ -30,14 +29,14 @@ export class PastBlocksProcessor extends BaseActor {
     const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
-    this.queue = new PQueue({ concurrency: 40, autoStart: false });
+    this.queue = new PQueue({ concurrency: 50, autoStart: false });
   }
 
-  async loopAction() {
+  async runLoop() {
     const api = await this.apiProviderWrapper.getAndWaitForReady();
     const contracts = getContractsToListenEvents(api);
-    await this.ensureBlockAnalysis(this.queue, api, contracts);
-    logger.info('EventAnalyzeEnsurer', 'sleeping for 1 min...');
+    await this.runAnalysis(this.queue, api, contracts);
+    logger.info('ChunkBlockProcessor | Done analyzing chunk');
   }
   addBlockRangeToTheQueue<TContract extends IWithAbi & IWithAddress>(queue: PQueue, api: ApiPromise, contracts: TContract[], blockNumbers: number[]) {
     logger.info(`adding ${blockNumbers.length} blocks to the queue from range...[${blockNumbers[0]}...${blockNumbers[blockNumbers.length - 1]}]`);
@@ -47,7 +46,7 @@ export class PastBlocksProcessor extends BaseActor {
         .then((res) => storeEventsAndErrors(res!))
         .then((resOrFailed) => {
           this.blockBenchCounter++;
-          if (resOrFailed && this.blockBenchCounter >= BENCH_BLOCKS_INTERVAL) {
+          if (resOrFailed && (resOrFailed as EventsFromBlockResult).blockTimestamp && this.blockBenchCounter >= BENCH_BLOCKS_INTERVAL) {
             this.blockBenchCounter = 0;
             this.printStats(resOrFailed);
           }
@@ -59,14 +58,14 @@ export class PastBlocksProcessor extends BaseActor {
     }
   }
 
-  async ensureBlockAnalysis(queue: PQueue, api: ApiPromise, contracts: (LendingPool | AToken | VToken | Psp22Emitable | Psp22Ownable)[]) {
-    const blocksToCatchUpToNow = await getBlocksToCatchUpToNow(api);
-    logger.info(`total number of blocks to process to catch up to now: ${blocksToCatchUpToNow.length}`);
+  async runAnalysis(queue: PQueue, api: ApiPromise, contracts: (LendingPool | AToken | VToken | Psp22Emitable | Psp22Ownable)[]) {
+    const blocksToAnalyze = await getBlocksToAnalyze();
+    logger.info(`total number of blocks to process to analyze: ${blocksToAnalyze.length}`);
 
     ensureQueueItemsFinishOnProcessExitSignal(queue);
     try {
-      for (let i = 0; i < blocksToCatchUpToNow.length; i += QUEUE_CHUNK_SIZE) {
-        const currentChunk = blocksToCatchUpToNow.slice(i, i + QUEUE_CHUNK_SIZE);
+      for (let i = 0; i < blocksToAnalyze.length; i += QUEUE_CHUNK_SIZE) {
+        const currentChunk = blocksToAnalyze.slice(i, i + QUEUE_CHUNK_SIZE);
         this.addBlockRangeToTheQueue(queue, api, contracts, currentChunk);
         queue.start();
         await queue.onIdle();
@@ -97,19 +96,21 @@ export class PastBlocksProcessor extends BaseActor {
   }
 }
 
-async function getBlocksToCatchUpToNow(api: ApiPromise) {
-  const ret = await getMissingOrFailedToAnalyzeBlocksFromRange();
-
+async function getBlocksToAnalyze() {
+  const start = process.env.START_BLOCK ? parseInt(process.env.START_BLOCK) : NaN;
+  const end = process.env.END_BLOCK ? parseInt(process.env.END_BLOCK) : NaN;
+  const ret = await getMissingOrFailedToAnalyzeBlocksFromRange({ start, end });
   const blocksToAnalyze: number[] = [];
   for (const { nstart, nend } of ret) {
     for (let currB = nstart; currB <= nend; currB++) {
+      if (start > currB || end < currB) continue; //TODO
       blocksToAnalyze.push(currB);
     }
   }
 
-  const lastBlockNumberInDb = await getLastBlockNumberInDbFromRange();
-  const latestBlockNumber = await getLatestBlockNumber(api);
-  for (let currB = lastBlockNumberInDb; currB < latestBlockNumber; currB++) {
+  const lastAnalyzedBlockNumber = await getLastBlockNumberInDbFromRange({ start, end });
+  for (let currB = lastAnalyzedBlockNumber; currB < end; currB++) {
+    if (start > currB || end < currB) continue; //TODO
     blocksToAnalyze.push(currB);
   }
   return blocksToAnalyze.sort();
