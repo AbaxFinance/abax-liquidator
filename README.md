@@ -49,7 +49,20 @@ yarn migrate
 - PostgreSQL: localhost:5432 (username: postgres, password: changeme)
 - pgAdmin: http://localhost:5050 (username: pgadmin4@pgadmin.org, password: admin)
 
-8. To stop the services:
+8. Logs
+
+Logs are being stored in `./compose-persistence/logs` folder. Each worker/actor produces a log file available to look up for troubleshooting & debugging.
+
+9. Debugging
+
+In order to debug any node actor: - assign port 9229 to a service in docker-compose:
+`             someservice:
+                //...
+                ports:
+                    - 9229:9229
+            ` - attach a debugger on port 9229 (available via `Run and Debug` in VSCode => `Docker: Attach to Node`)
+
+10. To stop the services:
 
 ```shell
 docker-compose down
