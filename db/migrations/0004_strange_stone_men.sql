@@ -1,0 +1,1 @@
+ALTER TABLE "lp_reserveDatas" ADD COLUMN "updateTimestamp" timestamp with time zone DEFAULT now() NOT NULL;

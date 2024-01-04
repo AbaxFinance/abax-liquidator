@@ -1,7 +1,7 @@
 // HF priorities:
 
 import type { UserConfig } from '@abaxfinance/contract-helpers';
-import { AToken, LendingPool, VToken, getContractObject } from '@abaxfinance/contract-helpers';
+import { AToken, LendingPool, Psp22Ownable, VToken, getContractObject } from '@abaxfinance/contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import { deployedContractsGetters } from '@src/deployedContracts';
@@ -23,11 +23,16 @@ export function getLendingPoolContracts(api: ApiPromise) {
     .filter((c) => c.name === 'a_token')
     .map((c) => getContractObject(AToken, c.address, signer, api));
   const vTokens = deployedContractsGetters.contractInfoRaw
-    .filter((c) => c.name === 'a_token')
+    .filter((c) => c.name === 'v_token')
     .map((c) => getContractObject(VToken, c.address, signer, api));
 
   const contracts = [lendingPool, ...aTokens, ...vTokens];
   return contracts;
+}
+
+export function getReserveTokenContracts(api: ApiPromise) {
+  const signer = nobody();
+  return deployedContractsGetters.getReserveUnderlyingAssetContracts().map((c) => getContractObject(Psp22Ownable, c.address, signer, api));
 }
 
 export async function getLatestBlockNumber(api: ApiPromise) {

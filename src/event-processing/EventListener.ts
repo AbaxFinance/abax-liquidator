@@ -1,6 +1,9 @@
 import {
+  ApiProviderWrapper,
   EVENT_DATA_TYPE_DESCRIPTIONS_A_TOKEN,
   EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL,
+  EVENT_DATA_TYPE_DESCRIPTIONS_PSP22_EMITABLE,
+  EVENT_DATA_TYPE_DESCRIPTIONS_PSP22_OWNABLE,
   EVENT_DATA_TYPE_DESCRIPTIONS_V_TOKEN,
   getEventTypeDescription,
   replaceNumericPropsWithStrings,
@@ -13,11 +16,10 @@ import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
 import { BaseActor } from '@src/base-actor/BaseActor';
 import { HF_PRIORITY, UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
+import { getContractsToListenEvents } from '@src/event-processing/utils';
 import { logger } from '@src/logger';
 import type { EventWithMeta, EventsFromBlockResult, IWithAbi, IWithAddress } from '@src/types';
-import { getLendingPoolContracts } from '@src/utils';
 import { PostgresError } from 'postgres';
-import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
 import { handleEventReturn } from 'wookashwackomytest-typechain-types';
 
 export class EventListener extends BaseActor {
@@ -35,7 +37,7 @@ export class EventListener extends BaseActor {
     logger.info('EventFeeder running...');
 
     const api = await this.apiProviderWrapper.getAndWaitForReady();
-    const contracts = getLendingPoolContracts(api);
+    const contracts = getContractsToListenEvents(api);
     listenToNewEvents(api, contracts);
   }
 }
@@ -165,6 +167,10 @@ function getEventDataTypeDescriptionToUse(contractName: string) {
       return EVENT_DATA_TYPE_DESCRIPTIONS_A_TOKEN;
     case 'v_token':
       return EVENT_DATA_TYPE_DESCRIPTIONS_V_TOKEN;
+    case 'psp22_ownable':
+      return EVENT_DATA_TYPE_DESCRIPTIONS_PSP22_OWNABLE;
+    case 'psp22_emitable':
+      return EVENT_DATA_TYPE_DESCRIPTIONS_PSP22_EMITABLE;
     default:
       return EVENT_DATA_TYPE_DESCRIPTIONS_LENDING_POOL;
   }

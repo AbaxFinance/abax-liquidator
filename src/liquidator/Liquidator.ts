@@ -66,11 +66,11 @@ export class Liquidator extends BaseActor {
 
     const reserveTokenToRepay = getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress.toString(), liquidationSignerSpender, api);
 
-    const amountToLiquidate = new BN(biggestDebtData.amountRawE6).muln(2); //TODO remove muln2
-    const approveQueryRes = await reserveTokenToRepay.query.approve(lendingPool.address, amountToLiquidate);
+    const amountToRepay = new BN(biggestDebtData.amountRawE6).muln(2); //TODO remove muln2
+    const approveQueryRes = await reserveTokenToRepay.query.approve(lendingPool.address, amountToRepay);
     try {
       approveQueryRes.value.unwrapRecursively();
-      await reserveTokenToRepay.tx.approve(lendingPool.address, amountToLiquidate); //TODO handle unhandled rejections
+      await reserveTokenToRepay.tx.approve(lendingPool.address, amountToRepay); //TODO handle unhandled rejections
     } catch (e) {
       logger.error(`failed to approve: reason ${JSON.stringify(e)}`); //TODO
       return false;
@@ -91,7 +91,7 @@ export class Liquidator extends BaseActor {
         userAddress,
         biggestDebtData.underlyingAddress,
         biggestCollateralData.underlyingAddress,
-        amountToLiquidate,
+        amountToRepay,
         minimumTokenReceivedE18,
         [],
       );
@@ -104,16 +104,18 @@ export class Liquidator extends BaseActor {
           userAddress,
           biggestDebtData.underlyingAddress,
           biggestCollateralData.underlyingAddress,
-          amountToLiquidate,
+          amountToRepay,
           minimumTokenReceivedE18,
           [],
         );
-      logger.info(`Liquidation success: ${tx.blockHash?.toString()} | events: ${JSON.stringify(tx.events)}`);
+      logger.info(
+        `${userAddress}| Liquidation success: ${tx.blockHash?.toString()} | events: ${JSON.stringify(replaceNumericPropsWithStrings(tx.events))}`,
+      );
     } catch (e) {
-      logger.error('liquidation unsuccessfull');
+      logger.error(`${userAddress}| liquidation unsuccessfull`);
       logger.error(e);
       if (isEqual(LendingPoolErrorBuilder.Collaterized(), e)) {
-        logger.warn('user was collateralized');
+        logger.warn(`${userAddress}| user was collateralized`);
         return false;
       }
     }

@@ -29,6 +29,7 @@ export class ReserveDataChainUpdater extends BaseActor {
         currentDebtRateE18: reserveData.data!.currentDebtRateE18.toString(),
         indexesUpdateTimestamp: new Date(parseInt(reserveData.indexes!.updateTimestamp.toString())),
         interestRateModel: replaceNumericPropsWithStrings(reserveData.interestRateModel),
+        updateTimestamp: new Date(),
       };
       await db
         .insert(lpReserveDatas)

@@ -117,6 +117,7 @@ export const lpReserveDatas = pgTable(
     currentDebtRateE18: varchar('currentDebtRateE18', { length: 128 }).notNull(),
     //parameters
     interestRateModel: jsonb('interestRateModel').$type<[string, string, string, string, string, string, string]>(),
+    updateTimestamp: timestamp('updateTimestamp', { withTimezone: true }).notNull().defaultNow(),
   },
   (c) => {
     return {

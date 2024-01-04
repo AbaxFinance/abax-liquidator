@@ -38,16 +38,17 @@ export class UserDataChainUpdater extends BaseMessagingActor {
       logger.info(e);
       process.exit(1);
     }
-    return usersWithReserveDatas;
   }
 
   private async updateDb(userAddress: AccountId, userConfig: UserConfig, userReserves: Record<string, UserReserveData>) {
+    const updateTimestamp = new Date();
     const userConfigDbValues: InsertLPUserConfig = {
       address: userAddress.toString(),
       borrows: userConfig.borrows.toString(),
       collaterals: userConfig.collaterals.toString(),
       deposits: userConfig.collaterals.toString(),
       marketRuleId: userConfig.marketRuleId.toNumber(),
+      updateTimestamp,
     };
     await db.insert(lpUserConfigs).values(userConfigDbValues).onConflictDoUpdate({
       target: lpUserConfigs.address,
@@ -61,6 +62,7 @@ export class UserDataChainUpdater extends BaseMessagingActor {
         appliedCumulativeDepositIndexE18: userReserve.appliedDepositIndexE18.toString(),
         debt: userReserve.debt.toString(),
         deposit: userReserve.deposit.toString(),
+        updateTimestamp,
       };
       await db
         .insert(lpUserDatas)

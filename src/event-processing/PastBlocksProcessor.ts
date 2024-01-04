@@ -1,4 +1,4 @@
-import { AToken, LendingPool, VToken } from '@abaxfinance/contract-helpers';
+import { AToken, LendingPool, Psp22Emitable, Psp22Ownable, VToken } from '@abaxfinance/contract-helpers';
 import { db } from '@db/index';
 import { analyzedBlocks } from '@db/schema';
 import { ApiPromise } from '@polkadot/api';
@@ -12,6 +12,7 @@ import { getLatestBlockNumber, getLendingPoolContracts } from '@src/utils';
 import { eq, getTableName, sql } from 'drizzle-orm';
 import PQueue from 'p-queue';
 import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
+import { getContractsToListenEvents } from '@src/event-processing/utils';
 
 const QUEUE_CHUNK_SIZE = 10_000;
 const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 48565327;
@@ -34,7 +35,7 @@ export class PastBlocksProcessor extends BaseActor {
 
   async loopAction() {
     const api = await this.apiProviderWrapper.getAndWaitForReady();
-    const contracts = getLendingPoolContracts(api);
+    const contracts = getContractsToListenEvents(api);
     await this.ensureBlockAnalysis(this.queue, api, contracts);
     logger.info('EventAnalyzeEnsurer', 'sleeping for 1 min...');
   }
@@ -58,7 +59,7 @@ export class PastBlocksProcessor extends BaseActor {
     }
   }
 
-  async ensureBlockAnalysis(queue: PQueue, api: ApiPromise, contracts: (LendingPool | AToken | VToken)[]) {
+  async ensureBlockAnalysis(queue: PQueue, api: ApiPromise, contracts: (LendingPool | AToken | VToken | Psp22Emitable | Psp22Ownable)[]) {
     const blocksToCatchUpToNow = await getBlocksToCatchUpToNow(api);
     logger.info(`total number of blocks to process to catch up to now: ${blocksToCatchUpToNow.length}`);
 

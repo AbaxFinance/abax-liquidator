@@ -29,6 +29,13 @@
       "when": 1703344120063,
       "tag": "0003_little_blackheart",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1704302599082,
+      "tag": "0004_strange_stone_men",
+      "breakpoints": true
     }
   ]
 }
