@@ -5,7 +5,7 @@ const destinationLogFileName = process.env.LOG_FILENAME?.toLocaleLowerCase() ?? 
 
 const GLOBAL_LOGGER_LEVEL = process.env.LOG_LEVEL?.toLowerCase() || 'info';
 
-const LOG_PATH_BASE = path.join('/app', 'logs');
+const LOG_PATH_BASE = process.env.DOCKER_ENV ? path.join('/app', 'logs') : path.join(__dirname, '..', 'logs');
 
 function createCommonLogTargetOptions(destinationFileName: string) {
   return { destination: path.join(LOG_PATH_BASE, destinationFileName), mkdir: true };

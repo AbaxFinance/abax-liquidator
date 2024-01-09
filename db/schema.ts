@@ -55,7 +55,7 @@ export const lpUserDatas = pgTable(
   },
   (t) => {
     return {
-      pk: primaryKey({ name: 'address_reserve_idx', columns: [t.address, t.reserveAddress] }),
+      pk: primaryKey({ name: 'address_reserve_updatetimestamp_idx', columns: [t.address, t.reserveAddress, t.updateTimestamp] }),
     };
   },
 );
@@ -63,7 +63,7 @@ export const lpUserDatas = pgTable(
 export const lpUserConfigs = pgTable(
   'lp_userConfigs',
   {
-    address: char('address', { length: 48 }).primaryKey(),
+    address: char('address', { length: 48 }).notNull(),
     deposits: varchar('deposits', { length: 128 }).notNull(),
     collaterals: varchar('collaterals', { length: 128 }).notNull(),
     borrows: varchar('borrows', { length: 128 }).notNull(),
@@ -72,7 +72,7 @@ export const lpUserConfigs = pgTable(
   },
   (c) => {
     return {
-      addressIndex: uniqueIndex('address_idx').on(c.address),
+      pk: primaryKey({ name: 'cfg_address_updatetimestamp_idx', columns: [c.address, c.updateTimestamp] }),
     };
   },
 );
@@ -92,8 +92,8 @@ export const lpMarketRules = pgTable('lp_marketRules', {
 export const lpReserveDatas = pgTable(
   'lp_reserveDatas',
   {
-    id: integer('id').primaryKey(),
-    address: char('address', { length: 48 }).unique().notNull(),
+    id: integer('id').notNull(),
+    address: char('address', { length: 48 }).notNull(),
     //restrictions
     maximalTotalDeposit: varchar('maximalTotalDeposit', { length: 256 }),
     maximalTotalDebt: varchar('maximalTotalDebt', { length: 256 }),
@@ -121,7 +121,7 @@ export const lpReserveDatas = pgTable(
   },
   (c) => {
     return {
-      addressIdIndex: uniqueIndex('address_id_index').on(c.address, c.id),
+      pk: primaryKey({ name: 'address_id_timestamp_index', columns: [c.address, c.id, c.updateTimestamp] }),
     };
   },
 );

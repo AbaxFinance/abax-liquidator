@@ -6,6 +6,7 @@ import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStra
 import type { ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import { logger } from '@src/logger';
 import { USER_DATA_QUEUE_NAME, USER_DATA_ROUTING_KEY } from '../messageQueueConsts';
+import { lt } from 'drizzle-orm';
 
 export class UserDataChainUpdater extends BaseMessagingActor {
   fetchStrategy = new ChainDataFetchStrategy();
@@ -19,10 +20,11 @@ export class UserDataChainUpdater extends BaseMessagingActor {
     await this.updateUserReserveDatas(userAddresses);
   }
   async getAllAddresses() {
-    return (await db.select({ address: lpTrackingData.address }).from(lpTrackingData)).map((a) => a.address);
+    return (await db.select({ address: lpTrackingData.address }).from(lpTrackingData).where(lt(lpTrackingData.updateAtLatest, new Date()))).map(
+      (a) => a.address,
+    );
   }
   private async updateUserReserveDatas(userAddresses: string[]) {
-    const usersWithReserveDatas: ProtocolUserDataReturnType[] = [];
     const CHUNK_SIZE = 10;
     try {
       for (let i = 0; i < userAddresses.length; i += CHUNK_SIZE) {
@@ -68,7 +70,7 @@ export class UserDataChainUpdater extends BaseMessagingActor {
         .insert(lpUserDatas)
         .values(userDataDbValues)
         .onConflictDoUpdate({
-          target: [lpUserDatas.address, lpUserDatas.reserveAddress],
+          target: [lpUserDatas.address, lpUserDatas.reserveAddress, lpUserDatas.updateTimestamp],
           set: userDataDbValues,
         });
     }

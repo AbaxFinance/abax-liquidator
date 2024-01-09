@@ -35,7 +35,7 @@ export class ReserveDataChainUpdater extends BaseActor {
         .insert(lpReserveDatas)
         .values(reserveDataDbValues)
         .onConflictDoUpdate({
-          target: [lpReserveDatas.id, lpReserveDatas.address],
+          target: [lpReserveDatas.id, lpReserveDatas.address, lpReserveDatas.updateTimestamp],
           set: reserveDataDbValues,
         });
     }

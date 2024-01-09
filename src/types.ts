@@ -1,12 +1,11 @@
 import type { CompleteReserveData } from '@abaxfinance/contract-helpers';
 import { Abi } from '@polkadot/api-contract';
-import type { BlockHash } from '@polkadot/types/interfaces/chain';
 export type EventsFromBlockResult = {
   blockTimestamp: string;
   blockNumber: number;
   eventsByContractAddress: Record<string, EventWithMeta[]>;
   error?: Error;
-  blockHash: BlockHash;
+  blockHash: string;
 };
 
 export type EventWithMeta = {

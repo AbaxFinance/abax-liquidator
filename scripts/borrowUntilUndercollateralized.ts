@@ -77,7 +77,7 @@ const queue = new PQueue({ concurrency: 5, autoStart: false });
   if (require.main !== module) return;
   const outputJsonFolder = (args['path'] as string) ?? process.argv[2] ?? process.env.PWD;
   if (!outputJsonFolder) throw 'could not determine path';
-  const wsEndpoint = process.env.WS_ENDPOINT;
+  const wsEndpoint = process.env.RPC_ENDPOINT;
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
   const api = await apiProviderWrapper.getAndWaitForReady();
 

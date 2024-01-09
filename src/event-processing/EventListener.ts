@@ -12,7 +12,7 @@ export class EventListener extends BaseActor {
 
   constructor() {
     super();
-    const wsEndpoint = process.env.WS_ENDPOINT;
+    const wsEndpoint = process.env.RPC_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
   }
@@ -46,7 +46,7 @@ async function listenToNewEvents<TContract extends IWithAbi & IWithAddress>(api:
             contracts,
             timestampExtrinistic.extrinsic.method.args[0].toString(),
             blockNumber.toNumber(),
-            blockHash,
+            blockHash.toString(),
           );
           storeEventsAndErrors(res);
         }

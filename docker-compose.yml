@@ -170,6 +170,7 @@ services:
       - postgres
     environment:
       ACTOR_TO_RUN: PAST_BLOCKS_PROCESSOR
+      LOOP_INTERVAL: 2000
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:
@@ -210,6 +211,7 @@ services:
     environment:
       ACTOR_TO_RUN: PERIODIC_HFUPDATER
       AMQP_URL: amqp://rabbitmq
+      LOOP_INTERVAL: 2000
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:
@@ -217,6 +219,8 @@ services:
       - '.env.secret'
     networks:
       - local_bridge
+    ports:
+      - 9229:9229
   price-change-updater:
     build:
       context: '../'
@@ -258,8 +262,6 @@ services:
       - '.env.secret'
     networks:
       - local_bridge
-    ports:
-      - 9229:9229
 
 networks:
   local_bridge:

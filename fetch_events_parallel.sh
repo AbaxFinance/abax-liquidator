@@ -21,7 +21,7 @@ do
         -e POSTGRES_USER="postgres" \
         -e POSTGRES_PASSWORD="changme" \
         -e POSTGRES_HOST="postgres" \
-        -e WS_ENDPOINT="wss://ws.test.azero.dev" \
+        -e RPC_ENDPOINT="wss://ws.test.azero.dev" \
         -e LOG_FILENAME="chunk-blocks-processor-$NTH" \
         -v "$SCRIPT_DIR/compose-persistence/logs:/app/logs" \
         -t liquidation-node-actor

@@ -27,7 +27,7 @@ export class PastBlocksProcessor extends BaseActor {
 
   constructor() {
     super();
-    const wsEndpoint = process.env.WS_ENDPOINT;
+    const wsEndpoint = process.env.RPC_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
     this.queue = new PQueue({ concurrency: 40, autoStart: false });
@@ -81,6 +81,7 @@ export class PastBlocksProcessor extends BaseActor {
     }
   }
   printStats(result: EventsFromBlockResult) {
+    if (!result.blockTimestamp) return; //TODO
     const now = Date.now();
     const timestampISO = new Date(parseInt(result.blockTimestamp.toString())).toISOString();
     if (!this.benchTimeIntermediateStart) {

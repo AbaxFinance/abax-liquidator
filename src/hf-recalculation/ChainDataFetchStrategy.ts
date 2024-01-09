@@ -13,7 +13,7 @@ export class ChainDataFetchStrategy implements DataFetchStrategy {
   apiProviderWrapper: ApiProviderWrapper;
 
   constructor() {
-    const wsEndpoint = process.env.WS_ENDPOINT;
+    const wsEndpoint = process.env.RPC_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
     this.apiProviderWrapper = new ApiProviderWrapper(this.wsEndpoint);

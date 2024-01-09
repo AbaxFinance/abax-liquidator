@@ -1,6 +1,6 @@
 import { db } from '@db/index';
 import type { SelectAssetPrice } from '@db/schema';
-import { assetPrices, lpTrackingData, lpUserDatas } from '@db/schema';
+import { assetPrices, lpUserDatas } from '@db/schema';
 import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';
 import { deployedContractsGetters } from '@src/deployedContracts';
 import { DbDataFetchStrategy } from '@src/hf-recalculation/DbDataFetchStrategy';
@@ -9,7 +9,7 @@ import { updateHFAndSendLiquidatationRequests } from '@src/hf-recalculation/hfUp
 import { logger } from '@src/logger';
 import { LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '@src/messageQueueConsts';
 import { PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME } from '@src/price-updating/consts';
-import { and, eq, inArray, ne } from 'drizzle-orm';
+import { and, inArray, ne } from 'drizzle-orm';
 
 export class PriceChangeHFUpdater extends BaseMessagingActor {
   lpDataFetchStrategy = new DbDataFetchStrategy(); //TODO DI
@@ -47,9 +47,8 @@ export class PriceChangeHFUpdater extends BaseMessagingActor {
     const channel = await this.getChannel();
     const addressesToUpdate = (
       await db
-        .select({ address: lpTrackingData.address })
-        .from(lpTrackingData)
-        .innerJoin(lpUserDatas, eq(lpTrackingData.address, lpUserDatas.address))
+        .select({ address: lpUserDatas.address })
+        .from(lpUserDatas)
         .where(and(inArray(lpUserDatas.reserveAddress, assetAddresses), ne(lpUserDatas.debt, '0')))
     ).map((a) => a.address);
     if (addressesToUpdate.length === 0) {

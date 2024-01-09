@@ -1,0 +1,2 @@
+ALTER TABLE "lp_userDatas" DROP CONSTRAINT "address_reserve_idx";--> statement-breakpoint
+ALTER TABLE "lp_userDatas" ADD CONSTRAINT "address_reserve_updatetimestamp_idx" PRIMARY KEY("address","reserveAddress","updateTimestamp");

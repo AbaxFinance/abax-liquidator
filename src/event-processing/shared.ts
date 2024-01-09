@@ -27,7 +27,7 @@ export async function getEventsByContract<TContract extends IWithAbi & IWithAddr
   api: ApiPromise,
   contracts: TContract[],
 ): Promise<EventsFromBlockResult> {
-  const blockHash: BlockHash = (await api.rpc.chain.getBlockHash(blockNumber)) as any;
+  const blockHash = (await api.rpc.chain.getBlockHash(blockNumber)).toString();
   const apiAt = await api.at(blockHash);
   const eventsToParse: any = await apiAt.query.system.events();
   const contractsEmittedEvents = eventsToParse.filter((e: any) => e.event.method === 'ContractEmitted');
@@ -36,7 +36,7 @@ export async function getEventsByContract<TContract extends IWithAbi & IWithAddr
   }
   const timestamp = await apiAt.query.timestamp.now();
 
-  return parseBlockEvents<TContract>(contractsEmittedEvents, contracts, timestamp.toString(), blockNumber, blockHash);
+  return parseBlockEvents<TContract>(contractsEmittedEvents, contracts, timestamp.toString(), blockNumber, blockHash.toString());
 }
 
 export async function getMissingOrFailedToAnalyzeBlocksFromRange(constraints?: { start: number; end: number }) {
@@ -173,7 +173,7 @@ export function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
   contracts: TContract[],
   timestamp: string,
   blockNumber: number,
-  blockHash: BlockHash,
+  blockHash: string,
 ) {
   const eventsToReturnByContractAddress: Record<string, EventWithMeta[]> = {};
   for (const record of eventsToParse) {
@@ -183,37 +183,36 @@ export function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
       const [address, data] = record.event.data;
 
       for (const contract of contracts) {
-        if (address.toString() === contract.address.toString()) {
-          const decodeEventResult = contract.abi.decodeEvent(data);
-          const { args: eventArgs, event: ev } = decodeEventResult;
+        if (address.toString() !== contract.address.toString()) continue;
+        const decodeEventResult = contract.abi.decodeEvent(data);
+        const { args: eventArgs, event: ev } = decodeEventResult;
 
-          const _event: Record<string, any> = {};
-          for (let argI = 0; argI < eventArgs.length; argI++) {
-            _event[ev.args[argI].name] = eventArgs[argI].toJSON();
-          }
-          const eventName = ev.identifier.toString();
-          const contractName = contract.abi.info.contract.name.toString();
-
-          const eventDataTypeDescriptionToUse = getEventDataTypeDescriptionToUse(contractName);
-          const eventRet = handleEventReturn(_event, getEventTypeDescription(eventName, eventDataTypeDescriptionToUse));
-
-          const eventRetWithMeta = {
-            event: eventRet,
-            meta: {
-              contractName,
-              contractAddress: address.toString() as string,
-              eventName,
-              timestamp: timestamp.toString(),
-              timestampISO: new Date(parseInt(timestamp.toString())).toISOString(),
-              blockNumber,
-              blockHash: blockHash.toString(),
-            },
-          } satisfies EventWithMeta;
-          eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] = [
-            ...(eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] ?? []),
-            replaceNumericPropsWithStrings(eventRetWithMeta),
-          ];
+        const _event: Record<string, any> = {};
+        for (let argI = 0; argI < eventArgs.length; argI++) {
+          _event[ev.args[argI].name] = eventArgs[argI].toJSON();
         }
+        const eventName = ev.identifier.toString();
+        const contractName = contract.abi.info.contract.name.toString();
+
+        const eventDataTypeDescriptionToUse = getEventDataTypeDescriptionToUse(contractName);
+        const eventRet = handleEventReturn(_event, getEventTypeDescription(eventName, eventDataTypeDescriptionToUse));
+
+        const eventRetWithMeta = {
+          event: eventRet,
+          meta: {
+            contractName,
+            contractAddress: address.toString() as string,
+            eventName,
+            timestamp: timestamp.toString(),
+            timestampISO: new Date(parseInt(timestamp.toString())).toISOString(),
+            blockNumber,
+            blockHash: blockHash.toString(),
+          },
+        } satisfies EventWithMeta;
+        eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] = [
+          ...(eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] ?? []),
+          replaceNumericPropsWithStrings(eventRetWithMeta),
+        ];
       }
     }
   }

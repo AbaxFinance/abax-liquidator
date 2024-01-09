@@ -37,7 +37,7 @@ export class DIAOraclePriceFetchStrategy implements PriceFetchStrategy {
   private wsEndpoint: string;
 
   constructor() {
-    const wsEndpoint = process.env.WS_ENDPOINT;
+    const wsEndpoint = process.env.RPC_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
   }

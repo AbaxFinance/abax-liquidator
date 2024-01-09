@@ -1,0 +1,1 @@
+ALTER TABLE "lp_reserveDatas" ALTER COLUMN "id" SET NOT NULL;

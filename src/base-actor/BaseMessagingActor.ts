@@ -18,13 +18,7 @@ export abstract class BaseMessagingActor extends BaseActor {
     if (this.channel) return this.channel;
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
-    await channel.assertExchange(LIQUIDATION_EXCHANGE, 'x-message-deduplication', {
-      durable: true,
-      arguments: {
-        'x-cache-size': 100_000,
-        'x-cache-persistence': 'disk' as 'disk' | 'memory',
-      },
-    });
+    await channel.assertExchange(LIQUIDATION_EXCHANGE, 'direct', { durable: true });
     await channel.assertQueue(this.queueName, { durable: true });
     await channel.bindQueue(this.queueName, LIQUIDATION_EXCHANGE, this.routingKey);
     this.channel = channel;

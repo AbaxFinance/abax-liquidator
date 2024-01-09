@@ -6,8 +6,10 @@ import {
   getContractObject,
   replaceNumericPropsWithStrings,
 } from '@abaxfinance/contract-helpers';
+import type { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
+import { bnToBn } from '@polkadot/util';
 import { BaseActor } from '@src/base-actor/BaseActor';
 import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
 import { getCollateralPowerE6AndBiggestDeposit, getDebtPowerE6BNAndBiggestLoan } from '@src/hf-recalculation/utils';
@@ -20,6 +22,34 @@ import { LENDING_POOL_ADDRESS } from '@src/utils';
 import amqplib from 'amqplib';
 import BN from 'bn.js';
 import { isEqual } from 'lodash';
+import type { WeightV2 } from '@polkadot/types/interfaces';
+
+export const getGasLimit = (api: ApiPromise, _refTime: string | BN, _proofSize: string | BN) => {
+  const refTime = bnToBn(_refTime);
+  const proofSize = bnToBn(_proofSize);
+
+  return api.registry.createType('WeightV2', {
+    refTime,
+    proofSize,
+  }) as WeightV2;
+};
+
+export const getMaxGasLimit = (api: ApiPromise, reductionFactor = 0.3) => {
+  const blockWeights = api.consts.system.blockWeights.toPrimitive() as any;
+  const maxExtrinsic = blockWeights?.perClass?.normal?.maxExtrinsic;
+  const maxRefTime = maxExtrinsic?.refTime
+    ? bnToBn(maxExtrinsic.refTime)
+        .mul(new BN(reductionFactor * 100))
+        .div(new BN(100))
+    : new BN(0);
+  const maxProofSize = maxExtrinsic?.proofSize
+    ? bnToBn(maxExtrinsic.proofSize)
+        .mul(new BN(reductionFactor * 100))
+        .div(new BN(100))
+    : new BN(0);
+
+  return getGasLimit(api, maxRefTime as any, maxProofSize as any);
+};
 
 export class Liquidator extends BaseActor {
   _liquidationSignerSpender?: KeyringPair;
@@ -28,7 +58,7 @@ export class Liquidator extends BaseActor {
 
   constructor() {
     super();
-    const wsEndpoint = process.env.WS_ENDPOINT;
+    const wsEndpoint = process.env.RPC_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
@@ -77,6 +107,20 @@ export class Liquidator extends BaseActor {
     }
 
     //DEBUG
+    const biggestDebtReserveBefore = (await lendingPool.query.viewReserveData(biggestDebtData.underlyingAddress.toString())).value.ok!;
+    const borrowerBiggestDebtReserveBefore = (await lendingPool.query.viewUserReserveData(biggestDebtData.underlyingAddress, userAddress)).value.ok!;
+    const borrowerBiggestCollateralReserveBefore = (await lendingPool.query.viewUserReserveData(biggestCollateralData.underlyingAddress, userAddress))
+      .value.ok!;
+    const liquidationSpenderBiggestDebtReserveBefore = (
+      await lendingPool.query.viewUserReserveData(biggestDebtData.underlyingAddress, liquidationSignerSpender.address)
+    ).value.ok!;
+    const liqudationSpenderBiggestCollateralReserveBefore = (
+      await lendingPool.query.viewUserReserveData(biggestCollateralData.underlyingAddress, liquidationSignerSpender.address)
+    ).value.ok!;
+
+    const biggestDebtPSPBalanceOfLendingPool = (
+      await getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress, liquidationSignerSpender, api).query.balanceOf(lendingPool.address)
+    ).value.ok!;
     const queryResD = await lendingPool.query.getUserFreeCollateralCoefficient(userAddress);
     logger.info({
       userAddress,
@@ -107,10 +151,46 @@ export class Liquidator extends BaseActor {
           amountToRepay,
           minimumTokenReceivedE18,
           [],
+          { gasLimit: getMaxGasLimit(api) },
         );
       logger.info(
         `${userAddress}| Liquidation success: ${tx.blockHash?.toString()} | events: ${JSON.stringify(replaceNumericPropsWithStrings(tx.events))}`,
       );
+      const queryResAfter = await lendingPool.query.getUserFreeCollateralCoefficient(userAddress);
+
+      const biggestDebtReserveAfter = (await lendingPool.query.viewReserveData(biggestDebtData.underlyingAddress.toString())).value.ok!;
+      const biggestDebtPSPBalanceOfLendingPoolAfter = (
+        await getContractObject(Psp22Ownable, biggestDebtData.underlyingAddress, liquidationSignerSpender, api).query.balanceOf(lendingPool.address)
+      ).value.ok!;
+      const borrowerBiggestDebtReserveAfter = (await lendingPool.query.viewUserReserveData(biggestDebtData.underlyingAddress, userAddress)).value.ok!;
+
+      const borrowerBiggestCollateralReserveAfter = (
+        await lendingPool.query.viewUserReserveData(biggestCollateralData.underlyingAddress, userAddress)
+      ).value.ok!;
+      const liquidationSpenderBiggestDebtReserveAfter = (
+        await lendingPool.query.viewUserReserveData(biggestDebtData.underlyingAddress, liquidationSignerSpender.address)
+      ).value.ok!;
+      const liqudationSpenderBiggestCollateralReserveAfter = (
+        await lendingPool.query.viewUserReserveData(biggestCollateralData.underlyingAddress, liquidationSignerSpender.address)
+      ).value.ok!;
+
+      logger.info({
+        userAddress,
+        collateralized: replaceNumericPropsWithStrings(queryResAfter.value.ok)[0],
+        collateralCoefficient: replaceNumericPropsWithStrings(queryResAfter.value.ok)[1],
+        biggestDebtReserveBefore: replaceNumericPropsWithStrings(biggestDebtReserveBefore),
+        biggestDebtDataAfter: replaceNumericPropsWithStrings(biggestDebtReserveAfter),
+        biggestDebtPSPBalanceOfLendingPool: biggestDebtPSPBalanceOfLendingPool.toString(),
+        biggestDebtPSPBalanceOfLendingPoolAfter: biggestDebtPSPBalanceOfLendingPoolAfter.toString(),
+        borrowerBiggestDebtReserveBefore: replaceNumericPropsWithStrings(borrowerBiggestDebtReserveBefore),
+        borrowerBiggestDebtReserveAfter: replaceNumericPropsWithStrings(borrowerBiggestDebtReserveAfter),
+        borrowerBiggestCollateralReserveBefore: replaceNumericPropsWithStrings(borrowerBiggestCollateralReserveBefore),
+        borrowerBiggestCollateralReserveAfter: replaceNumericPropsWithStrings(borrowerBiggestCollateralReserveAfter),
+        liquidationSpenderBiggestDebtReserveBefore: replaceNumericPropsWithStrings(liquidationSpenderBiggestDebtReserveBefore),
+        liquidationSpenderBiggestDebtReserveAfter: replaceNumericPropsWithStrings(liquidationSpenderBiggestDebtReserveAfter),
+        liqudationSpenderBiggestCollateralReserveBefore: replaceNumericPropsWithStrings(liqudationSpenderBiggestCollateralReserveBefore),
+        liqudationSpenderBiggestCollateralReserveAfter: replaceNumericPropsWithStrings(liqudationSpenderBiggestCollateralReserveAfter),
+      });
     } catch (e) {
       logger.error(`${userAddress}| liquidation unsuccessfull`);
       logger.error(e);

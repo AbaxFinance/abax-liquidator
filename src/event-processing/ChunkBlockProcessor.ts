@@ -26,7 +26,7 @@ export class ChunkBlockProcessor extends BaseActor {
 
   constructor() {
     super();
-    const wsEndpoint = process.env.WS_ENDPOINT;
+    const wsEndpoint = process.env.RPC_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
     this.queue = new PQueue({ concurrency: 50, autoStart: false });
