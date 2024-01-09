@@ -1,4 +1,5 @@
-import { Abi, Bytes, encodeCall, decodeResult } from '@subsquid/ink-abi';
+import { Abi, encodeCall, decodeResult } from '@subsquid/ink-abi';
+import type { Bytes } from '@subsquid/ink-abi';
 
 export const metadata = {
   source: {

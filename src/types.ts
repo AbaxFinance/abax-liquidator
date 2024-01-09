@@ -36,8 +36,8 @@ export type ReserveDataWithMetadata = Omit<CompleteReserveData, 'tokens'> & {
 export type LiquidationRequestData = {
   userAddress: string;
   debtPower: string;
-  biggestDebtData: {
-    amountRawE6: string;
+  biggestDebtPowerData: {
+    powerE6: string;
     underlyingAddress: string;
   };
   collateralPower: string;

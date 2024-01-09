@@ -21,14 +21,14 @@ export async function updateHFAndSendLiquidatationRequests(
   for (const { userConfig, userReserves, userAddress } of usersWithReserveDatas) {
     const userAppliedMarketRule = marketRules.get(userConfig.marketRuleId.toNumber())!;
     let healthFactor = Number.MAX_SAFE_INTEGER - 1;
-    const { debtPower, biggestDebtData } = getDebtPowerE6BNAndBiggestLoan(
+    const { debtPower, biggestDebtPowerData } = getDebtPowerE6BNAndBiggestLoan(
       reserveDatas,
       pricesE18ByReserveAddress,
       userReserves,
       userAppliedMarketRule,
     );
     if (!debtPower.eqn(0)) {
-      const { collateralPower, biggestCollateralData } = getCollateralPowerE6AndBiggestDeposit(
+      const { collateralPower, biggestCollateralPowerData } = getCollateralPowerE6AndBiggestDeposit(
         userConfig,
         reserveDatas,
         pricesE18ByReserveAddress,
@@ -49,9 +49,9 @@ export async function updateHFAndSendLiquidatationRequests(
                 healthFactor,
                 userAddress,
                 debtPower,
-                biggestDebtData,
+                biggestDebtPowerData,
                 collateralPower,
-                biggestCollateralData,
+                biggestCollateralData: biggestCollateralPowerData,
               }) as LiquidationRequestData,
             ),
           ),

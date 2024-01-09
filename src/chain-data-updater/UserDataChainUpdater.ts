@@ -52,10 +52,13 @@ export class UserDataChainUpdater extends BaseMessagingActor {
       marketRuleId: userConfig.marketRuleId.toNumber(),
       updateTimestamp,
     };
-    await db.insert(lpUserConfigs).values(userConfigDbValues).onConflictDoUpdate({
-      target: lpUserConfigs.address,
-      set: userConfigDbValues,
-    });
+    await db
+      .insert(lpUserConfigs)
+      .values(userConfigDbValues)
+      .onConflictDoUpdate({
+        target: [lpUserConfigs.address, lpUserConfigs.updateTimestamp],
+        set: userConfigDbValues,
+      });
     for (const [reserveAddress, userReserve] of Object.entries(userReserves)) {
       const userDataDbValues: InsertLPUserData = {
         address: userAddress.toString(),

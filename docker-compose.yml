@@ -219,8 +219,6 @@ services:
       - '.env.secret'
     networks:
       - local_bridge
-    ports:
-      - 9229:9229
   price-change-updater:
     build:
       context: '../'
@@ -255,6 +253,7 @@ services:
       - rabbitmq
     environment:
       ACTOR_TO_RUN: LIQUIDATOR
+      # DEBUG_SLOW_MODE: 1
     volumes:
       - './compose-persistence/logs:/app/logs'
     env_file:
@@ -262,6 +261,8 @@ services:
       - '.env.secret'
     networks:
       - local_bridge
+    ports:
+      - 9229:9229
 
 networks:
   local_bridge:

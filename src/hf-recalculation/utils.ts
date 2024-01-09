@@ -27,13 +27,13 @@ export const getCollateralPowerE6AndBiggestDeposit = (
   userReserveDatas: Record<string, UserReserveData>,
   marketRule: NonNullable<MarketRule>,
 ) => {
-  let ret = new BN(0);
-  const biggestCollateralData: {
-    amountRawE6: BN;
+  let totalCollateralPowerE6 = new BN(0);
+  const biggestCollateralPowerData: {
+    powerE6: BN;
     underlyingAddress: string;
   } = {
     underlyingAddress: '',
-    amountRawE6: new BN(0),
+    powerE6: new BN(0),
   };
   Object.entries(userReserveDatas).forEach(([reserveAddress, userReserveData]) => {
     let retDenom = new BN(1);
@@ -47,16 +47,16 @@ export const getCollateralPowerE6AndBiggestDeposit = (
     const priceE18 = pricesE18ByReserveAddress[reserveAddress] ?? new BN(0);
     retDenom = retDenom.mul(E18bn);
     const collateralCoefficientE6 = assetRule && assetRule.collateralCoefficientE6 ? assetRule.collateralCoefficientE6.rawNumber : new BN(0);
-    const reserveCollateral = deposit.mul(priceE18).mul(collateralCoefficientE6).div(retDenom);
-    ret = ret.add(reserveCollateral);
+    const reserveCollateralPowerE6 = deposit.mul(priceE18).mul(collateralCoefficientE6).div(retDenom);
+    totalCollateralPowerE6 = totalCollateralPowerE6.add(reserveCollateralPowerE6);
     //biggest collateral data
-    if (biggestCollateralData.amountRawE6.lt(reserveCollateral)) {
-      biggestCollateralData.underlyingAddress = reserveAddress;
-      biggestCollateralData.amountRawE6 = reserveCollateral;
+    if (biggestCollateralPowerData.powerE6.lt(reserveCollateralPowerE6)) {
+      biggestCollateralPowerData.underlyingAddress = reserveAddress;
+      biggestCollateralPowerData.powerE6 = reserveCollateralPowerE6;
     }
   });
 
-  return { collateralPower: ret, biggestCollateralData };
+  return { collateralPower: totalCollateralPowerE6, biggestCollateralPowerData };
 };
 
 export const getDebtPowerE6BNAndBiggestLoan = (
@@ -64,14 +64,20 @@ export const getDebtPowerE6BNAndBiggestLoan = (
   pricesE18ByReserveAddress: Record<string, BN>,
   userReserveDatas: Record<string, UserReserveData>,
   marketRule: NonNullable<MarketRule>,
-) => {
-  let ret = new BN(0);
-  const biggestDebtData: {
-    amountRawE6: BN;
+): {
+  debtPower: BN;
+  biggestDebtPowerData: {
+    powerE6: BN;
+    underlyingAddress: string;
+  };
+} => {
+  let totalDebtPowerE6 = new BN(0);
+  const biggestDebtPowerData: {
+    powerE6: BN;
     underlyingAddress: string;
   } = {
     underlyingAddress: '',
-    amountRawE6: new BN(0),
+    powerE6: new BN(0),
   };
   Object.entries(userReserveDatas).forEach(([reserveAddress, userReserveData]) => {
     let retDenom = new BN(1);
@@ -83,15 +89,15 @@ export const getDebtPowerE6BNAndBiggestLoan = (
     const debtDecimals = reserveData.decimalMultiplier.rawNumber;
     retDenom = retDenom.mul(debtDecimals);
     retDenom = retDenom.mul(E18bn);
-    const borrowCoefficient = assetRule.borrowCoefficientE6.rawNumber;
-    const reserveDebt = debt.mul(price).mul(borrowCoefficient).div(retDenom);
-    ret = ret.add(reserveDebt);
+    const borrowCoefficientE6 = assetRule.borrowCoefficientE6.rawNumber;
+    const reserveDebtPowerE6 = debt.mul(price).mul(borrowCoefficientE6).div(retDenom);
+    totalDebtPowerE6 = totalDebtPowerE6.add(reserveDebtPowerE6);
     //biggest loan data
-    if (biggestDebtData.amountRawE6.lt(reserveDebt)) {
-      biggestDebtData.underlyingAddress = reserveAddress;
-      biggestDebtData.amountRawE6 = reserveDebt;
+    if (biggestDebtPowerData.powerE6.lt(reserveDebtPowerE6)) {
+      biggestDebtPowerData.underlyingAddress = reserveAddress;
+      biggestDebtPowerData.powerE6 = reserveDebtPowerE6;
     }
   });
 
-  return { debtPower: ret, biggestDebtData };
+  return { debtPower: totalDebtPowerE6, biggestDebtPowerData };
 };
