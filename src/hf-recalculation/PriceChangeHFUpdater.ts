@@ -3,6 +3,7 @@ import type { SelectAssetPrice } from '@db/schema';
 import { assetPrices, lpUserDatas } from '@db/schema';
 import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';
 import { deployedContractsGetters } from '@src/deployedContracts';
+import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
 import { DbDataFetchStrategy } from '@src/hf-recalculation/DbDataFetchStrategy';
 import { PriceDbFetchStrategy } from '@src/hf-recalculation/PriceDbFetchStrategy';
 import { updateHFAndSendLiquidatationRequests } from '@src/hf-recalculation/hfUpdateUtils';
@@ -12,7 +13,7 @@ import { PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME } from '@src/price-updating/cons
 import { and, inArray, ne } from 'drizzle-orm';
 
 export class PriceChangeHFUpdater extends BaseMessagingActor {
-  lpDataFetchStrategy = new DbDataFetchStrategy(); //TODO DI
+  lpDataFetchStrategy = new ChainDataFetchStrategy(); //TODO DI
   priceFetchStrategy = new PriceDbFetchStrategy();
   cachedAssetPriceData: SelectAssetPrice[] = [];
   constructor() {

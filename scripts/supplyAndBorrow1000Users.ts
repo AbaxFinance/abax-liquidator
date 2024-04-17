@@ -1,11 +1,11 @@
-import { LendingPool, Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from '@abaxfinance/contract-helpers';
 import {
-  SUPPORTED_CURRENCIES_DECIMALS,
-  U128_MAX_VALUE,
-  convertNumberOrStringToBN,
-  convertToCurrencyDecimalsStatic,
-  getArgvObj,
-} from '@abaxfinance/utils';
+  LendingPool,
+  Psp22Ownable,
+  TestReservesMinter,
+  TestReservesMinterErrorBuilder,
+  getContractObject,
+} from 'wookashwackomytest-contract-helpers';
+import { SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, convertToCurrencyDecimalsStatic, getArgvObj } from 'wookashwackomytest-utils';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import { nobody } from '@polkadot/keyring/pair/nobody';
@@ -21,7 +21,7 @@ import fs from 'fs-extra';
 import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
 import path from 'path';
-import { ReturnNumber } from 'wookashwackomytest-typechain-types';
+import { U128_MAX_VALUE } from '@c-forge/polkahat-network-helpers';
 
 const SAFE_ONE_TIME_APPROVAL_AMOUNT = U128_MAX_VALUE.divn(1_000);
 
@@ -52,7 +52,7 @@ const keyring = new Keyring();
   if (require.main !== module) return;
   const outputJsonFolder = (args['path'] as string) ?? process.argv[2] ?? process.env.PWD;
   if (!outputJsonFolder) throw 'could not determine path';
-  const wsEndpoint = process.env.RPC_ENDPOINT;
+  const wsEndpoint = process.env.WS_ENDPOINT;
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
   const seed = process.env.SEED;
   if (!seed) throw 'could not determine seed';
@@ -68,7 +68,7 @@ const keyring = new Keyring();
   const shouldInitializeUsers = storedUsers.length === 0;
   if (shouldInitializeUsers) console.log('generating users...');
   const usersToUse = shouldInitializeUsers
-    ? Array(1_000)
+    ? Array(100)
         .fill(null)
         .map(() => getRandomSigner(keyring))
     : storedUsers.map((su) => ({ mnemonic: su.mnemonic, pair: keyring.addFromUri(su.mnemonic, {}, 'sr25519') }));
@@ -155,7 +155,7 @@ async function approveSupplyAndBorrow(api: ApiPromise, usersToUse: { pair: Keyri
   if (i % 50 === 0) console.log(new Date(), 'Approve & Supply & Borrow', `${i} users done`);
   const userSignedLendingPool = lendingPool.withSigner(user.pair);
 
-  let collateralCoeffRes: [boolean, ReturnNumber] | undefined = [true, new ReturnNumber(0)] as const;
+  let collateralCoeffRes: [boolean, BN] | undefined = [true, new BN(0)] as const;
   try {
     const {
       value: { ok: collateralCoeff },
@@ -165,7 +165,7 @@ async function approveSupplyAndBorrow(api: ApiPromise, usersToUse: { pair: Keyri
     console.log(e);
   }
 
-  if (!collateralCoeffRes || collateralCoeffRes[1].rawNumber.eqn(0)) {
+  if (!collateralCoeffRes || collateralCoeffRes[1].eqn(0)) {
     try {
       const testEth = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('WETH_TEST'), user.pair, api);
       const testAzero = getContractObject(Psp22Ownable, deployedContractsGetters.getReserveUnderlyingAddress('AZERO_TEST'), user.pair, api);

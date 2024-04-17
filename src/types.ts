@@ -1,4 +1,4 @@
-import type { CompleteReserveData } from '@abaxfinance/contract-helpers';
+import type { CompleteReserveData } from 'wookashwackomytest-contract-helpers';
 import { Abi } from '@polkadot/api-contract';
 export type EventsFromBlockResult = {
   blockTimestamp: string;

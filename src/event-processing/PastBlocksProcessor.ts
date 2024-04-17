@@ -1,4 +1,4 @@
-import { AToken, ApiProviderWrapper, LendingPool, Psp22Emitable, Psp22Ownable, VToken } from '@abaxfinance/contract-helpers';
+import { AToken, ApiProviderWrapper, LendingPool, Psp22Emitable, Psp22Ownable, VToken } from 'wookashwackomytest-contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import { TimeSpanFormatter } from '@scripts/utils';
 import { BaseActor } from '@src/base-actor/BaseActor';
@@ -27,7 +27,7 @@ export class PastBlocksProcessor extends BaseActor {
 
   constructor() {
     super();
-    const wsEndpoint = process.env.RPC_ENDPOINT;
+    const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
     this.queue = new PQueue({ concurrency: 40, autoStart: false });

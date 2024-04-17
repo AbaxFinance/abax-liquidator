@@ -1,5 +1,5 @@
-import type { MarketRule } from '@abaxfinance/contract-helpers';
-import { BalanceViewer, LendingPool, getContractObject } from '@abaxfinance/contract-helpers';
+import type { MarketRule } from 'wookashwackomytest-contract-helpers';
+import { BalanceViewer, LendingPool, getContractObject } from 'wookashwackomytest-contract-helpers';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import { queryProtocolReserveDatas, queryProtocolUserData } from '@src/common/chain-data-utils';
 import { MARKET_RULE_IDS } from '@src/constants';
@@ -7,13 +7,13 @@ import { deployedContractsGetters } from '@src/deployedContracts';
 import type { DataFetchStrategy, ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import { logger } from '@src/logger';
 import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS } from '@src/utils';
-import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
+import { ApiProviderWrapper } from 'wookashwackomytest-contract-helpers';
 export class ChainDataFetchStrategy implements DataFetchStrategy {
   wsEndpoint: string;
   apiProviderWrapper: ApiProviderWrapper;
 
   constructor() {
-    const wsEndpoint = process.env.RPC_ENDPOINT;
+    const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
     this.apiProviderWrapper = new ApiProviderWrapper(this.wsEndpoint);

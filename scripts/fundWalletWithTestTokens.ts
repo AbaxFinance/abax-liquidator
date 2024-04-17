@@ -1,5 +1,5 @@
-import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from '@abaxfinance/contract-helpers';
-import { E12bn, SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, getArgvObj, toE12 } from '@abaxfinance/utils';
+import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from 'wookashwackomytest-contract-helpers';
+import { E12bn, SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, getArgvObj, toE12 } from 'wookashwackomytest-utils';
 import type { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
@@ -16,7 +16,7 @@ const keyring = new Keyring();
   if (require.main !== module) return;
   const outputJsonFolder = (args['path'] as string) ?? process.argv[2] ?? process.env.PWD;
   if (!outputJsonFolder) throw 'could not determine path';
-  const wsEndpoint = process.env.RPC_ENDPOINT;
+  const wsEndpoint = process.env.WS_ENDPOINT;
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
   const seed = process.env.SEED;
   if (!seed) throw 'could not determine seed';

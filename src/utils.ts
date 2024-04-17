@@ -1,7 +1,7 @@
 // HF priorities:
 
-import type { UserConfig } from '@abaxfinance/contract-helpers';
-import { AToken, LendingPool, Psp22Ownable, VToken, getContractObject } from '@abaxfinance/contract-helpers';
+import type { UserConfig } from 'wookashwackomytest-contract-helpers';
+import { AToken, LendingPool, Psp22Ownable, VToken, getContractObject } from 'wookashwackomytest-contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import { deployedContractsGetters } from '@src/deployedContracts';

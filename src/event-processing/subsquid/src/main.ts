@@ -4,7 +4,7 @@ import { toHex } from '@subsquid/util-internal-hex';
 import * as ss58 from '@subsquid/ss58';
 import { getContractsToListenEvents } from '../../utils';
 import { ApiPromise } from '@polkadot/api';
-import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
+import { ApiProviderWrapper } from 'wookashwackomytest-contract-helpers';
 
 import { Store, TypeormDatabase } from '@subsquid/typeorm-store';
 
@@ -15,11 +15,11 @@ import type { EventsFromBlockResult } from '@src/types';
 function getEvents(ctx: ProcessorContext<Store>, contracts: any[]) {
   const records: EventsFromBlockResult[] = [];
   for (const block of ctx.blocks) {
-    assert(block.header.timestamp, `Block ${block.header.height} had no timestamp`);
+    assert((block.header as any).timestamp, `Block ${block.header.height} had no timestamp`);
     const parsedEvents = parseBlockEvents(
       block.events,
       contracts,
-      block.header.timestamp.toString(),
+      (block.header as any).timestamp.toString(),
       block.header.height,
       block.header.hash.toString(),
     );
@@ -30,7 +30,7 @@ function getEvents(ctx: ProcessorContext<Store>, contracts: any[]) {
 (async () => {
   let eventsCount = 0;
 
-  const wsEndpoint = process.env.RPC_ENDPOINT;
+  const wsEndpoint = process.env.WS_ENDPOINT;
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
   const apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
   const api = await apiProviderWrapper.getAndWaitForReady();

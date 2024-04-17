@@ -1,4 +1,4 @@
-import type { AccountId, MarketRule, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
+import type { AccountId, MarketRule, UserConfig, UserReserveData } from 'wookashwackomytest-contract-helpers';
 import type { ReserveDataWithMetadata } from '@src/types';
 
 export type ProtocolUserDataReturnType = {

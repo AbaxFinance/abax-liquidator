@@ -4,10 +4,9 @@ import {
   LendingPoolErrorBuilder,
   Psp22Ownable,
   getContractObject,
-  replaceNumericPropsWithStrings,
   type UserReserveData,
   type ReserveData,
-} from '@abaxfinance/contract-helpers';
+} from 'wookashwackomytest-contract-helpers';
 import type { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
@@ -25,12 +24,10 @@ import amqplib from 'amqplib';
 import BN from 'bn.js';
 import { isEqual } from 'lodash';
 import type { WeightV2 } from '@polkadot/types/interfaces';
-import type { ReturnNumber } from 'wookashwackomytest-typechain-types';
 import { nobody } from '@polkadot/keyring/pair/nobody';
+import { stringifyNumericProps } from '@c-forge/polkahat-chai-matchers';
 
 const DEBUG_SLOW_MODE = !!process.env.DEBUG_SLOW_MODE;
-
-logger.info(`DEBUG_SLOW_MODE: ${DEBUG_SLOW_MODE}`);
 
 export const getGasLimit = (api: ApiPromise, _refTime: string | BN, _proofSize: string | BN) => {
   const refTime = bnToBn(_refTime);
@@ -69,7 +66,7 @@ export class Liquidator extends BaseActor {
 
   constructor() {
     super();
-    const wsEndpoint = process.env.RPC_ENDPOINT;
+    const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
@@ -94,7 +91,9 @@ export class Liquidator extends BaseActor {
   ) {
     const api = await this.apiProviderWrapper.getAndWaitForReady();
     const liquidationSignerSpender = await this.getLiquidationSignerSpender();
-    const [lendingPool, psp22Contract] = this.getContracts(liquidationSignerSpender, api);
+
+    const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, liquidationSignerSpender, api);
+    const psp22Contract = getContractObject(Psp22Ownable, nobody().address, liquidationSignerSpender, api);
     // const minimumTokenReceivedE18 = calculateMinimumTokenReceivedE18();
     const minimumTokenReceivedE18 = 1;
     const reserveTokenToRepay = psp22Contract.withAddress(biggestDebtPowerData.underlyingAddress.toString());
@@ -102,8 +101,8 @@ export class Liquidator extends BaseActor {
     logger.info({
       userAddress,
       minimumTokenReceivedE18: minimumTokenReceivedE18.toString(),
-      biggestCollateralData: replaceNumericPropsWithStrings(biggestCollateralData),
-      biggestDebtPowerData: replaceNumericPropsWithStrings(biggestDebtPowerData),
+      biggestCollateralData: stringifyNumericProps(biggestCollateralData),
+      biggestDebtPowerData: stringifyNumericProps(biggestDebtPowerData),
     });
 
     const amountToRepay = new BN(`999999999999999999999999999`).muln(2); //TODO remove muln2
@@ -149,9 +148,7 @@ export class Liquidator extends BaseActor {
           [],
           { gasLimit: getMaxGasLimit(api) },
         );
-      logger.info(
-        `${userAddress}| Liquidation success: ${tx.blockHash?.toString()} | events: ${JSON.stringify(replaceNumericPropsWithStrings(tx.events))}`,
-      );
+      logger.info(`${userAddress}| Liquidation success: ${tx.blockHash?.toString()} | events: ${JSON.stringify(stringifyNumericProps(tx.events))}`);
 
       this.messageRetryCounter.set(userAddress, 0);
       if (DEBUG_SLOW_MODE)
@@ -179,8 +176,9 @@ export class Liquidator extends BaseActor {
     }
     return true;
   }
-  private getContracts(liquidationSignerSpender: KeyringPair, api: ApiPromise) {
-    if (this.lendingPool && this.psp22Contract) return [this.lendingPool, this.psp22Contract] as const;
+  private async getContracts(liquidationSignerSpender: KeyringPair, api: ApiPromise) {
+    const isReady = await api.isReady;
+    if (this.lendingPool && this.psp22Contract && isReady) return [this.lendingPool, this.psp22Contract] as const;
     const lendingPool = getContractObject(LendingPool, LENDING_POOL_ADDRESS, liquidationSignerSpender, api);
     const psp22Contract = getContractObject(Psp22Ownable, nobody().address, liquidationSignerSpender, api);
     this.lendingPool = lendingPool;
@@ -237,17 +235,17 @@ export class Liquidator extends BaseActor {
     }
     return this.tryLiquidate(
       userAddress,
-      replaceNumericPropsWithStrings(biggestDebtPowerData),
-      replaceNumericPropsWithStrings(biggestCollateralPowerData),
+      stringifyNumericProps(biggestDebtPowerData),
+      stringifyNumericProps(biggestCollateralPowerData as any) as any,
     );
   }
 
   async runLoop() {
-    // eslint-disable-next-line no-constant-condition
+    logger.info(`DEBUG_SLOW_MODE: ${DEBUG_SLOW_MODE}`);
     logger.info('Liquidator running...');
     const connection = await amqplib.connect(AMQP_URL, 'heartbeat=60');
     const channel = await connection.createChannel();
-    await channel.prefetch(DEBUG_SLOW_MODE ? 1 : 10);
+    await channel.prefetch(DEBUG_SLOW_MODE ? 1 : 20);
 
     process.once('SIGINT', async () => {
       logger.info('got sigint, closing connection');
@@ -304,8 +302,8 @@ export class Liquidator extends BaseActor {
   }
 
   private handleFailedMessageProcessing(liquidationRequest: LiquidationRequestData, channel: amqplib.Channel, msg: amqplib.ConsumeMessage) {
-    if (this.messageRetryCounter.get(liquidationRequest.userAddress) ?? 0 > 10) {
-      logger.error(`Failed to liquidate ${liquidationRequest.userAddress} after 10 retries, acking msg anyway...`);
+    if (this.messageRetryCounter.get(liquidationRequest.userAddress) ?? 0 > 2) {
+      logger.error(`Failed to liquidate ${liquidationRequest.userAddress} after 2 retries, acking msg anyway...`);
       channel.ack(msg);
     } else {
       logger.info('nacking message');
@@ -323,7 +321,7 @@ async function debugLogBefore(
   api: ApiPromise,
 ) {
   let biggestDebtReserveBefore: ReserveData | null = null;
-  let biggestDebtPSPBalanceOfLendingPool: ReturnNumber | null = null;
+  let biggestDebtPSPBalanceOfLendingPool: BN | null = null;
   let borrowerBiggestDebtReserveBefore: UserReserveData | null = null;
   let borrowerBiggestCollateralReserveBefore: UserReserveData | null = null;
   let liquidationSpenderBiggestDebtReserveBefore: UserReserveData | null = null;
@@ -356,8 +354,8 @@ async function debugLogBefore(
   const queryResD = await lendingPool.query.getUserFreeCollateralCoefficient(userAddress);
   logger.info({
     userAddress,
-    collateralized: replaceNumericPropsWithStrings(queryResD.value.ok)[0],
-    collateralCoefficient: replaceNumericPropsWithStrings(queryResD.value.ok)[1],
+    collateralized: stringifyNumericProps(queryResD.value.ok)?.[0],
+    collateralCoefficient: stringifyNumericProps(queryResD.value.ok)?.[1],
   });
   return {
     biggestDebtReserveBefore,
@@ -377,7 +375,7 @@ async function debugLogAfter(
   api: ApiPromise,
   biggestCollateralData: { amountRawE6: string; underlyingAddress: string },
   biggestDebtReserveBefore: ReserveData | null,
-  biggestDebtPSPBalanceOfLendingPool: ReturnNumber | null,
+  biggestDebtPSPBalanceOfLendingPool: BN | null,
   borrowerBiggestDebtReserveBefore: UserReserveData | null,
   borrowerBiggestCollateralReserveBefore: UserReserveData | null,
   liquidationSpenderBiggestDebtReserveBefore: UserReserveData | null,
@@ -414,19 +412,19 @@ async function debugLogAfter(
 
   logger.info({
     userAddress,
-    collateralized: replaceNumericPropsWithStrings(queryResAfter.value.ok)[0],
-    collateralCoefficient: replaceNumericPropsWithStrings(queryResAfter.value.ok)[1],
-    biggestDebtReserveBefore: replaceNumericPropsWithStrings(biggestDebtReserveBefore),
-    biggestDebtPowerDataAfter: replaceNumericPropsWithStrings(biggestDebtReserveAfter),
+    collateralized: stringifyNumericProps(queryResAfter.value.ok)?.[0],
+    collateralCoefficient: stringifyNumericProps(queryResAfter.value.ok)?.[1],
+    biggestDebtReserveBefore: stringifyNumericProps(biggestDebtReserveBefore),
+    biggestDebtPowerDataAfter: stringifyNumericProps(biggestDebtReserveAfter),
     biggestDebtPSPBalanceOfLendingPool: biggestDebtPSPBalanceOfLendingPool.toString(),
     biggestDebtPSPBalanceOfLendingPoolAfter: biggestDebtPSPBalanceOfLendingPoolAfter.toString(),
-    borrowerBiggestDebtReserveBefore: replaceNumericPropsWithStrings(borrowerBiggestDebtReserveBefore),
-    borrowerBiggestDebtReserveAfter: replaceNumericPropsWithStrings(borrowerBiggestDebtReserveAfter),
-    borrowerBiggestCollateralReserveBefore: replaceNumericPropsWithStrings(borrowerBiggestCollateralReserveBefore),
-    borrowerBiggestCollateralReserveAfter: replaceNumericPropsWithStrings(borrowerBiggestCollateralReserveAfter),
-    liquidationSpenderBiggestDebtReserveBefore: replaceNumericPropsWithStrings(liquidationSpenderBiggestDebtReserveBefore),
-    liquidationSpenderBiggestDebtReserveAfter: replaceNumericPropsWithStrings(liquidationSpenderBiggestDebtReserveAfter),
-    liqudationSpenderBiggestCollateralReserveBefore: replaceNumericPropsWithStrings(liqudationSpenderBiggestCollateralReserveBefore),
-    liqudationSpenderBiggestCollateralReserveAfter: replaceNumericPropsWithStrings(liqudationSpenderBiggestCollateralReserveAfter),
+    borrowerBiggestDebtReserveBefore: stringifyNumericProps(borrowerBiggestDebtReserveBefore),
+    borrowerBiggestDebtReserveAfter: stringifyNumericProps(borrowerBiggestDebtReserveAfter),
+    borrowerBiggestCollateralReserveBefore: stringifyNumericProps(borrowerBiggestCollateralReserveBefore),
+    borrowerBiggestCollateralReserveAfter: stringifyNumericProps(borrowerBiggestCollateralReserveAfter),
+    liquidationSpenderBiggestDebtReserveBefore: stringifyNumericProps(liquidationSpenderBiggestDebtReserveBefore),
+    liquidationSpenderBiggestDebtReserveAfter: stringifyNumericProps(liquidationSpenderBiggestDebtReserveAfter),
+    liqudationSpenderBiggestCollateralReserveBefore: stringifyNumericProps(liqudationSpenderBiggestCollateralReserveBefore),
+    liqudationSpenderBiggestCollateralReserveAfter: stringifyNumericProps(liqudationSpenderBiggestCollateralReserveAfter),
   });
 }

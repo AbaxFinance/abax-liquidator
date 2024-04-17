@@ -3,9 +3,9 @@ SCRIPT_DIR=$(cd ${0%/*} && pwd -P)
 
 
 NTH=0
-START_BLOCK_NUMBER_PRE_DEPLOYMENT=48565327
-APPROX_NOW=51364642
-CHUNK_SIZE=500000
+START_BLOCK_NUMBER_PRE_DEPLOYMENT=52102566
+APPROX_NOW=52217826
+CHUNK_SIZE=25000
 
 for (( START_BLOCK=$START_BLOCK_NUMBER_PRE_DEPLOYMENT; START_BLOCK<=$APPROX_NOW; START_BLOCK+=$CHUNK_SIZE ))
 do
@@ -21,10 +21,11 @@ do
         -e POSTGRES_USER="postgres" \
         -e POSTGRES_PASSWORD="changme" \
         -e POSTGRES_HOST="postgres" \
-        -e RPC_ENDPOINT="wss://ws.test.azero.dev" \
+        -e WS_ENDPOINT="wss://ws.test.azero.dev" \
         -e LOG_FILENAME="chunk-blocks-processor-$NTH" \
         -v "$SCRIPT_DIR/compose-persistence/logs:/app/logs" \
         -t liquidation-node-actor
+
     NTH=$((NTH + 1))
 done
 

@@ -1,4 +1,4 @@
-import type { AccountId, BalanceViewer, CompleteReserveData, LendingPool, UserReserveData } from '@abaxfinance/contract-helpers';
+import type { AccountId, BalanceViewer, CompleteReserveData, LendingPool, UserReserveData } from 'wookashwackomytest-contract-helpers';
 import type { ProtocolUserDataReturnType } from '@src/hf-recalculation/DataFetchStrategy';
 import type { ReserveDataWithMetadata } from '@src/types';
 

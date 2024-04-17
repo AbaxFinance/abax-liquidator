@@ -1,5 +1,5 @@
-import type { MarketRule, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
-import { E18bn } from '@abaxfinance/utils';
+import type { MarketRule, UserConfig, UserReserveData } from 'wookashwackomytest-contract-helpers';
+import { E18bn } from 'wookashwackomytest-utils';
 import { HF_PRIORITY, HF_RANGE_BY_HF_PRIORITY } from '@src/constants';
 import { logger } from '@src/logger';
 import type { ReserveDataWithMetadata } from '@src/types';

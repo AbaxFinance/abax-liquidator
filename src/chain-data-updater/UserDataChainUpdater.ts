@@ -1,4 +1,4 @@
-import { type AccountId, type UserConfig, type UserReserveData } from '@abaxfinance/contract-helpers';
+import { type AccountId, type UserConfig, type UserReserveData } from 'wookashwackomytest-contract-helpers';
 import { db } from '@db/index';
 import { lpTrackingData, lpUserConfigs, lpUserDatas, type InsertLPUserConfig, type InsertLPUserData } from '@db/schema';
 import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';

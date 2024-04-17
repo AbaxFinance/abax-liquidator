@@ -1,4 +1,4 @@
-import { E12, E6bn, E6, E12bn, E8 } from '@abaxfinance/utils';
+import { E12, E6bn, E6, E12bn, E8 } from 'wookashwackomytest-utils';
 import { logger } from '@src/logger';
 import { PRICE_SOURCE, type AnyRegisteredAsset } from '@src/price-updating/consts';
 import type { PriceFetchStrategy } from '@src/price-updating/price-fetch-strategy/PriceFetchStrategy';

@@ -2,6 +2,7 @@ import { db } from '@db/index';
 import { lpTrackingData } from '@db/schema';
 import { BaseMessagingActor } from '@src/base-actor/BaseMessagingActor';
 import { deployedContractsGetters } from '@src/deployedContracts';
+import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
 import { DbDataFetchStrategy } from '@src/hf-recalculation/DbDataFetchStrategy';
 import { PriceDbFetchStrategy } from '@src/hf-recalculation/PriceDbFetchStrategy';
 import { updateHFAndSendLiquidatationRequests } from '@src/hf-recalculation/hfUpdateUtils';
@@ -10,7 +11,7 @@ import { LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY } from '@src/messageQue
 import { lt } from 'drizzle-orm';
 
 export class PeriodicHFUpdater extends BaseMessagingActor {
-  lpDataFetchStrategy = new DbDataFetchStrategy(); //TODO DI
+  lpDataFetchStrategy = new ChainDataFetchStrategy(); //TODO DI
   priceFetchStrategy = new PriceDbFetchStrategy();
   constructor() {
     super(LIQUIDATION_QUEUE_NAME, LIQUIDATION_ROUTING_KEY);

@@ -1,8 +1,8 @@
-import { replaceNumericPropsWithStrings } from '@abaxfinance/contract-helpers';
 import { db } from '@db/index';
 import { lpMarketRules, lpReserveDatas, type InsertLPReserveData } from '@db/schema';
 import { BaseActor } from '@src/base-actor/BaseActor';
 import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
+import { stringifyNumericProps } from '@c-forge/polkahat-chai-matchers';
 
 export class ReserveDataChainUpdater extends BaseActor {
   fetchStrategy = new ChainDataFetchStrategy();
@@ -28,7 +28,7 @@ export class ReserveDataChainUpdater extends BaseActor {
         totalDebt: reserveData.data!.totalDebt.toString(),
         currentDebtRateE18: reserveData.data!.currentDebtRateE18.toString(),
         indexesUpdateTimestamp: new Date(parseInt(reserveData.indexes!.updateTimestamp.toString())),
-        interestRateModel: replaceNumericPropsWithStrings(reserveData.interestRateModel),
+        interestRateModel: stringifyNumericProps(reserveData.interestRateModel as any) as any,
         updateTimestamp: new Date(),
       };
       await db
@@ -41,7 +41,7 @@ export class ReserveDataChainUpdater extends BaseActor {
     }
     const marketRules = await this.fetchStrategy.fetchMarketRules();
     for (const [id, marketRule] of marketRules) {
-      const values = { id, assetRules: replaceNumericPropsWithStrings(marketRule) };
+      const values = { id, assetRules: stringifyNumericProps(marketRule as any) as any };
       await db.insert(lpMarketRules).values(values).onConflictDoUpdate({
         target: lpMarketRules.id,
         set: values,

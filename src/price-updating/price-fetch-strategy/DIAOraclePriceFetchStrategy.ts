@@ -1,5 +1,5 @@
-import { ApiProviderWrapper, DiaOracle, getContractObject } from '@abaxfinance/contract-helpers';
-import { E6 } from '@abaxfinance/utils';
+import { ApiProviderWrapper, DiaOracle, getContractObject } from 'wookashwackomytest-contract-helpers';
+import { E6 } from 'wookashwackomytest-utils';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import { PRICE_SOURCE, type AnyRegisteredAsset } from '@src/price-updating/consts';
 import type { PriceFetchStrategy } from '@src/price-updating/price-fetch-strategy/PriceFetchStrategy';
@@ -37,7 +37,7 @@ export class DIAOraclePriceFetchStrategy implements PriceFetchStrategy {
   private wsEndpoint: string;
 
   constructor() {
-    const wsEndpoint = process.env.RPC_ENDPOINT;
+    const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.wsEndpoint = wsEndpoint;
   }

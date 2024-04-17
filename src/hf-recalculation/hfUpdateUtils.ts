@@ -1,5 +1,3 @@
-import { replaceNumericPropsWithStrings, type MarketRule } from '@abaxfinance/contract-helpers';
-import { E6, E6bn } from '@abaxfinance/utils';
 import { db } from '@db/index';
 import { lpTrackingData } from '@db/schema';
 import { UPDATE_INTERVAL_BY_HF_PRIORITY } from '@src/constants';
@@ -11,6 +9,13 @@ import amqplib from 'amqplib';
 import type BN from 'bn.js';
 import { eq } from 'drizzle-orm';
 import { LIQUIDATION_EXCHANGE, LIQUIDATION_ROUTING_KEY } from '../messageQueueConsts';
+import type { MarketRule } from 'wookashwackomytest-contract-helpers';
+import { stringifyNumericProps } from '@c-forge/polkahat-chai-matchers';
+import { E6bn } from '@c-forge/polkahat-network-helpers';
+
+const E6 = 1_000_000;
+
+const DRY_RUN = !!process.env.DRY_RUN;
 export async function updateHFAndSendLiquidatationRequests(
   usersWithReserveDatas: ProtocolUserDataReturnType[],
   marketRules: Map<number, MarketRule>,
@@ -40,29 +45,31 @@ export async function updateHFAndSendLiquidatationRequests(
       if (collateralPower.lte(debtPower)) {
         logger.info(`${userAddress} CP: ${collateralPower.toString()} | DP: ${debtPower.toString()}`);
         logger.info(`${userAddress} should be liquidated | HF: ${healthFactor}`);
-        channel.publish(
-          LIQUIDATION_EXCHANGE,
-          LIQUIDATION_ROUTING_KEY,
-          Buffer.from(
-            JSON.stringify(
-              replaceNumericPropsWithStrings({
-                healthFactor,
-                userAddress,
-                debtPower,
-                biggestDebtPowerData,
-                collateralPower,
-                biggestCollateralData: biggestCollateralPowerData,
-              }) as LiquidationRequestData,
+        if (DRY_RUN) logger.info('dry run, not sending liquidation request');
+        else
+          channel.publish(
+            LIQUIDATION_EXCHANGE,
+            LIQUIDATION_ROUTING_KEY,
+            Buffer.from(
+              JSON.stringify(
+                stringifyNumericProps({
+                  healthFactor,
+                  userAddress,
+                  debtPower,
+                  biggestDebtPowerData,
+                  collateralPower,
+                  biggestCollateralData: biggestCollateralPowerData,
+                } as any) as LiquidationRequestData,
+              ),
             ),
-          ),
-          {
-            headers: {
-              'x-deduplication-header': userAddress.toString(),
+            {
+              headers: {
+                'x-deduplication-header': userAddress.toString(),
+              },
+              contentType: 'application/json',
+              persistent: true,
             },
-            contentType: 'application/json',
-            persistent: true,
-          },
-        );
+          );
       } else {
         logger.debug(`${userAddress} is safe | HF: ${healthFactor}`);
       }

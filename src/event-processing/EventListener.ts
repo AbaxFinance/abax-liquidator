@@ -1,4 +1,4 @@
-import { ApiProviderWrapper } from '@abaxfinance/contract-helpers';
+import { ApiProviderWrapper } from 'wookashwackomytest-contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { BaseActor } from '@src/base-actor/BaseActor';
@@ -12,7 +12,7 @@ export class EventListener extends BaseActor {
 
   constructor() {
     super();
-    const wsEndpoint = process.env.RPC_ENDPOINT;
+    const wsEndpoint = process.env.WS_ENDPOINT;
     if (!wsEndpoint) throw 'could not determine wsEndpoint';
     this.apiProviderWrapper = new ApiProviderWrapper(wsEndpoint);
   }

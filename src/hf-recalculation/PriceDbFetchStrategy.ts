@@ -1,4 +1,4 @@
-import { E12bn, E8 } from '@abaxfinance/utils';
+import { E12bn, E8 } from 'wookashwackomytest-utils';
 import { db } from '@db/index';
 import { assetPrices } from '@db/schema';
 import { logger } from '@src/logger';

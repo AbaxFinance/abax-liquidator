@@ -18,8 +18,8 @@ import {
   EVENT_DATA_TYPE_DESCRIPTIONS_PSP22_OWNABLE,
   EVENT_DATA_TYPE_DESCRIPTIONS_V_TOKEN,
   getEventTypeDescription,
-  replaceNumericPropsWithStrings,
-} from '@abaxfinance/contract-helpers';
+} from 'wookashwackomytest-contract-helpers';
+import { stringifyNumericProps } from '@c-forge/polkahat-chai-matchers';
 
 const START_BLOCK_NUMBER_PRE_DEPLOYMENT = 48565327;
 export async function getEventsByContract<TContract extends IWithAbi & IWithAddress>(
@@ -211,7 +211,7 @@ export function parseBlockEvents<TContract extends IWithAbi & IWithAddress>(
         } satisfies EventWithMeta;
         eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] = [
           ...(eventsToReturnByContractAddress[eventRetWithMeta.meta.contractAddress] ?? []),
-          replaceNumericPropsWithStrings(eventRetWithMeta),
+          stringifyNumericProps(eventRetWithMeta as any) as any,
         ];
       }
     }

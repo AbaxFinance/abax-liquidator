@@ -9,7 +9,7 @@ import {
   type UserReserveData,
   type MarketRule,
   PriceFeedProvider,
-} from '@abaxfinance/contract-helpers';
+} from 'wookashwackomytest-contract-helpers';
 import {
   SUPPORTED_CURRENCIES_DECIMALS,
   convertNumberOrStringToBN,
@@ -19,7 +19,7 @@ import {
   E18bn,
   E6bn,
   toE6,
-} from '@abaxfinance/utils';
+} from 'wookashwackomytest-utils';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import { nobody } from '@polkadot/keyring/pair/nobody';
@@ -34,7 +34,7 @@ import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS, getIsUsedAsCollateral } f
 import BN from 'bn.js';
 import chalk from 'chalk';
 import PQueue from 'p-queue';
-import { E6 } from '@abaxfinance/utils';
+import { E6 } from 'wookashwackomytest-utils';
 import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
 
 const forbiddenRegexps = [
@@ -77,7 +77,7 @@ const queue = new PQueue({ concurrency: 5, autoStart: false });
   if (require.main !== module) return;
   const outputJsonFolder = (args['path'] as string) ?? process.argv[2] ?? process.env.PWD;
   if (!outputJsonFolder) throw 'could not determine path';
-  const wsEndpoint = process.env.RPC_ENDPOINT;
+  const wsEndpoint = process.env.WS_ENDPOINT;
   if (!wsEndpoint) throw 'could not determine wsEndpoint';
   const api = await apiProviderWrapper.getAndWaitForReady();
 

@@ -9,7 +9,7 @@ import {
 } from '@src/price-updating/consts';
 import BN from 'bn.js';
 import { eq, sql } from 'drizzle-orm';
-import { E6, E6bn } from '@abaxfinance/utils';
+import { E6, E6bn } from 'wookashwackomytest-utils';
 
 export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, BN][], priceSource: PRICE_SOURCE) {
   const assetPriceData: SelectAssetPrice[] = await db.select().from(assetPrices).where(eq(assetPrices.source, priceSource));

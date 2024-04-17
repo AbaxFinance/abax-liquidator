@@ -1,4 +1,4 @@
-import type { AccountId, InterestRateModel, MarketRule, UserConfig, UserReserveData } from '@abaxfinance/contract-helpers';
+import type { AccountId, InterestRateModel, MarketRule, UserConfig, UserReserveData } from 'wookashwackomytest-contract-helpers';
 import { db } from '@db/index';
 import { lpMarketRules, lpReserveDatas, lpUserConfigs, lpUserDatas } from '@db/schema';
 import { MARKET_RULE_IDS } from '@src/constants';
@@ -8,7 +8,7 @@ import type { ReserveDataWithMetadata } from '@src/types';
 import { and, eq, inArray, max, sql, getTableName } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { alias } from 'drizzle-orm/pg-core';
-import { ReturnNumber } from 'wookashwackomytest-typechain-types';
+import { BN } from 'bn.js';
 export class DbDataFetchStrategy implements DataFetchStrategy {
   async fetchReserveDatas(reserveAddresses?: string[]): Promise<Record<string, ReserveDataWithMetadata>> {
     // const dbRes = reserveAddresses
@@ -33,31 +33,31 @@ export class DbDataFetchStrategy implements DataFetchStrategy {
         acc[curr.address] = {
           id: curr.id,
           restriction: {
-            maximalTotalDeposit: curr.maximalTotalDeposit ? new ReturnNumber(curr.maximalTotalDeposit) : null,
-            maximalTotalDebt: curr.maximalTotalDebt ? new ReturnNumber(curr.maximalTotalDebt) : null,
-            minimalCollateral: new ReturnNumber(curr.minimalCollateral),
-            minimalDebt: new ReturnNumber(curr.minimalDebt),
+            maximalTotalDeposit: curr.maximalTotalDeposit ? new BN(curr.maximalTotalDeposit) : null,
+            maximalTotalDebt: curr.maximalTotalDebt ? new BN(curr.maximalTotalDebt) : null,
+            minimalCollateral: new BN(curr.minimalCollateral),
+            minimalDebt: new BN(curr.minimalDebt),
           },
           indexes: {
-            depositIndexE18: new ReturnNumber(curr.depositIndexE18),
-            debtIndexE18: new ReturnNumber(curr.debtIndexE18),
-            updateTimestamp: new ReturnNumber(curr.indexesUpdateTimestamp.getTime()),
+            depositIndexE18: new BN(curr.depositIndexE18),
+            debtIndexE18: new BN(curr.debtIndexE18),
+            updateTimestamp: new BN(curr.indexesUpdateTimestamp.getTime()),
           },
           fees: {
-            depositFeeE6: new ReturnNumber(curr.depositFeeE6),
-            debtFeeE6: new ReturnNumber(curr.debtFeeE6),
+            depositFeeE6: new BN(curr.depositFeeE6),
+            debtFeeE6: new BN(curr.debtFeeE6),
           },
-          decimalMultiplier: new ReturnNumber(curr.decimalMultiplier),
+          decimalMultiplier: new BN(curr.decimalMultiplier),
           data: {
             activated: curr.activated,
             freezed: curr.freezed,
-            totalDeposit: new ReturnNumber(curr.totalDeposit),
-            currentDepositRateE18: new ReturnNumber(curr.currentDepositRateE18),
-            totalDebt: new ReturnNumber(curr.totalDebt),
-            currentDebtRateE18: new ReturnNumber(curr.currentDebtRateE18),
+            totalDeposit: new BN(curr.totalDeposit),
+            currentDepositRateE18: new BN(curr.currentDepositRateE18),
+            totalDebt: new BN(curr.totalDebt),
+            currentDebtRateE18: new BN(curr.currentDebtRateE18),
           },
           interestRateModel: (curr.interestRateModel
-            ? JSON.parse(curr.interestRateModel).map((n) => new ReturnNumber(n)) //TODO
+            ? JSON.parse(curr.interestRateModel).map((n) => new BN(n)) //TODO
             : curr.interestRateModel) as InterestRateModel,
         };
         return acc;
@@ -72,9 +72,9 @@ export class DbDataFetchStrategy implements DataFetchStrategy {
       const marketRule: MarketRule = row.assetRules?.map((ar) =>
         ar
           ? {
-              collateralCoefficientE6: ar.collateralCoefficientE6 ? new ReturnNumber(ar.collateralCoefficientE6) : null,
-              borrowCoefficientE6: ar.borrowCoefficientE6 ? new ReturnNumber(ar.borrowCoefficientE6) : null,
-              penaltyE6: ar.penaltyE6 ? new ReturnNumber(ar.penaltyE6) : null,
+              collateralCoefficientE6: ar.collateralCoefficientE6 ? new BN(ar.collateralCoefficientE6) : null,
+              borrowCoefficientE6: ar.borrowCoefficientE6 ? new BN(ar.borrowCoefficientE6) : null,
+              penaltyE6: ar.penaltyE6 ? new BN(ar.penaltyE6) : null,
             }
           : ar,
       );
@@ -100,10 +100,10 @@ export class DbDataFetchStrategy implements DataFetchStrategy {
       if (userConfigRows.length > 1) logger.warn(`more than 1 user config in the database for address: ${userAddress.toString()}`);
       if (userConfigRows.length === 0) logger.warn(`no user config in the database for address: ${userAddress.toString()}`);
       const userConfig: UserConfig = {
-        deposits: new ReturnNumber(userConfigRows[0].deposits),
-        collaterals: new ReturnNumber(userConfigRows[0].collaterals),
-        borrows: new ReturnNumber(userConfigRows[0].borrows),
-        marketRuleId: new ReturnNumber(userConfigRows[0].marketRuleId),
+        deposits: new BN(userConfigRows[0].deposits),
+        collaterals: new BN(userConfigRows[0].collaterals),
+        borrows: new BN(userConfigRows[0].borrows),
+        marketRuleId: new BN(userConfigRows[0].marketRuleId),
       };
 
       // const innerQuery = new QueryBuilder()
@@ -145,10 +145,10 @@ export class DbDataFetchStrategy implements DataFetchStrategy {
       const userReserves = userReserveDatas.reduce(
         (acc, curr) => {
           acc[curr.reserveAddress] = {
-            deposit: new ReturnNumber(curr.deposit),
-            debt: new ReturnNumber(curr.debt),
-            appliedDepositIndexE18: new ReturnNumber(curr.appliedCumulativeDepositIndexE18),
-            appliedDebtIndexE18: new ReturnNumber(curr.appliedCumulativeDebtIndexE18),
+            deposit: new BN(curr.deposit),
+            debt: new BN(curr.debt),
+            appliedDepositIndexE18: new BN(curr.appliedCumulativeDepositIndexE18),
+            appliedDebtIndexE18: new BN(curr.appliedCumulativeDebtIndexE18),
           };
           return acc;
         },

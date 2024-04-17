@@ -12,7 +12,7 @@ import type {
 import { SubstrateBatchProcessor } from '@subsquid/substrate-processor';
 import dotenv from 'dotenv';
 import path from 'path';
-import type { ReturnPromiseType } from '@abaxfinance/utils';
+import type { ReturnPromiseType } from 'wookashwackomytest-utils';
 
 dotenv.config({ path: path.join(__dirname, '..', '..', '..', '..', '.env.local') });
 
@@ -26,7 +26,7 @@ export const getProcessor = async (contractAddress: string[]) => {
       chain: {
         // Set via .env for local runs or via secrets when deploying to Subsquid Cloud
         // https://docs.subsquid.io/deploy-squid/env-variables/
-        url: assertNotNull(process.env.RPC_ENDPOINT),
+        url: assertNotNull(process.env.WS_ENDPOINT),
         // More RPC connection options at https://docs.subsquid.io/substrate-indexing/setup/general/#set-data-source
         rateLimit: 10,
       },

@@ -1,4 +1,4 @@
-import { getArgvObj } from '@abaxfinance/utils';
+import { getArgvObj } from 'wookashwackomytest-utils';
 import { apiProviderWrapper } from '@scripts/common';
 import chalk from 'chalk';
 
