@@ -1,5 +1,4 @@
 import { ApiProviderWrapper, DiaOracle, getContractObject } from 'wookashwackomytest-contract-helpers';
-import { E6 } from 'wookashwackomytest-utils';
 import { nobody } from '@polkadot/keyring/pair/nobody';
 import { PRICE_SOURCE, type AnyRegisteredAsset } from '@src/price-updating/consts';
 import type { PriceFetchStrategy } from '@src/price-updating/price-fetch-strategy/PriceFetchStrategy';
@@ -49,7 +48,7 @@ export class DIAOraclePriceFetchStrategy implements PriceFetchStrategy {
 
     const currentPricesE18: [AnyRegisteredAsset, BN][] = zip(Object.keys(QUERY_STRING_BY_RESERVE_NAME), queryRes.value.ok!).map(
       ([reserveName, oracleResE18]) => {
-        return [reserveName!, oracleResE18![1].rawNumber] as [AnyRegisteredAsset, BN];
+        return [reserveName!, oracleResE18![1]] as [AnyRegisteredAsset, BN];
       },
     );
     return currentPricesE18;

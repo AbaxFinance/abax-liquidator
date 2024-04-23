@@ -1,3 +1,4 @@
+import { E6bn } from '@c-forge/polkahat-network-helpers';
 import { db } from '@db/index';
 import { assetPrices, type InsertAssetPrice, type SelectAssetPrice } from '@db/schema';
 import { logger } from '@src/logger';
@@ -9,7 +10,6 @@ import {
 } from '@src/price-updating/consts';
 import BN from 'bn.js';
 import { eq, sql } from 'drizzle-orm';
-import { E6, E6bn } from 'wookashwackomytest-utils';
 
 export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, BN][], priceSource: PRICE_SOURCE) {
   const assetPriceData: SelectAssetPrice[] = await db.select().from(assetPrices).where(eq(assetPrices.source, priceSource));
@@ -34,7 +34,7 @@ export async function insertPricesIntoDb(currentPricesE8: [AnyRegisteredAsset, B
         updateTimestamp: updateTs,
         currentPriceE18: currentPriceE18.toString(),
         anchorPriceE18:
-          parseInt(new BN(apd.anchorPriceE18).sub(currentPriceE18).abs().mul(E6bn).div(new BN(apd.anchorPriceE18)).toString()) / E6 >
+          parseInt(new BN(apd.anchorPriceE18).sub(currentPriceE18).abs().mul(E6bn).div(new BN(apd.anchorPriceE18)).toString()) / E6bn.toNumber() >
           PRICE_CHANGE_THRESHOLD_BY_RESERVE_NAME[apd.name]
             ? currentPriceE18.toString()
             : apd.anchorPriceE18,

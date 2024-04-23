@@ -2,10 +2,11 @@ import { ApiProviderWrapper } from 'wookashwackomytest-contract-helpers';
 import { ApiPromise } from '@polkadot/api';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { BaseActor } from '@src/base-actor/BaseActor';
-import { parseBlockEvents, storeEventsAndErrors } from '@src/event-processing/shared';
+import { storeEventsAndErrors } from '@src/event-processing/shared';
 import { getContractsToListenEvents } from '@src/event-processing/utils';
 import { logger } from '@src/logger';
 import type { IWithAbi, IWithAddress } from '@src/types';
+import { parseBlockEvents } from '@src/event-processing/parseBlockEvents';
 
 export class EventListener extends BaseActor {
   apiProviderWrapper: ApiProviderWrapper;

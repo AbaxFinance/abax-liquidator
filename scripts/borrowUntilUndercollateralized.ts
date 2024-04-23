@@ -16,9 +16,6 @@ import {
   getArgvObj,
   type SUPPORTED_CURRENCIES_TYPE,
   SUPPORTED_CURRENCIES_SYMBOLS,
-  E18bn,
-  E6bn,
-  toE6,
 } from 'wookashwackomytest-utils';
 import { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
@@ -34,8 +31,10 @@ import { BALANCE_VIEWER_ADDRESS, LENDING_POOL_ADDRESS, getIsUsedAsCollateral } f
 import BN from 'bn.js';
 import chalk from 'chalk';
 import PQueue from 'p-queue';
-import { E6 } from 'wookashwackomytest-utils';
 import { ChainDataFetchStrategy } from '@src/hf-recalculation/ChainDataFetchStrategy';
+import { E18bn, E6bn } from '@c-forge/polkahat-network-helpers';
+
+const toE6 = (n: number) => n * 1_000_000;
 
 const forbiddenRegexps = [
   /Unable to find handler for subscription/,
@@ -107,7 +106,7 @@ const queue = new PQueue({ concurrency: 5, autoStart: false });
   const prices = (await priceFeedProvider.query.getLatestPrices(reserveContractInfos.map((c) => c.address))).value.unwrap().unwrap();
   const priceMap = prices.reduce(
     (acc, curr, i) => {
-      acc[reserveContractInfos[i].address] = curr.rawNumber;
+      acc[reserveContractInfos[i].address] = curr;
       return acc;
     },
     {} as Record<SUPPORTED_CURRENCIES_TYPE, BN>,
@@ -157,7 +156,7 @@ async function borrowUntilUndercollateralized(
   const {
     value: { ok: initialCollateralCoeffRes },
   } = await userSignedLendingPool.query.getUserFreeCollateralCoefficient(user.pair.address);
-  let collateralCoefficient = initialCollateralCoeffRes![1].rawNumber;
+  let collateralCoefficient = initialCollateralCoeffRes![1];
 
   while (collateralCoefficient && collateralCoefficient.gtn(55_000)) {
     logProgress(collateralCoefficient, user);
@@ -183,11 +182,11 @@ async function borrowUntilUndercollateralized(
     }
     console.log({ maxBorrowE6: maxBorrowE6?.toString() });
 
-    if (collateralCoeffRes && collateralCoeffRes[1].rawNumber.gtn(0)) {
-      if (collateralCoeffRes[1].rawNumber.gt(collateralCoeffRes[1].rawNumber)) {
+    if (collateralCoeffRes && collateralCoeffRes[1].gtn(0)) {
+      if (collateralCoeffRes[1].gt(collateralCoeffRes[1])) {
         console.log('COLLATERAL COEFFICIENT INCREASED');
       }
-      collateralCoefficient = collateralCoeffRes[1].rawNumber;
+      collateralCoefficient = collateralCoeffRes[1];
       try {
         // await tryBorrow(`usd | user no. ${i} (${user.pair.address})`, userSignedLendingPool, testUSDC, user.pair, usdcAmount, api, signerWithFunds);
         // await tryBorrow(`dot | user no. ${i} (${user.pair.address})`, userSignedLendingPool, testDOT, user.pair, dotAmount, api, signerWithFunds);
@@ -249,7 +248,7 @@ export const calculateMaxBorrowE6 = (
 ): BN | null => {
   const reserveData = reserveDatas[reserveAddressToBeBorrowed];
   const assetRule = marketRule[reserveData.id];
-  const borrowCoefficientE6 = assetRule?.borrowCoefficientE6?.rawNumber;
+  const borrowCoefficientE6 = assetRule?.borrowCoefficientE6;
 
   if (!borrowCoefficientE6) return null;
   const collateralPowerE6 = calculateCollateralPowerE6BN(userConfig, reserveDatas, userReserveDatas, marketRule, prices);
@@ -280,12 +279,12 @@ export const calculateDebtPowerE6BN = (
     const assetRule = marketRule[reserveData.id];
     if (!reserveData.decimalMultiplier || !assetRule?.borrowCoefficientE6 || !prices[reserveAddress]) return;
     const userReserveData = userReserveDatas[reserveAddress];
-    const debt = userReserveData.debt.rawNumber;
-    const debtDecimals = reserveData.decimalMultiplier.rawNumber;
+    const debt = userReserveData.debt;
+    const debtDecimals = reserveData.decimalMultiplier;
     retDenom = retDenom.mul(debtDecimals);
     const priceE18 = prices[reserveAddress] ?? new BN(0);
     retDenom = retDenom.mul(E18bn);
-    const borrowCoefficient = assetRule.borrowCoefficientE6.rawNumber;
+    const borrowCoefficient = assetRule.borrowCoefficientE6;
     ret = ret.add(debt.mul(priceE18).mul(borrowCoefficient).div(retDenom));
   });
 
@@ -306,13 +305,13 @@ export const calculateCollateralPowerE6BN = (
     if (!getIsUsedAsCollateral(userConfig, reserveData)) return;
 
     const assetRule = marketRule[reserveData.id];
-    const deposit = userReserveDatas[reserveAddress].deposit.rawNumber;
-    const decimalMultiplier = reserveData.decimalMultiplier?.rawNumber ?? new BN(1);
+    const deposit = userReserveDatas[reserveAddress].deposit;
+    const decimalMultiplier = reserveData.decimalMultiplier ?? new BN(1);
 
     retDenom = retDenom.mul(decimalMultiplier);
     const priceE18 = prices[reserveAddress] ?? new BN(0);
     retDenom = retDenom.mul(E18bn);
-    const collateralCoefficientE6 = assetRule && assetRule.collateralCoefficientE6 ? assetRule.collateralCoefficientE6.rawNumber : new BN(0);
+    const collateralCoefficientE6 = assetRule && assetRule.collateralCoefficientE6 ? assetRule.collateralCoefficientE6 : new BN(0);
     ret = ret.add(deposit.mul(priceE18).mul(collateralCoefficientE6).div(retDenom));
   });
 

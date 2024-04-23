@@ -12,7 +12,7 @@ import type {
 import { SubstrateBatchProcessor } from '@subsquid/substrate-processor';
 import dotenv from 'dotenv';
 import path from 'path';
-import type { ReturnPromiseType } from 'wookashwackomytest-utils';
+import type { ReturnPromiseType } from '@src/types';
 
 dotenv.config({ path: path.join(__dirname, '..', '..', '..', '..', '.env.local') });
 
@@ -28,7 +28,7 @@ export const getProcessor = async (contractAddress: string[]) => {
         // https://docs.subsquid.io/deploy-squid/env-variables/
         url: assertNotNull(process.env.WS_ENDPOINT),
         // More RPC connection options at https://docs.subsquid.io/substrate-indexing/setup/general/#set-data-source
-        rateLimit: 10,
+        rateLimit: 30,
       },
     })
     .addContractsContractEmitted({
@@ -46,7 +46,7 @@ export const getProcessor = async (contractAddress: string[]) => {
     .setBlockRange({
       // genesis block happens to not have a timestamp, so it's easier
       // to start from 1 in cases when the deployment height is unknown
-      from: 48505327,
+      from: 36334999,
     });
 };
 

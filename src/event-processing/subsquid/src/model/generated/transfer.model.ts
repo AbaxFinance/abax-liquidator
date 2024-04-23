@@ -10,7 +10,7 @@ export class Transfer {
   }
 
   //@ts-ignore
-  @PrimaryColumn_()
+  @PrimaryColumn_('uuid')
   id!: string;
 
   //@ts-ignore

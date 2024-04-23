@@ -1,4 +1,4 @@
-import type { ReturnPromiseType } from 'wookashwackomytest-utils';
+import type { ReturnPromiseType } from '@src/types';
 import { countDecimals } from 'wookashwackomytest-utils';
 
 export const measureTime = async <T>(sampleSize: number, markId: string, benchmarkFunc: () => Promise<T>) => {

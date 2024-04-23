@@ -1,5 +1,5 @@
 import { Psp22Ownable, TestReservesMinter, TestReservesMinterErrorBuilder, getContractObject } from 'wookashwackomytest-contract-helpers';
-import { E12bn, SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, getArgvObj, toE12 } from 'wookashwackomytest-utils';
+import { SUPPORTED_CURRENCIES_DECIMALS, convertNumberOrStringToBN, getArgvObj } from 'wookashwackomytest-utils';
 import type { ApiPromise } from '@polkadot/api';
 import Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
@@ -10,6 +10,7 @@ import { isEqual, isNil } from 'lodash';
 import PQueue from 'p-queue';
 import { deployedContractsGetters } from '../src/deployedContracts';
 import { BN } from 'bn.js';
+import { E12bn, toE } from '@c-forge/polkahat-network-helpers';
 
 const keyring = new Keyring();
 (async (args: Record<string, unknown>) => {
@@ -77,7 +78,7 @@ export async function supplyNativeTAZEROBalance(api: ApiPromise, receiver: Keyri
   if (new BN(balanceTotalRaw.toString()).lt(transferAmount)) {
     await new Promise((resolve, reject) => {
       api.tx.balances
-        .transferKeepAlive(receiver.address, toE12(100))
+        .transferKeepAlive(receiver.address, toE(12, 100))
         .signAndSend(sender, (currentResult) => {
           const { status } = currentResult;
           if (status.isInBlock) {
